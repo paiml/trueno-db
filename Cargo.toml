@@ -87,6 +87,10 @@ harness = false
 name = "backend_comparison"
 harness = false
 
+[profile.test]
+# Optimizations for faster test execution (certeza formula)
+opt-level = 1
+
 [profile.release]
 opt-level = 3
 lto = "fat"
@@ -101,5 +105,5 @@ inherits = "release"
 quality_gates = true
 tdg_score_minimum = 85  # B+ grade minimum
 mutation_testing = true
-mutation_kill_rate_minimum = 80  # 80% kill rate
+mutation_kill_rate_minimum = 85  # 85% kill rate (certeza formula)
 coverage_minimum = 90  # 90% code coverage

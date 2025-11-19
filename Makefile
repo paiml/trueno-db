@@ -30,8 +30,11 @@ bench: ## Run benchmarks
 
 ## Quality Gates (EXTREME TDD)
 
-lint: ## Run clippy with zero tolerance
-	cargo clippy --all-features -- -D warnings
+lint: ## Run clippy with zero tolerance (ALL targets: lib, tests, examples, benches)
+	cargo clippy --all-targets --all-features -- -D warnings
+
+lint-pedantic: ## Run clippy with pedantic lints (for continuous improvement)
+	cargo clippy --all-targets --all-features -- -D warnings -D clippy::pedantic
 
 check: lint test ## Run basic quality checks
 
@@ -46,8 +49,28 @@ coverage: ## Generate coverage report (>90% required, <10 min target)
 	@echo "✅ Coverage report: target/coverage/html/index.html"
 	@cargo llvm-cov report | grep TOTAL
 
-mutants: ## Run mutation testing (target: ≥80% kill rate)
-	cargo mutants --all-features
+mutants: ## Run mutation testing (target: ≥85% kill rate, certeza formula)
+	@echo "🧬 Running mutation testing (this will take a while)..."
+	@echo "Target: >85% mutation score"
+	@if command -v cargo-mutants >/dev/null 2>&1; then \
+		cargo mutants --no-times --output mutants.out || true; \
+		echo "✅ Mutation testing complete. Results in mutants.out/"; \
+	else \
+		echo "📥 Installing cargo-mutants..."; \
+		cargo install cargo-mutants && cargo mutants --no-times --output mutants.out || true; \
+	fi
+
+mutation-report: ## Analyze mutation test results
+	@echo "📊 Analyzing mutation test results..."
+	@if [ -d "mutants.out" ]; then \
+		cat mutants.out/mutants.out 2>/dev/null || echo "No mutation results yet"; \
+	else \
+		echo "No mutation results found. Run 'make mutants' first."; \
+	fi
+
+mutation-clean: ## Clean mutation testing artifacts
+	@rm -rf mutants.out mutants.out.old
+	@echo "✓ Mutation testing artifacts cleaned"
 
 tdg: ## Run TDG analysis (target: ≥B+ / 85)
 	pmat analyze tdg

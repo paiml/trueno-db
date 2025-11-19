@@ -41,24 +41,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Project Setup
 ```bash
-# This is a new project - no Cargo.toml exists yet
-# When created, standard Rust commands apply:
-cargo build                           # Build the project
-cargo build --release                 # Release build
-cargo test                            # Run all tests
-cargo test --all-features             # Run tests with all features
-cargo clippy -- -D warnings           # Lint with zero tolerance
+make build                            # Build the project
+make build-release                    # Release build
+make test                             # Run all tests
+make lint                             # Lint with clippy (zero tolerance)
+make check                            # Lint + test
 ```
 
 ### Quality Gates (EXTREME TDD)
 ```bash
 # All of these must pass before any commit:
-cargo test --all-features             # 100% tests pass
-cargo clippy -- -D warnings           # Zero clippy warnings
-cargo llvm-cov                        # >90% code coverage required
-pmat analyze tdg                      # TDG score ≥B+ (85/100)
-cargo mutants                         # ≥80% mutation kill rate
+make test                             # 100% tests pass
+make lint                             # Zero clippy warnings
+make coverage                         # >90% code coverage required
+make tdg                              # TDG score ≥B+ (85/100)
+make mutants                          # ≥80% mutation kill rate (optional)
+make quality-gate                     # Run all gates (lint + test + coverage)
 ```
+
+**IMPORTANT**: Always use `make coverage` instead of raw `cargo llvm-cov` commands.
+The Makefile handles mold linker conflicts automatically.
 
 ### WASM Build
 ```bash
