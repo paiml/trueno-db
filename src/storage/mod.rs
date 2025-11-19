@@ -12,6 +12,10 @@ use std::path::Path;
 /// Based on: Leis et al. (2014) morsel-driven parallelism
 pub const MORSEL_SIZE_BYTES: usize = 128 * 1024 * 1024; // 128MB
 
+/// Maximum number of in-flight GPU transfers
+/// Bounded to prevent memory explosion while keeping PCIe bus busy
+const MAX_IN_FLIGHT_TRANSFERS: usize = 2;
+
 /// Storage engine for Arrow/Parquet data
 pub struct StorageEngine {
     batches: Vec<RecordBatch>,
@@ -133,6 +137,65 @@ impl Iterator for MorselIterator<'_> {
     }
 }
 
+/// GPU Transfer Queue for async bounded transfers
+///
+/// Toyota Way: Heijunka (Load Balancing)
+/// - Bounded queue prevents memory explosion (Poka-Yoke)
+/// - Max 2 in-flight keeps PCIe bus busy without overwhelming GPU
+/// - Async design prevents blocking Tokio reactor
+///
+/// References:
+/// - Leis et al. (2014): Morsel-driven parallelism
+pub struct GpuTransferQueue {
+    sender: tokio::sync::mpsc::Sender<RecordBatch>,
+    receiver: tokio::sync::mpsc::Receiver<RecordBatch>,
+}
+
+impl GpuTransferQueue {
+    /// Create new GPU transfer queue with bounded capacity
+    ///
+    /// # Returns
+    /// Queue with max 2 in-flight transfers
+    #[must_use]
+    pub fn new() -> Self {
+        let (sender, receiver) = tokio::sync::mpsc::channel(MAX_IN_FLIGHT_TRANSFERS);
+        Self { sender, receiver }
+    }
+
+    /// Enqueue a record batch for GPU transfer
+    ///
+    /// This will block if queue is full (2 batches in-flight)
+    ///
+    /// # Errors
+    /// Returns error if queue is closed
+    pub async fn enqueue(&self, batch: RecordBatch) -> Result<()> {
+        self.sender
+            .send(batch)
+            .await
+            .map_err(|_| Error::Other("GPU transfer queue closed".into()))
+    }
+
+    /// Dequeue a record batch from GPU transfer queue
+    ///
+    /// # Returns
+    /// Next batch if available, None if queue is empty and closed
+    pub async fn dequeue(&mut self) -> Option<RecordBatch> {
+        self.receiver.recv().await
+    }
+
+    /// Get sender for concurrent enqueueing
+    #[must_use]
+    pub fn sender(&self) -> tokio::sync::mpsc::Sender<RecordBatch> {
+        self.sender.clone()
+    }
+}
+
+impl Default for GpuTransferQueue {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -203,6 +266,64 @@ mod tests {
         // Verify all rows accounted for across both batches
         let total_rows: usize = morsels.iter().map(|m| m.num_rows()).sum();
         assert_eq!(total_rows, 1000);
+    }
+
+    #[tokio::test]
+    async fn test_gpu_transfer_queue_basic() {
+        let mut queue = GpuTransferQueue::new();
+        let batch = create_test_batch(100);
+
+        // Enqueue
+        queue.enqueue(batch.clone()).await.unwrap();
+
+        // Dequeue
+        let received = queue.dequeue().await.unwrap();
+        assert_eq!(received.num_rows(), 100);
+    }
+
+    #[tokio::test]
+    async fn test_gpu_transfer_queue_bounded() {
+        use tokio::time::{timeout, Duration};
+
+        let queue = GpuTransferQueue::new();
+        let batch = create_test_batch(100);
+
+        // Fill queue (capacity = 2)
+        queue.enqueue(batch.clone()).await.unwrap();
+        queue.enqueue(batch.clone()).await.unwrap();
+
+        // Third enqueue should timeout (queue full)
+        let result = timeout(
+            Duration::from_millis(100),
+            queue.enqueue(batch)
+        ).await;
+
+        assert!(result.is_err(), "Queue should be full and block");
+    }
+
+    #[tokio::test]
+    async fn test_gpu_transfer_queue_concurrent_enqueue_dequeue() {
+        use tokio::task;
+
+        let mut queue = GpuTransferQueue::new();
+        let sender = queue.sender();
+
+        // Spawn task to enqueue multiple batches
+        let enqueue_handle = task::spawn(async move {
+            for i in 0..5 {
+                let batch = create_test_batch(100 * (i + 1));
+                sender.send(batch).await.unwrap();
+            }
+        });
+
+        // Dequeue and verify order
+        for i in 0..5 {
+            let batch = queue.dequeue().await.unwrap();
+            assert_eq!(batch.num_rows(), 100 * (i + 1));
+        }
+
+        // Wait for enqueue task to complete
+        enqueue_handle.await.unwrap();
     }
 
     // Property-based tests (EXTREME TDD - Toyota Way: Jidoka)
