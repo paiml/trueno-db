@@ -172,7 +172,7 @@ impl GpuTransferQueue {
         self.sender
             .send(batch)
             .await
-            .map_err(|_| Error::Other("GPU transfer queue closed".into()))
+            .map_err(|_| Error::QueueClosed)
     }
 
     /// Dequeue a record batch from GPU transfer queue

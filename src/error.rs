@@ -35,9 +35,17 @@ pub enum Error {
     #[error("Storage error: {0}")]
     StorageError(String),
 
+    /// GPU transfer queue closed
+    #[error("GPU transfer queue closed (receiver dropped)")]
+    QueueClosed,
+
     /// IO error
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
+
+    /// Arrow/Parquet error
+    #[error("Arrow error: {0}")]
+    Arrow(#[from] arrow::error::ArrowError),
 
     /// Generic error
     #[error("{0}")]
