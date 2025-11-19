@@ -204,4 +204,79 @@ mod tests {
         let total_rows: usize = morsels.iter().map(|m| m.num_rows()).sum();
         assert_eq!(total_rows, 1000);
     }
+
+    // Property-based tests (EXTREME TDD - Toyota Way: Jidoka)
+    mod property_tests {
+        use super::*;
+        use proptest::prelude::*;
+
+        proptest! {
+            /// Property: MorselIterator preserves all rows (no data loss)
+            #[test]
+            fn prop_morsel_iterator_preserves_all_rows(
+                num_rows in 1usize..100_000
+            ) {
+                let batch = create_test_batch(num_rows);
+                let original_rows = batch.num_rows();
+                let batches = vec![batch];
+
+                let iter = MorselIterator::new(&batches);
+                let total_morsel_rows: usize = iter.map(|m| m.num_rows()).sum();
+
+                prop_assert_eq!(original_rows, total_morsel_rows);
+            }
+
+            /// Property: Each morsel respects 128MB size limit (Poka-Yoke)
+            #[test]
+            fn prop_morsel_size_within_limit(
+                num_rows in 1usize..100_000
+            ) {
+                let batch = create_test_batch(num_rows);
+                let batches = vec![batch];
+
+                let iter = MorselIterator::new(&batches);
+
+                for morsel in iter {
+                    let size = morsel.get_array_memory_size();
+                    prop_assert!(
+                        size <= MORSEL_SIZE_BYTES,
+                        "Morsel size {} exceeds limit {}",
+                        size,
+                        MORSEL_SIZE_BYTES
+                    );
+                }
+            }
+
+            /// Property: Multiple batches preserve total row count
+            #[test]
+            fn prop_multiple_batches_preserve_rows(
+                batch_sizes in prop::collection::vec(1usize..10_000, 1..10)
+            ) {
+                let total_expected: usize = batch_sizes.iter().sum();
+                let batches: Vec<_> = batch_sizes.iter()
+                    .map(|&size| create_test_batch(size))
+                    .collect();
+
+                let iter = MorselIterator::new(&batches);
+                let total_actual: usize = iter.map(|m| m.num_rows()).sum();
+
+                prop_assert_eq!(total_expected, total_actual);
+            }
+
+            /// Property: Empty batches are handled correctly
+            #[test]
+            fn prop_empty_batches_handled(
+                num_empty in 0usize..10
+            ) {
+                let batches: Vec<_> = (0..num_empty)
+                    .map(|_| create_test_batch(0))
+                    .collect();
+
+                let iter = MorselIterator::new(&batches);
+                let total_rows: usize = iter.map(|m| m.num_rows()).sum();
+
+                prop_assert_eq!(0, total_rows);
+            }
+        }
+    }
 }
