@@ -13,12 +13,12 @@ Complete remaining 3 P0 blockers identified in PMAT integration review.
 
 ## Progress Summary
 
-✅ **Completed** (2/5):
+✅ **Completed** (3/5):
 - Issue #1: Feature-gate wgpu dependency (Commit: 7c6fa75)
+- Issue #2: Top-K selection API (Commit: 059b902)
 - Issue #4: OLAP write pattern enforcement (Commit: 4e33359)
 
-❌ **Remaining** (3/5):
-- Issue #2: Top-K selection API
+❌ **Remaining** (2/5):
 - Issue #3: Floating-point statistical equivalence tests
 - Issue #5: PCIe bandwidth runtime calibration
 
@@ -42,10 +42,10 @@ pub trait TopKSelection {
 ```
 
 ### Acceptance Criteria
-- [ ] Heap-based Top-K algorithm implemented
-- [ ] 4+ tests (correctness, perf, edge cases, property)
-- [ ] >10x speedup benchmark
-- [ ] Documentation updated
+- [x] Heap-based Top-K algorithm implemented
+- [x] 4+ tests (correctness, perf, edge cases, property) - 11 tests added
+- [x] >10x speedup benchmark - 28.75x achieved
+- [x] Documentation updated
 
 ---
 
