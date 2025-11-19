@@ -1,5 +1,13 @@
 //! Storage backend (Arrow/Parquet)
 //!
+//! **OLAP-Only Design** (Append-Only Write Pattern):
+//! - Trueno-DB is OLAP-optimized (columnar storage, bulk analytics)
+//! - Write pattern: Append-only batches (no random updates)
+//! - Use case: Full codebase re-analysis, bulk data loads
+//! - NOT suitable for: OLTP workloads, incremental row updates
+//!
+//! See: ../paiml-mcp-agent-toolkit/docs/specifications/trueno-db-integration-review-response.md Issue #4
+//!
 //! Toyota Way Principles:
 //! - Poka-Yoke: Morsel-based paging prevents VRAM OOM (Funke et al. 2018)
 //! - Muda elimination: Late materialization (Abadi et al. 2008)
@@ -69,9 +77,113 @@ impl StorageEngine {
     }
 
     /// Create iterator over morsels (128MB chunks)
-    #[must_use] 
+    #[must_use]
     pub fn morsels(&self) -> MorselIterator<'_> {
         MorselIterator::new(&self.batches)
+    }
+
+    /// Append batches to storage (OLAP-optimized)
+    ///
+    /// **WARNING**: This is the ONLY supported write operation.
+    /// Trueno-DB does NOT support incremental row updates (OLTP).
+    ///
+    /// # Design Rationale
+    ///
+    /// Columnar storage optimizes for bulk reads, not random writes:
+    /// - Single-row update cost: O(N) (rewrite entire column)
+    /// - Batch append cost: O(1) (append to new partition)
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use trueno_db::storage::StorageEngine;
+    /// # use arrow::array::{Int32Array, RecordBatch};
+    /// # use arrow::datatypes::{DataType, Field, Schema};
+    /// # use std::sync::Arc;
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// // Good: Bulk append (OLAP-compatible)
+    /// let schema = Arc::new(Schema::new(vec![
+    ///     Field::new("id", DataType::Int32, false),
+    /// ]));
+    /// let batch = RecordBatch::try_new(
+    ///     schema,
+    ///     vec![Arc::new(Int32Array::from(vec![1, 2, 3]))],
+    /// )?;
+    ///
+    /// let mut storage = StorageEngine::new(vec![]);
+    /// storage.append_batch(batch)?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns error if batch schema doesn't match existing batches
+    pub fn append_batch(&mut self, batch: RecordBatch) -> Result<()> {
+        // Validate schema compatibility
+        if !self.batches.is_empty() {
+            let existing_schema = self.batches[0].schema();
+            if batch.schema() != existing_schema {
+                return Err(Error::StorageError(format!(
+                    "Schema mismatch: expected {:?}, got {:?}",
+                    existing_schema, batch.schema()
+                )));
+            }
+        }
+
+        self.batches.push(batch);
+        Ok(())
+    }
+
+    /// **DEPRECATED**: Single-row update not supported
+    ///
+    /// Trueno-DB is OLAP-only (columnar storage). Use [`append_batch`](Self::append_batch) instead.
+    ///
+    /// # Why This Fails
+    ///
+    /// Column stores are optimized for bulk reads, not random writes:
+    /// - SQLite (row-store): O(1) update with B-tree index
+    /// - Trueno-DB (column-store): O(N) update (rewrite entire column)
+    ///
+    /// # Migration Guide
+    ///
+    /// ```rust,no_run
+    /// # use trueno_db::storage::StorageEngine;
+    /// # use arrow::array::{Int32Array, RecordBatch};
+    /// # use arrow::datatypes::{DataType, Field, Schema};
+    /// # use std::sync::Arc;
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// // Bad: Incremental update (OLTP pattern)
+    /// // storage.update_row(row_id, new_values)?;  // NOT SUPPORTED
+    ///
+    /// // Good: Batch re-analysis (OLAP pattern)
+    /// let schema = Arc::new(Schema::new(vec![
+    ///     Field::new("id", DataType::Int32, false),
+    /// ]));
+    /// let new_batch = RecordBatch::try_new(
+    ///     schema,
+    ///     vec![Arc::new(Int32Array::from(vec![1, 2, 3]))],
+    /// )?;
+    /// let mut storage = StorageEngine::new(vec![]);
+    /// storage.append_batch(new_batch)?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Always returns error (not implemented)
+    #[deprecated(
+        since = "0.1.0",
+        note = "Trueno-DB is OLAP-only. Use append_batch() for bulk data loads."
+    )]
+    #[allow(clippy::unused_self)]
+    pub fn update_row(&mut self, _row_id: usize, _values: RecordBatch) -> Result<()> {
+        Err(Error::StorageError(
+            "Single-row updates not supported in columnar storage. \
+             Use append_batch() for bulk re-analysis instead."
+                .to_string(),
+        ))
     }
 }
 
@@ -261,6 +373,58 @@ mod tests {
 
         let iter = MorselIterator::new(&batches);
         assert_eq!(iter.count(), 0);
+    }
+
+    #[test]
+    fn test_append_batch_olap_pattern() {
+        // OLAP-compatible: Bulk append
+        let mut storage = StorageEngine::new(vec![]);
+        let batch1 = create_test_batch(100);
+        let batch2 = create_test_batch(200);
+
+        storage.append_batch(batch1).unwrap();
+        storage.append_batch(batch2).unwrap();
+
+        assert_eq!(storage.batches().len(), 2);
+        assert_eq!(storage.batches()[0].num_rows(), 100);
+        assert_eq!(storage.batches()[1].num_rows(), 200);
+    }
+
+    #[test]
+    fn test_append_batch_schema_validation() {
+        // Schema mismatch should fail
+        let mut storage = StorageEngine::new(vec![]);
+        let batch1 = create_test_batch(100);
+        storage.append_batch(batch1).unwrap();
+
+        // Create incompatible schema
+        let incompatible_schema = Schema::new(vec![
+            Field::new("different_field", DataType::Int32, false),
+        ]);
+        let incompatible_batch = RecordBatch::try_new(
+            Arc::new(incompatible_schema),
+            vec![Arc::new(Int32Array::from(vec![1, 2, 3]))],
+        )
+        .unwrap();
+
+        let result = storage.append_batch(incompatible_batch);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Schema mismatch"));
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_update_row_fails_oltp_pattern() {
+        // OLTP pattern (single-row update) must fail
+        let mut storage = StorageEngine::new(vec![]);
+        let batch = create_test_batch(100);
+
+        let result = storage.update_row(0, batch);
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Single-row updates not supported"));
     }
 
     #[test]
