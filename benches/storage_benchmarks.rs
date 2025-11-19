@@ -123,12 +123,16 @@ fn bench_batch_slicing(c: &mut Criterion) {
     let batch = create_test_batch(100_000);
 
     for chunk_size in [1_000, 10_000, 50_000].iter() {
-        group.bench_with_input(BenchmarkId::from_parameter(chunk_size), chunk_size, |b, size| {
-            b.iter(|| {
-                let sliced = batch.slice(0, *size);
-                black_box(sliced);
-            });
-        });
+        group.bench_with_input(
+            BenchmarkId::from_parameter(chunk_size),
+            chunk_size,
+            |b, size| {
+                b.iter(|| {
+                    let sliced = batch.slice(0, *size);
+                    black_box(sliced);
+                });
+            },
+        );
     }
 
     group.finish();

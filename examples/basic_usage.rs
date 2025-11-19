@@ -19,8 +19,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create sample data (1M rows)
     println!("Creating sample dataset (1M rows)...");
     let batch = create_sample_batch(1_000_000)?;
-    println!("  ✓ Created batch: {} rows, {} columns", batch.num_rows(), batch.num_columns());
-    println!("  ✓ Memory size: {:.2} MB\n", batch.get_array_memory_size() as f64 / 1_048_576.0);
+    println!(
+        "  ✓ Created batch: {} rows, {} columns",
+        batch.num_rows(),
+        batch.num_columns()
+    );
+    println!(
+        "  ✓ Memory size: {:.2} MB\n",
+        batch.get_array_memory_size() as f64 / 1_048_576.0
+    );
 
     // Initialize storage engine
     println!("Initializing storage engine...");
@@ -31,7 +38,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Appending batch to storage (OLAP append-only pattern)...");
     storage.append_batch(batch)?;
     println!("  ✓ Batch appended successfully");
-    println!("  ✓ Total batches in storage: {}\n", storage.batches().len());
+    println!(
+        "  ✓ Total batches in storage: {}\n",
+        storage.batches().len()
+    );
 
     // Demonstrate morsel iteration (128MB chunks for out-of-core execution)
     println!("Iterating over morsels (128MB chunks):");
@@ -47,7 +57,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         total_rows += rows;
 
         if morsel_count <= 3 || morsel_count % 10 == 0 {
-            println!("  Morsel #{}: {} rows, {:.2} MB", morsel_count, rows, size_mb);
+            println!(
+                "  Morsel #{}: {} rows, {:.2} MB",
+                morsel_count, rows, size_mb
+            );
         }
     }
 

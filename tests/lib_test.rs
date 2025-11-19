@@ -11,21 +11,17 @@ fn test_database_builder() {
 #[test]
 fn test_database_builder_with_backend() {
     // Test backend configuration
-    let _builder = Database::builder()
-        .backend(Backend::CostBased);
+    let _builder = Database::builder().backend(Backend::CostBased);
 
-    let _builder = Database::builder()
-        .backend(Backend::Gpu);
+    let _builder = Database::builder().backend(Backend::Gpu);
 
-    let _builder = Database::builder()
-        .backend(Backend::Simd);
+    let _builder = Database::builder().backend(Backend::Simd);
 }
 
 #[test]
 fn test_database_builder_with_morsel_size() {
     // Test morsel size configuration
-    let _builder = Database::builder()
-        .morsel_size_mb(256);
+    let _builder = Database::builder().morsel_size_mb(256);
 }
 
 #[test]

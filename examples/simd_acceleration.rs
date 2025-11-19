@@ -38,8 +38,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Creating test dataset (10M elements)...");
     let size = 10_000_000;
     let data: Vec<f32> = (0..size).map(|i| i as f32 * 1.5).collect();
-    println!("  ✓ Dataset created: {} elements ({:.2} MB)\n",
-             size, (size * 4) as f64 / 1_048_576.0);
+    println!(
+        "  ✓ Dataset created: {} elements ({:.2} MB)\n",
+        size,
+        (size * 4) as f64 / 1_048_576.0
+    );
 
     // Benchmark: Scalar sum
     println!("=== Benchmark 1: Scalar Sum (No SIMD) ===");
@@ -48,8 +51,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let scalar_time = start.elapsed();
     println!("  Result: {:.2}", scalar_sum);
     println!("  Time: {:?}", scalar_time);
-    println!("  Throughput: {:.2} GB/s\n",
-             (size * 4) as f64 / 1_073_741_824.0 / scalar_time.as_secs_f64());
+    println!(
+        "  Throughput: {:.2} GB/s\n",
+        (size * 4) as f64 / 1_073_741_824.0 / scalar_time.as_secs_f64()
+    );
 
     // Benchmark: SIMD sum (auto-vectorized)
     println!("=== Benchmark 2: Auto-Vectorized Sum ===");
@@ -58,10 +63,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let simd_time = start.elapsed();
     println!("  Result: {:.2}", simd_sum);
     println!("  Time: {:?}", simd_time);
-    println!("  Throughput: {:.2} GB/s",
-             (size * 4) as f64 / 1_073_741_824.0 / simd_time.as_secs_f64());
-    println!("  Speedup: {:.2}x vs scalar\n",
-             scalar_time.as_secs_f64() / simd_time.as_secs_f64());
+    println!(
+        "  Throughput: {:.2} GB/s",
+        (size * 4) as f64 / 1_073_741_824.0 / simd_time.as_secs_f64()
+    );
+    println!(
+        "  Speedup: {:.2}x vs scalar\n",
+        scalar_time.as_secs_f64() / simd_time.as_secs_f64()
+    );
 
     // Demonstrate trueno backend (Phase 1 MVP integrates trueno for SIMD)
     println!("=== Trueno Integration (Phase 1 MVP) ===");

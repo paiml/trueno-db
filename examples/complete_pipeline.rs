@@ -31,7 +31,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("│ Dataset created:");
     println!("│   Rows: {}", batch.num_rows());
     println!("│   Columns: {}", batch.num_columns());
-    println!("│   Memory: {:.2} MB", batch.get_array_memory_size() as f64 / 1_048_576.0);
+    println!(
+        "│   Memory: {:.2} MB",
+        batch.get_array_memory_size() as f64 / 1_048_576.0
+    );
     println!("│   Time: {:?}", load_time);
 
     let schema = batch.schema();
@@ -49,7 +52,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("│ Storage engine initialized:");
     println!("│   Pattern: OLAP (append-only)");
     println!("│   Batches: {}", storage.batches().len());
-    println!("│   Total rows: {}", storage.batches().iter().map(|b| b.num_rows()).sum::<usize>());
+    println!(
+        "│   Total rows: {}",
+        storage
+            .batches()
+            .iter()
+            .map(|b| b.num_rows())
+            .sum::<usize>()
+    );
     println!("└────────────────────────────────────────────────────────────┘\n");
 
     // Step 3: Morsel iteration
@@ -66,7 +76,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         if morsel_count <= 3 {
             let size_mb = morsel.get_array_memory_size() as f64 / 1_048_576.0;
-            println!("│   Morsel #{}: {} rows, {:.2} MB", morsel_count, morsel.num_rows(), size_mb);
+            println!(
+                "│   Morsel #{}: {} rows, {:.2} MB",
+                morsel_count,
+                morsel.num_rows(),
+                size_mb
+            );
         }
     }
 
@@ -78,7 +93,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("│ Summary:");
     println!("│   Total morsels: {}", morsel_count);
     println!("│   Total rows: {}", total_morsel_rows);
-    println!("│   Integrity check: {} ✓", total_morsel_rows == batch.num_rows());
+    println!(
+        "│   Integrity check: {} ✓",
+        total_morsel_rows == batch.num_rows()
+    );
     println!("└────────────────────────────────────────────────────────────┘\n");
 
     // Step 4: Backend selection
@@ -96,7 +114,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("│   Estimated FLOPs: {:.0}", estimated_flops);
     println!("│   PCIe transfer time: {:.3} ms", pcie_transfer_ms);
     println!("│   GPU compute time: {:.3} ms", gpu_compute_ms);
-    println!("│   Ratio: {:.2}x (compute/transfer)", gpu_compute_ms / pcie_transfer_ms);
+    println!(
+        "│   Ratio: {:.2}x (compute/transfer)",
+        gpu_compute_ms / pcie_transfer_ms
+    );
     println!("│");
     println!("│ Decision:");
     println!("│   Selected backend: {:?}", backend);
@@ -125,13 +146,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let topk_time = start.elapsed();
 
     println!("│ Top-10 Highest Scores:");
-    let score_col = top10_high.column(2).as_any().downcast_ref::<Float64Array>().unwrap();
-    let id_col = top10_high.column(0).as_any().downcast_ref::<Int32Array>().unwrap();
-    let user_col = top10_high.column(1).as_any().downcast_ref::<StringArray>().unwrap();
+    let score_col = top10_high
+        .column(2)
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .unwrap();
+    let id_col = top10_high
+        .column(0)
+        .as_any()
+        .downcast_ref::<Int32Array>()
+        .unwrap();
+    let user_col = top10_high
+        .column(1)
+        .as_any()
+        .downcast_ref::<StringArray>()
+        .unwrap();
 
     for i in 0..top10_high.num_rows().min(5) {
-        println!("│   #{}: user_id={}, username={}, score={:.2}",
-                 i + 1, id_col.value(i), user_col.value(i), score_col.value(i));
+        println!(
+            "│   #{}: user_id={}, username={}, score={:.2}",
+            i + 1,
+            id_col.value(i),
+            user_col.value(i),
+            score_col.value(i)
+        );
     }
     if top10_high.num_rows() > 5 {
         println!("│   ... ({} more)", top10_high.num_rows() - 5);
@@ -140,8 +178,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("│");
     println!("│ Performance:");
     println!("│   Time: {:?}", topk_time);
-    println!("│   Throughput: {:.2} M rows/sec",
-             batch.num_rows() as f64 / 1_000_000.0 / topk_time.as_secs_f64());
+    println!(
+        "│   Throughput: {:.2} M rows/sec",
+        batch.num_rows() as f64 / 1_000_000.0 / topk_time.as_secs_f64()
+    );
     println!("└────────────────────────────────────────────────────────────┘\n");
 
     // Summary
@@ -149,7 +189,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("║                    PIPELINE SUMMARY                         ║");
     println!("╚══════════════════════════════════════════════════════════════╝");
     println!();
-    println!("✓ Data loaded: 5M rows ({:.2} MB)", data_bytes as f64 / 1_048_576.0);
+    println!(
+        "✓ Data loaded: 5M rows ({:.2} MB)",
+        data_bytes as f64 / 1_048_576.0
+    );
     println!("✓ Storage: OLAP append-only pattern");
     println!("✓ Morsels: {} chunks (out-of-core execution)", morsel_count);
     println!("✓ Backend: {:?} (cost-based selection)", backend);
@@ -185,12 +228,8 @@ fn create_sample_data(num_rows: usize) -> Result<RecordBatch, Box<dyn std::error
     let mut rng = rand::thread_rng();
 
     let user_ids: Vec<i32> = (0..num_rows).map(|i| i as i32).collect();
-    let usernames: Vec<String> = (0..num_rows)
-        .map(|i| format!("user_{}", i))
-        .collect();
-    let scores: Vec<f64> = (0..num_rows)
-        .map(|_| rng.gen_range(0.0..1000.0))
-        .collect();
+    let usernames: Vec<String> = (0..num_rows).map(|i| format!("user_{}", i)).collect();
+    let scores: Vec<f64> = (0..num_rows).map(|_| rng.gen_range(0.0..1000.0)).collect();
 
     let batch = RecordBatch::try_new(
         Arc::new(schema),

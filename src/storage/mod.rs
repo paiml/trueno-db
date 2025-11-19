@@ -46,24 +46,21 @@ impl StorageEngine {
         use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
         use std::fs::File;
 
-        let file = File::open(path.as_ref()).map_err(|e| {
-            Error::StorageError(format!("Failed to open Parquet file: {e}"))
-        })?;
+        let file = File::open(path.as_ref())
+            .map_err(|e| Error::StorageError(format!("Failed to open Parquet file: {e}")))?;
 
-        let builder = ParquetRecordBatchReaderBuilder::try_new(file).map_err(|e| {
-            Error::StorageError(format!("Failed to parse Parquet file: {e}"))
-        })?;
+        let builder = ParquetRecordBatchReaderBuilder::try_new(file)
+            .map_err(|e| Error::StorageError(format!("Failed to parse Parquet file: {e}")))?;
 
-        let reader = builder.build().map_err(|e| {
-            Error::StorageError(format!("Failed to create Parquet reader: {e}"))
-        })?;
+        let reader = builder
+            .build()
+            .map_err(|e| Error::StorageError(format!("Failed to create Parquet reader: {e}")))?;
 
         // Read all batches into memory
         let mut batches = Vec::new();
         for batch in reader {
-            let batch = batch.map_err(|e| {
-                Error::StorageError(format!("Failed to read record batch: {e}"))
-            })?;
+            let batch = batch
+                .map_err(|e| Error::StorageError(format!("Failed to read record batch: {e}")))?;
             batches.push(batch);
         }
 
@@ -126,7 +123,8 @@ impl StorageEngine {
             if batch.schema() != existing_schema {
                 return Err(Error::StorageError(format!(
                     "Schema mismatch: expected {:?}, got {:?}",
-                    existing_schema, batch.schema()
+                    existing_schema,
+                    batch.schema()
                 )));
             }
         }
@@ -398,9 +396,8 @@ mod tests {
         storage.append_batch(batch1).unwrap();
 
         // Create incompatible schema
-        let incompatible_schema = Schema::new(vec![
-            Field::new("different_field", DataType::Int32, false),
-        ]);
+        let incompatible_schema =
+            Schema::new(vec![Field::new("different_field", DataType::Int32, false)]);
         let incompatible_batch = RecordBatch::try_new(
             Arc::new(incompatible_schema),
             vec![Arc::new(Int32Array::from(vec![1, 2, 3]))],
@@ -466,10 +463,7 @@ mod tests {
         queue.enqueue(batch.clone()).await.unwrap();
 
         // Third enqueue should timeout (queue full)
-        let result = timeout(
-            Duration::from_millis(100),
-            queue.enqueue(batch)
-        ).await;
+        let result = timeout(Duration::from_millis(100), queue.enqueue(batch)).await;
 
         assert!(result.is_err(), "Queue should be full and block");
     }

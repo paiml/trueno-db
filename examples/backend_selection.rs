@@ -44,7 +44,10 @@ fn main() {
     println!("  Estimated FLOPs: {:.0}", flops);
     println!("  PCIe transfer time: {:.3} ms", pcie_transfer_ms);
     println!("  GPU compute time: {:.3} ms", gpu_compute_ms);
-    println!("  Ratio: {:.2}x (compute / transfer)", gpu_compute_ms / pcie_transfer_ms);
+    println!(
+        "  Ratio: {:.2}x (compute / transfer)",
+        gpu_compute_ms / pcie_transfer_ms
+    );
     println!("  Selected backend: {:?}", backend);
     println!("  Rationale: Compute < 5x transfer → SIMD (transfer overhead too high)\n");
 
@@ -61,7 +64,10 @@ fn main() {
     println!("  Estimated FLOPs: {:.0}", flops);
     println!("  PCIe transfer time: {:.3} ms", pcie_transfer_ms);
     println!("  GPU compute time: {:.3} ms", gpu_compute_ms);
-    println!("  Ratio: {:.2}x (compute / transfer)", gpu_compute_ms / pcie_transfer_ms);
+    println!(
+        "  Ratio: {:.2}x (compute / transfer)",
+        gpu_compute_ms / pcie_transfer_ms
+    );
     println!("  Selected backend: {:?}", backend);
     println!("  Rationale: Compute > 5x transfer → GPU (transfer overhead amortized)\n");
 
@@ -78,7 +84,10 @@ fn main() {
     println!("  Estimated FLOPs: {:.0}", flops);
     println!("  PCIe transfer time: {:.1} ms", pcie_transfer_ms);
     println!("  GPU compute time: {:.1} ms", gpu_compute_ms);
-    println!("  Ratio: {:.2}x (compute / transfer)", gpu_compute_ms / pcie_transfer_ms);
+    println!(
+        "  Ratio: {:.2}x (compute / transfer)",
+        gpu_compute_ms / pcie_transfer_ms
+    );
     println!("  Selected backend: {:?}", backend);
     println!("  Rationale: Large dataset + high compute intensity → GPU sweet spot\n");
 

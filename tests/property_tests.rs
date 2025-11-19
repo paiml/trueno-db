@@ -31,7 +31,10 @@ fn arb_record_batch(rows: usize) -> impl Strategy<Value = RecordBatch> {
         .prop_map(move |(ids, values)| {
             RecordBatch::try_new(
                 schema.clone(),
-                vec![Arc::new(Int32Array::from(ids)), Arc::new(Float64Array::from(values))],
+                vec![
+                    Arc::new(Int32Array::from(ids)),
+                    Arc::new(Float64Array::from(values)),
+                ],
             )
             .unwrap()
         })

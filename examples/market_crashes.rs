@@ -113,7 +113,10 @@ fn print_banner() {
 }
 
 fn generate_market_data(num_days: usize) -> RecordBatch {
-    println!("⏳ Loading historical market data ({} trading days)...", num_days);
+    println!(
+        "⏳ Loading historical market data ({} trading days)...",
+        num_days
+    );
 
     let schema = Arc::new(Schema::new(vec![
         Field::new("date_id", DataType::Int32, false),
@@ -130,7 +133,12 @@ fn generate_market_data(num_days: usize) -> RecordBatch {
         .map(|i| {
             let year = 1929 + (i / 252);
             let day_of_year = i % 252;
-            format!("{}-{:02}-{:02}", year, 1 + (day_of_year / 21), 1 + (day_of_year % 21))
+            format!(
+                "{}-{:02}-{:02}",
+                year,
+                1 + (day_of_year / 21),
+                1 + (day_of_year % 21)
+            )
         })
         .collect();
 
@@ -151,14 +159,16 @@ fn generate_market_data(num_days: usize) -> RecordBatch {
         // Inject historical crashes (based on academic research)
 
         // 1929 Black Tuesday (Oct 29): -11.7% (Schwert 1989)
-        if i == 252 { // ~1 year in
+        if i == 252 {
+            // ~1 year in
             daily_return = -11.7;
             volatility = 45.0;
             intraday_range = 15.0;
         }
 
         // 1987 Black Monday (Oct 19): -22.6% (Schwert 1989, Roll 1988)
-        if i == 14_600 { // ~58 years in
+        if i == 14_600 {
+            // ~58 years in
             daily_return = -22.6;
             volatility = 85.0;
             intraday_range = 25.0;
@@ -172,7 +182,8 @@ fn generate_market_data(num_days: usize) -> RecordBatch {
         }
 
         // 2010 Flash Crash (May 6): -9.2% in minutes (Kirilenko+ 2017)
-        if i == 20_440 { // ~81 years in
+        if i == 20_440 {
+            // ~81 years in
             daily_return = -9.2;
             volatility = 75.0;
             intraday_range = 12.5; // Extreme intraday move
@@ -249,7 +260,10 @@ fn run_crash_query(
     let result = batch.top_k(value_column, k, order).unwrap();
     let elapsed = start.elapsed();
 
-    println!("⚡ Query Execution: {:.3}ms (scanning 24K rows)", elapsed.as_secs_f64() * 1000.0);
+    println!(
+        "⚡ Query Execution: {:.3}ms (scanning 24K rows)",
+        elapsed.as_secs_f64() * 1000.0
+    );
     println!();
 
     // Display results
@@ -258,9 +272,21 @@ fn run_crash_query(
     println!("  Rank  Date         Index    Value        Event");
     println!("  ────  ──────────   ──────   ──────────   ─────────────────────");
 
-    let dates = result.column(1).as_any().downcast_ref::<StringArray>().unwrap();
-    let index_levels = result.column(2).as_any().downcast_ref::<Float64Array>().unwrap();
-    let values = result.column(value_column).as_any().downcast_ref::<Float64Array>().unwrap();
+    let dates = result
+        .column(1)
+        .as_any()
+        .downcast_ref::<StringArray>()
+        .unwrap();
+    let index_levels = result
+        .column(2)
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .unwrap();
+    let values = result
+        .column(value_column)
+        .as_any()
+        .downcast_ref::<Float64Array>()
+        .unwrap();
 
     let display_count = result.num_rows().min(10);
 
@@ -284,8 +310,10 @@ fn run_crash_query(
             _ => "  ",
         };
 
-        println!("  {medal} {:2}  {}  {:7.0}  {:12} {}",
-            rank, date, index, value_str, event);
+        println!(
+            "  {medal} {:2}  {}  {:7.0}  {:12} {}",
+            rank, date, index, value_str, event
+        );
     }
 
     if result.num_rows() > display_count {

@@ -6,8 +6,18 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/crates/v/trueno-db.svg" alt="Crates.io">
-  <img src="https://img.shields.io/badge/coverage-95.58%25-brightgreen" alt="Coverage">
+  <a href="https://github.com/paiml/trueno-db/actions/workflows/ci.yml">
+    <img src="https://github.com/paiml/trueno-db/actions/workflows/ci.yml/badge.svg" alt="CI Status">
+  </a>
+  <a href="https://github.com/paiml/trueno-db/actions/workflows/book.yml">
+    <img src="https://github.com/paiml/trueno-db/actions/workflows/book.yml/badge.svg" alt="Book">
+  </a>
+  <a href="https://crates.io/crates/trueno-db">
+    <img src="https://img.shields.io/crates/v/trueno-db.svg" alt="Crates.io">
+  </a>
+  <a href="https://codecov.io/gh/paiml/trueno-db">
+    <img src="https://codecov.io/gh/paiml/trueno-db/branch/main/graph/badge.svg" alt="Coverage">
+  </a>
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="License">
   <img src="https://img.shields.io/badge/Phase-1_MVP-orange" alt="Phase 1">
 </p>

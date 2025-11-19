@@ -15,7 +15,9 @@ pub enum Error {
     GpuInitFailed(String),
 
     /// VRAM exhaustion (Poka-Yoke: should not occur with morsel paging)
-    #[error("VRAM exhausted: {0}\nMorsel-based paging failed to prevent OOM. Please report this issue.")]
+    #[error(
+        "VRAM exhausted: {0}\nMorsel-based paging failed to prevent OOM. Please report this issue."
+    )]
     VramExhausted(String),
 
     /// Backend equivalence test failed (critical bug)

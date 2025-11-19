@@ -30,9 +30,8 @@ fn create_test_parquet<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn std::error
     let num_rows: i32 = 10_000;
     let id_array = Int32Array::from_iter_values(0..num_rows);
     let value_array = Float32Array::from_iter_values((0..num_rows).map(|i| (i as f32) * 1.5));
-    let category_array = StringArray::from_iter_values(
-        (0..num_rows).map(|i| format!("category_{}", i % 10)),
-    );
+    let category_array =
+        StringArray::from_iter_values((0..num_rows).map(|i| format!("category_{}", i % 10)));
 
     let batch = RecordBatch::try_new(
         Arc::new(schema.clone()),
@@ -63,8 +62,7 @@ fn test_storage_engine_loads_parquet() {
     create_test_parquet(test_file).expect("Failed to create test Parquet file");
 
     // Load with StorageEngine
-    let storage = StorageEngine::load_parquet(test_file)
-        .expect("Failed to load Parquet file");
+    let storage = StorageEngine::load_parquet(test_file).expect("Failed to load Parquet file");
 
     // Verify batches loaded
     let batches = storage.batches();
@@ -90,8 +88,7 @@ fn test_morsel_iterator_with_real_data() {
     create_test_parquet(test_file).expect("Failed to create test Parquet file");
 
     // Load with StorageEngine
-    let storage = StorageEngine::load_parquet(test_file)
-        .expect("Failed to load Parquet file");
+    let storage = StorageEngine::load_parquet(test_file).expect("Failed to load Parquet file");
 
     // Iterate over morsels
     let morsels: Vec<_> = storage.morsels().collect();
@@ -126,8 +123,7 @@ async fn test_full_pipeline_with_gpu_queue() {
     create_test_parquet(test_file).expect("Failed to create test Parquet file");
 
     // Load with StorageEngine
-    let storage = StorageEngine::load_parquet(test_file)
-        .expect("Failed to load Parquet file");
+    let storage = StorageEngine::load_parquet(test_file).expect("Failed to load Parquet file");
 
     // Create GPU transfer queue
     let queue = trueno_db::storage::GpuTransferQueue::new();
@@ -135,7 +131,10 @@ async fn test_full_pipeline_with_gpu_queue() {
     // Enqueue 2 morsels (queue capacity is 2, so this won't block)
     let mut count = 0;
     for morsel in storage.morsels().take(2) {
-        queue.enqueue(morsel).await.expect("Failed to enqueue morsel");
+        queue
+            .enqueue(morsel)
+            .await
+            .expect("Failed to enqueue morsel");
         count += 1;
     }
 

@@ -20,7 +20,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create large dataset (1M rows) for performance demonstration
     println!("Creating sample dataset (1M rows)...");
     let batch = create_sample_batch(1_000_000)?;
-    println!("  ✓ Created batch: {} rows, {} columns\n", batch.num_rows(), batch.num_columns());
+    println!(
+        "  ✓ Created batch: {} rows, {} columns\n",
+        batch.num_rows(),
+        batch.num_columns()
+    );
 
     // Demonstrate Top-K selection (descending - largest values)
     println!("=== Top-10 Highest Scores ===");
@@ -44,8 +48,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap();
 
     for i in 0..top10_high.num_rows() {
-        println!("    #{}: user_id={}, score={:.2}",
-                 i + 1, id_col.value(i), score_col.value(i));
+        println!(
+            "    #{}: user_id={}, score={:.2}",
+            i + 1,
+            id_col.value(i),
+            score_col.value(i)
+        );
     }
     println!();
 
@@ -71,8 +79,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap();
 
     for i in 0..top10_low.num_rows() {
-        println!("    #{}: user_id={}, score={:.2}",
-                 i + 1, id_col.value(i), score_col.value(i));
+        println!(
+            "    #{}: user_id={}, score={:.2}",
+            i + 1,
+            id_col.value(i),
+            score_col.value(i)
+        );
     }
     println!();
 
@@ -103,8 +115,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap();
 
     for i in 0..5.min(top100.num_rows()) {
-        println!("    #{}: user_id={}, score={:.2}",
-                 i + 1, id_col.value(i), score_col.value(i));
+        println!(
+            "    #{}: user_id={}, score={:.2}",
+            i + 1,
+            id_col.value(i),
+            score_col.value(i)
+        );
     }
     println!("    ... ({} more results)", top100.num_rows() - 5);
     println!();
@@ -144,9 +160,7 @@ fn create_sample_batch(num_rows: usize) -> Result<RecordBatch, Box<dyn std::erro
 
     // Generate random scores for realistic Top-K selection
     let user_ids: Vec<i32> = (0..num_rows).map(|i| i as i32).collect();
-    let scores: Vec<f64> = (0..num_rows)
-        .map(|_| rng.gen_range(0.0..1000.0))
-        .collect();
+    let scores: Vec<f64> = (0..num_rows).map(|_| rng.gen_range(0.0..1000.0)).collect();
 
     let batch = RecordBatch::try_new(
         Arc::new(schema),

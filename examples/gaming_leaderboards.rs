@@ -122,7 +122,11 @@ fn generate_match_data(num_matches: usize) -> RecordBatch {
         .map(|i| {
             let base = ((i * 7919) % 9) as i32; // 0-8 kills (common)
             let bonus = ((i * 31) % 100) as i32; // 1% chance of high kill game
-            if bonus < 5 { base + 15 } else { base }
+            if bonus < 5 {
+                base + 15
+            } else {
+                base
+            }
         })
         .collect();
 
@@ -176,9 +180,15 @@ fn run_leaderboard_query(
 
     // Simulate SQL query
     let sql = match value_column {
-        2 => format!("SELECT player_id, username, kills FROM matches ORDER BY kills DESC LIMIT {k}"),
-        3 => format!("SELECT player_id, username, score FROM matches ORDER BY score DESC LIMIT {k}"),
-        4 => format!("SELECT player_id, username, accuracy FROM matches ORDER BY accuracy DESC LIMIT {k}"),
+        2 => {
+            format!("SELECT player_id, username, kills FROM matches ORDER BY kills DESC LIMIT {k}")
+        }
+        3 => {
+            format!("SELECT player_id, username, score FROM matches ORDER BY score DESC LIMIT {k}")
+        }
+        4 => format!(
+            "SELECT player_id, username, accuracy FROM matches ORDER BY accuracy DESC LIMIT {k}"
+        ),
         _ => String::new(),
     };
 
@@ -191,7 +201,10 @@ fn run_leaderboard_query(
     let result = batch.top_k(value_column, k, order).unwrap();
     let elapsed = start.elapsed();
 
-    println!("⚡ Query Execution Time: {:.3}ms", elapsed.as_secs_f64() * 1000.0);
+    println!(
+        "⚡ Query Execution Time: {:.3}ms",
+        elapsed.as_secs_f64() * 1000.0
+    );
     println!();
 
     // Display results
@@ -200,8 +213,16 @@ fn run_leaderboard_query(
     println!("  Rank  Player ID   Username        Value");
     println!("  ────  ──────────  ──────────────  ─────────");
 
-    let player_ids = result.column(0).as_any().downcast_ref::<Int32Array>().unwrap();
-    let usernames = result.column(1).as_any().downcast_ref::<StringArray>().unwrap();
+    let player_ids = result
+        .column(0)
+        .as_any()
+        .downcast_ref::<Int32Array>()
+        .unwrap();
+    let usernames = result
+        .column(1)
+        .as_any()
+        .downcast_ref::<StringArray>()
+        .unwrap();
 
     let display_count = result.num_rows().min(10);
 
@@ -212,11 +233,19 @@ fn run_leaderboard_query(
 
         let value_str = if value_column == 2 {
             // Kills (Int32)
-            let kills = result.column(value_column).as_any().downcast_ref::<Int32Array>().unwrap();
+            let kills = result
+                .column(value_column)
+                .as_any()
+                .downcast_ref::<Int32Array>()
+                .unwrap();
             format!("{} kills", kills.value(i))
         } else {
             // Score or Accuracy (Float64)
-            let values = result.column(value_column).as_any().downcast_ref::<Float64Array>().unwrap();
+            let values = result
+                .column(value_column)
+                .as_any()
+                .downcast_ref::<Float64Array>()
+                .unwrap();
             if value_column == 4 {
                 format!("{:.1}%", values.value(i))
             } else {
@@ -231,8 +260,10 @@ fn run_leaderboard_query(
             _ => "  ",
         };
 
-        println!("  {medal} {:2}  {:10}  {:14}  {}",
-            rank, player_id, username, value_str);
+        println!(
+            "  {medal} {:2}  {:10}  {:14}  {}",
+            rank, player_id, username, value_str
+        );
     }
 
     if result.num_rows() > display_count {
