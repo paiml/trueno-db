@@ -42,6 +42,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 criterion = { version = "0.5", features = ["html_reports"] }
 proptest = "1.5"           # Property-based testing
 quickcheck = "1"           # Property-based testing (backend equivalence)
+rand = "0.8"               # Random data generation for examples
 
 # Coverage
 cargo-llvm-cov = "0.6"
