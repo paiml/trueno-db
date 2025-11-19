@@ -46,6 +46,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 - 🚧 **SQL parser**: SELECT, WHERE, GROUP BY, aggregations
 - 🚧 **WASM support**: WebGPU + HTTP range requests
 
+## Documentation
+
+📖 **[Read the Book](book/book/index.html)** - Comprehensive guide to Trueno-DB
+
+```bash
+# Build documentation
+make book
+
+# Serve locally at http://localhost:3000
+make book-serve
+
+# Watch and rebuild on changes
+make book-watch
+```
+
+The book covers:
+- Architecture and design principles
+- EXTREME TDD methodology
+- Toyota Way principles
+- Case studies (CORE-001, CORE-002)
+- Academic research foundation
+- Performance benchmarking
+
 ## Development
 
 ```bash

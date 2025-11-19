@@ -79,12 +79,24 @@ bench-simd: ## Benchmark SIMD backend
 bench-comparison: ## Compare all backends
 	cargo bench --bench backend_comparison
 
+## Documentation
+
+book: ## Build the mdBook
+	cd book && mdbook build
+
+book-serve: ## Serve the book locally
+	cd book && mdbook serve --open
+
+book-watch: ## Watch and rebuild book on changes
+	cd book && mdbook watch
+
 ## Maintenance
 
 clean: ## Clean build artifacts
 	cargo clean
 	rm -rf target/ || exit 1
 	rm -rf coverage/ || exit 1
+	rm -rf book/book/ || exit 1
 
 update-trueno: ## Update trueno to latest version
 	@echo "Checking latest trueno version..."

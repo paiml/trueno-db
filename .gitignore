@@ -29,6 +29,9 @@ lcov.info
 /target/debug/deps
 /target/release/deps
 
+# mdBook generated output
+/book/book
+
 # Backup files
 *.bak
 *.backup
