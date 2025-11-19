@@ -2,7 +2,7 @@
 //!
 //! Toyota Way: Prove all performance claims with benchmarks
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 
 fn bench_sum(_c: &mut Criterion) {
     // TODO: Implement sum benchmark

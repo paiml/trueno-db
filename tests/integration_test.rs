@@ -18,6 +18,7 @@ use std::sync::Arc;
 use trueno_db::storage::StorageEngine;
 
 /// Create a test Parquet file with 10,000 rows
+#[allow(clippy::cast_precision_loss)]
 fn create_test_parquet<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn std::error::Error>> {
     let schema = Schema::new(vec![
         Field::new("id", DataType::Int32, false),
@@ -26,8 +27,8 @@ fn create_test_parquet<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn std::error
     ]);
 
     // Create test data (10,000 rows)
-    let num_rows = 10_000;
-    let id_array = Int32Array::from_iter_values(0..num_rows as i32);
+    let num_rows: i32 = 10_000;
+    let id_array = Int32Array::from_iter_values(0..num_rows);
     let value_array = Float32Array::from_iter_values((0..num_rows).map(|i| (i as f32) * 1.5));
     let category_array = StringArray::from_iter_values(
         (0..num_rows).map(|i| format!("category_{}", i % 10)),

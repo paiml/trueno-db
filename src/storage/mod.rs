@@ -13,7 +13,7 @@ use std::path::Path;
 pub const MORSEL_SIZE_BYTES: usize = 128 * 1024 * 1024; // 128MB
 
 /// Maximum number of in-flight GPU transfers
-/// Bounded to prevent memory explosion while keeping PCIe bus busy
+/// Bounded to prevent memory explosion while keeping `PCIe` bus busy
 const MAX_IN_FLIGHT_TRANSFERS: usize = 2;
 
 /// Storage engine for Arrow/Parquet data
@@ -79,7 +79,7 @@ impl<'a> MorselIterator<'a> {
     /// Create new morsel iterator
     fn new(batches: &'a [RecordBatch]) -> Self {
         // Calculate morsel size based on first batch
-        let morsel_rows = batches.first().map_or(0, |first_batch| Self::calculate_morsel_rows(first_batch));
+        let morsel_rows = batches.first().map_or(0, Self::calculate_morsel_rows);
 
         Self {
             batches,
@@ -141,7 +141,7 @@ impl Iterator for MorselIterator<'_> {
 ///
 /// Toyota Way: Heijunka (Load Balancing)
 /// - Bounded queue prevents memory explosion (Poka-Yoke)
-/// - Max 2 in-flight keeps PCIe bus busy without overwhelming GPU
+/// - Max 2 in-flight keeps `PCIe` bus busy without overwhelming GPU
 /// - Async design prevents blocking Tokio reactor
 ///
 /// References:
@@ -203,6 +203,9 @@ mod tests {
     use arrow::datatypes::{DataType, Field, Schema};
     use std::sync::Arc;
 
+    #[allow(clippy::cast_possible_truncation)]
+    #[allow(clippy::cast_possible_wrap)]
+    #[allow(clippy::cast_precision_loss)]
     fn create_test_batch(num_rows: usize) -> RecordBatch {
         let schema = Schema::new(vec![
             Field::new("id", DataType::Int32, false),
@@ -234,7 +237,7 @@ mod tests {
         let morsels: Vec<_> = iter.collect();
 
         // Verify all rows accounted for
-        let total_rows: usize = morsels.iter().map(|m| m.num_rows()).sum();
+        let total_rows: usize = morsels.iter().map(RecordBatch::num_rows).sum();
         assert_eq!(total_rows, 1000);
 
         // Verify each morsel is within size limit
@@ -249,9 +252,7 @@ mod tests {
         let batches = vec![batch];
 
         let iter = MorselIterator::new(&batches);
-        let morsels: Vec<_> = iter.collect();
-
-        assert_eq!(morsels.len(), 0);
+        assert_eq!(iter.count(), 0);
     }
 
     #[test]
@@ -264,7 +265,7 @@ mod tests {
         let morsels: Vec<_> = iter.collect();
 
         // Verify all rows accounted for across both batches
-        let total_rows: usize = morsels.iter().map(|m| m.num_rows()).sum();
+        let total_rows: usize = morsels.iter().map(RecordBatch::num_rows).sum();
         assert_eq!(total_rows, 1000);
     }
 

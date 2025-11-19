@@ -2,7 +2,7 @@
 //!
 //! Toyota Way: Backend equivalence + performance comparison
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 
 fn bench_backend_comparison(_c: &mut Criterion) {
     // TODO: Implement backend comparison
