@@ -1,6 +1,11 @@
 # Trueno-DB Makefile
 # Toyota Way: Extreme TDD with quality gates
 
+# Quality directives (bashrs enforcement)
+.SUFFIXES:
+.DELETE_ON_ERROR:
+.ONESHELL:
+
 .PHONY: help build test bench lint check coverage mutants tdg clean
 
 help: ## Show this help
@@ -30,9 +35,16 @@ lint: ## Run clippy with zero tolerance
 
 check: lint test ## Run basic quality checks
 
-coverage: ## Run code coverage (target: >90%)
-	cargo llvm-cov --all-features --html
-	@echo "Coverage report: target/llvm-cov/html/index.html"
+coverage: ## Generate coverage report (>90% required, <10 min target)
+	@echo "📊 Generating coverage report (target: >90%, <10 min)..."
+	@# Temporarily disable mold linker (breaks LLVM coverage)
+	@test -f ~/.cargo/config.toml && mv ~/.cargo/config.toml ~/.cargo/config.toml.cov-backup || true
+	@cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+	@cargo llvm-cov report --html --output-dir target/coverage/html
+	@# Restore mold linker
+	@test -f ~/.cargo/config.toml.cov-backup && mv ~/.cargo/config.toml.cov-backup ~/.cargo/config.toml || true
+	@echo "✅ Coverage report: target/coverage/html/index.html"
+	@cargo llvm-cov report | grep TOTAL
 
 mutants: ## Run mutation testing (target: ≥80% kill rate)
 	cargo mutants --all-features
@@ -71,8 +83,8 @@ bench-comparison: ## Compare all backends
 
 clean: ## Clean build artifacts
 	cargo clean
-	rm -rf target/
-	rm -rf coverage/
+	rm -rf target/ || exit 1
+	rm -rf coverage/ || exit 1
 
 update-trueno: ## Update trueno to latest version
 	@echo "Checking latest trueno version..."
