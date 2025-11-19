@@ -14,8 +14,8 @@ pub enum Error {
     #[error("GPU initialization failed: {0}\nFalling back to SIMD backend")]
     GpuInitFailed(String),
 
-    /// VRAM exhaustion (should not occur with morsel paging)
-    #[error("VRAM exhausted: {0}\nThis indicates a bug in morsel-based paging. Please report.")]
+    /// VRAM exhaustion (Poka-Yoke: should not occur with morsel paging)
+    #[error("VRAM exhausted: {0}\nMorsel-based paging failed to prevent OOM. Please report this issue.")]
     VramExhausted(String),
 
     /// Backend equivalence test failed (critical bug)

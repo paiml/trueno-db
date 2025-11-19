@@ -34,7 +34,7 @@ impl StorageEngine {
     ///
     /// Useful for testing and benchmarking
     #[must_use]
-    pub fn new(batches: Vec<RecordBatch>) -> Self {
+    pub const fn new(batches: Vec<RecordBatch>) -> Self {
         Self { batches }
     }
 
@@ -142,8 +142,8 @@ impl StorageEngine {
     /// # Why This Fails
     ///
     /// Column stores are optimized for bulk reads, not random writes:
-    /// - SQLite (row-store): O(1) update with B-tree index
-    /// - Trueno-DB (column-store): O(N) update (rewrite entire column)
+    /// - `SQLite` (row-store): `O(1)` update with `B-tree` index
+    /// - `Trueno-DB` (column-store): `O(N)` update (rewrite entire column)
     ///
     /// # Migration Guide
     ///
