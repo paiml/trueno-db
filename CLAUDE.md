@@ -1,0 +1,280 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+**Trueno-DB** is a GPU-first, SIMD-fallback embedded analytics database built on Apache Arrow and Trueno. It provides high-performance aggregations with graceful degradation from GPU → AVX-512 → AVX2 → SSE2 → Scalar, including WASM/WebGPU support for browser deployment.
+
+**Design Philosophy:**
+- GPU-first compute with automatic fallback to SIMD
+- Zero-copy operations via Arrow columnar format
+- WASM-portable for browser analytics
+- Multi-GPU scaling capability
+
+## Architecture
+
+### Core Components
+
+**Backend Selection Hierarchy:**
+1. Multi-GPU distribution (if multiple GPUs available and workload supports it)
+2. Single GPU via wgpu (for datasets >100K rows)
+3. SIMD via Trueno (AVX-512 → AVX2 → Auto-detect)
+4. Scalar fallback
+
+**Storage Layer:**
+- Apache Arrow columnar format (Int32Array, Float32Array, StringArray, etc.)
+- Zero-copy GPU transfers (Arrow buffers → GPU VRAM)
+- Parquet and CSV readers
+
+**Query Engine:**
+- SQL-like subset (SELECT, WHERE, GROUP BY, aggregations, JOINs, window functions)
+- Cost-based backend dispatcher
+- LRU cache for hot queries
+
+**Compute Backends:**
+- GpuBackend: wgpu compute shaders (Vulkan/Metal/DX12/WebGPU)
+- TruenoBackend: SIMD acceleration via trueno crate
+- WASM: WebGPU + SIMD128 for browser deployment
+
+## Development Commands
+
+### Project Setup
+```bash
+# This is a new project - no Cargo.toml exists yet
+# When created, standard Rust commands apply:
+cargo build                           # Build the project
+cargo build --release                 # Release build
+cargo test                            # Run all tests
+cargo test --all-features             # Run tests with all features
+cargo clippy -- -D warnings           # Lint with zero tolerance
+```
+
+### Quality Gates (EXTREME TDD)
+```bash
+# All of these must pass before any commit:
+cargo test --all-features             # 100% tests pass
+cargo clippy -- -D warnings           # Zero clippy warnings
+cargo llvm-cov                        # >90% code coverage required
+pmat analyze tdg                      # TDG score ≥B+ (85/100)
+cargo mutants                         # ≥80% mutation kill rate
+```
+
+### WASM Build
+```bash
+cargo build --target wasm32-unknown-unknown --release
+```
+
+### Benchmarking
+```bash
+# Benchmarks are required for all performance claims
+cargo bench                           # Run benchmarks
+cargo bench --bench aggregations      # Specific benchmark suite
+```
+
+## Critical Dependencies
+
+### trueno Integration
+```toml
+[dependencies]
+trueno = "0.3.0"           # SIMD fallback (ALWAYS use crates.io version)
+wgpu = "22"                # GPU compute
+arrow = "53"               # Columnar format
+parquet = "53"             # Parquet reader
+sqlparser = "0.52"         # SQL parsing
+tokio = { version = "1", features = ["full"] }
+rayon = "1.8"              # CPU parallelism
+```
+
+**IMPORTANT:** Always use the latest trueno from crates.io, never git dependencies.
+
+Check for updates:
+```bash
+cargo search trueno                   # Check latest version
+cargo tree | grep trueno              # Current version
+cargo update trueno                   # Update to latest
+```
+
+## Testing Requirements
+
+### Backend Equivalence Testing
+GPU results MUST exactly match SIMD and scalar results for correctness:
+
+```rust
+#[test]
+fn test_sum_backend_equivalence() {
+    let data = generate_test_data(1_000_000);
+
+    let gpu_result = execute_on_backend(Backend::Gpu, &data);
+    let simd_result = execute_on_backend(Backend::Trueno(Auto), &data);
+    let scalar_result = execute_on_backend(Backend::Scalar, &data);
+
+    assert_eq!(gpu_result, simd_result);
+    assert_eq!(simd_result, scalar_result);
+}
+```
+
+### Property-Based Testing
+Use property tests for operations:
+```rust
+#[quickcheck]
+fn prop_sum_commutative(xs: Vec<f32>) -> bool {
+    let result1 = db.query("SELECT sum(x) FROM data").execute();
+    let shuffled = shuffle(xs);
+    let result2 = db.query("SELECT sum(x) FROM shuffled").execute();
+    result1 == result2
+}
+```
+
+### Performance Regression Tests
+Every benchmark must prove claimed speedups:
+```rust
+// Target: 50-100x faster than CPU for 100M row SUM
+assert!(gpu_time < cpu_time / 50.0);
+```
+
+## GPU Kernel Development
+
+GPU operations are implemented in WGSL (WebGPU Shading Language):
+
+```wgsl
+// Example: Parallel sum reduction
+@group(0) @binding(0) var<storage, read> input: array<f32>;
+@group(0) @binding(1) var<storage, read_write> output: atomic<u32>;
+
+@compute @workgroup_size(256)
+fn sum_kernel(@builtin(global_invocation_id) id: vec3<u32>) {
+    let idx = id.x;
+    if (idx < arrayLength(&input)) {
+        atomicAdd(&output, bitcast<u32>(input[idx]));
+    }
+}
+```
+
+### Performance Targets
+| Operation | Speedup (vs CPU) | Requirement |
+|-----------|------------------|-------------|
+| SUM       | 50-100x          | Must meet   |
+| AVG       | 50-100x          | Must meet   |
+| COUNT     | 30-50x           | Must meet   |
+| MIN/MAX   | 50-100x          | Must meet   |
+| FILTER    | 20-40x           | Must meet   |
+
+## Code Quality Standards
+
+### Pre-commit Requirements
+- All tests pass (cargo test --all-features)
+- Zero clippy warnings (cargo clippy -- -D warnings)
+- Code coverage >90%
+- TDG score ≥B+ (85/100)
+- Mutation testing ≥80% kill rate
+
+### Pull Request Requirements
+- Include benchmarks proving performance claims
+- Add property-based tests for correctness
+- Backend equivalence tests (GPU == SIMD == Scalar)
+- Update CHANGELOG.md (keep-a-changelog format)
+
+### Release Requirements
+- Repository score ≥90/110 (pmat repo-score)
+- Performance regression tests vs previous version
+- WASM build succeeds
+- Multi-GPU tests pass (if GPUs available)
+
+## Implementation Phases
+
+### Phase 1: Core Engine (Current)
+- Arrow storage backend (Parquet, CSV readers)
+- SQL parser (SELECT, WHERE, GROUP BY, aggregations)
+- GPU kernels (sum, avg, count, min, max)
+- SIMD fallback via Trueno
+- 100+ unit tests with property-based and equivalence testing
+- Benchmarks vs DuckDB, SQLite, Polars
+
+### Phase 2: Multi-GPU
+- Local multi-GPU data partitioning (range/hash)
+- Cost-based query planner
+- Multi-GPU aggregation with reduce
+- 2 GPU vs 1 GPU vs CPU benchmarks
+
+### Phase 3: Distribution
+- gRPC worker protocol
+- Distributed query execution
+- Fault tolerance (retry, failover)
+- Remote multi-GPU benchmarks
+
+### Phase 4: WASM
+- wasm32-unknown-unknown build target
+- WebGPU backend integration
+- Browser example dashboard
+- WebGPU vs SIMD128 browser benchmarks
+
+## Example Usage Patterns
+
+### Embedded Rust
+```rust
+use trueno_db::Database;
+
+let db = Database::builder()
+    .backend(Backend::Gpu)
+    .fallback(Backend::Trueno(trueno::Backend::Auto))
+    .cache_size_mb(512)
+    .build()?;
+
+db.load_table("events", "data/events.parquet").await?;
+
+let result = db.query(
+    "SELECT category, sum(value) as total
+     FROM events
+     WHERE timestamp > '2025-11-01'
+     GROUP BY category
+     ORDER BY total DESC"
+).execute().await?;
+```
+
+### WASM/Browser
+```javascript
+const db = new Database({
+    backend: 'webgpu',
+    fallback: 'simd128'
+});
+await db.loadTable('events', '/data/events.parquet');
+const result = await db.query('SELECT category, sum(value) FROM events GROUP BY category');
+```
+
+## Dogfooding Opportunities
+
+This database is designed to be used in:
+- **assetsearch**: GPU-accelerated aggregations replacing PostgreSQL
+- **assetgen**: Real-time AI model metadata dashboards
+- **bashrs**: Command history analytics
+- **auth-billing**: Real-time usage tracking
+- **interactive.paiml.com**: WASM analytics dashboards
+
+## Academic Foundations
+
+Key papers informing the architecture:
+- MonetDB/X100: Vectorized execution (CIDR 2005)
+- HeavyDB: GPU database patterns (SIGMOD 2017)
+- Apache Arrow: Columnar format (VLDB 2020)
+- Volcano Optimizer: Cost-based optimization (IEEE 1993)
+- Morsel-Driven Parallelism: NUMA-aware execution (SIGMOD 2014)
+
+See docs/specifications/db-spec-v1.md section 8 for complete references.
+
+## Toyota Way Principles
+
+### Jidoka (Built-in Quality)
+- EXTREME TDD: Tests before implementation
+- Pre-commit hooks enforce quality gates
+- Backend equivalence: GPU == SIMD == Scalar
+
+### Kaizen (Continuous Improvement)
+- Benchmarks required for all optimizations
+- Performance regression tests detect slowdowns
+- Mutation testing finds coverage gaps
+
+### Respect for People
+- Simple DuckDB-like API
+- Graceful degradation (works on any hardware)
+- Clear error messages explaining GPU failures and fallbacks

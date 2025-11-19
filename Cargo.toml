@@ -1,0 +1,86 @@
+[package]
+name = "trueno-db"
+version = "0.1.0"
+edition = "2021"
+authors = ["Pragmatic AI Labs <info@paiml.com>"]
+license = "MIT"
+description = "GPU-first embedded analytics database with SIMD fallback"
+repository = "https://github.com/paiml/trueno-db"
+keywords = ["database", "gpu", "simd", "analytics", "wasm"]
+categories = ["database", "science", "wasm"]
+rust-version = "1.75"
+
+[dependencies]
+# Core compute
+# CRITICAL: Using filesystem path for development, will switch to crates.io before release
+trueno = { path = "../trueno" }  # SIMD fallback (AVX-512/AVX2/SSE2)
+wgpu = "22"       # GPU compute (Vulkan/Metal/DX12/WebGPU)
+
+# Storage (Arrow columnar format)
+arrow = "53"               # Columnar format
+parquet = "53"             # Parquet reader
+
+# Query parsing
+sqlparser = "0.52"         # SQL parsing
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+rayon = "1.8"              # CPU parallelism (for spawn_blocking isolation)
+
+# Error handling
+thiserror = "2"
+anyhow = "1"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[dev-dependencies]
+# Testing
+criterion = { version = "0.5", features = ["html_reports"] }
+proptest = "1.5"           # Property-based testing
+quickcheck = "1"           # Property-based testing (backend equivalence)
+
+# Coverage
+cargo-llvm-cov = "0.6"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+# WASM support
+wasm-bindgen = "0.2"
+web-sys = { version = "0.3", features = ["Gpu", "GpuDevice"] }
+console_error_panic_hook = "0.1"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+# Native-only dependencies (Phase 3: gRPC distribution)
+tonic = { version = "0.12", optional = true }
+prost = { version = "0.13", optional = true }
+
+[features]
+default = []
+distributed = ["tonic", "prost"]  # Phase 3: Distributed multi-GPU
+wasm = []                          # Phase 4: WASM build
+
+[[bench]]
+name = "aggregations"
+harness = false
+
+[[bench]]
+name = "backend_comparison"
+harness = false
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = false  # Keep symbols for profiling
+
+[profile.bench]
+inherits = "release"
+
+# Toyota Way: Enforce quality gates in development
+[package.metadata.pmat]
+quality_gates = true
+tdg_score_minimum = 85  # B+ grade minimum
+mutation_testing = true
+mutation_kill_rate_minimum = 80  # 80% kill rate
+coverage_minimum = 90  # 90% code coverage

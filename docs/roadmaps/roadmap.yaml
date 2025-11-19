@@ -1,0 +1,157 @@
+roadmap_version: '1.0'
+github_enabled: true
+github_repo: paiml/trueno-db
+roadmap:
+  # Phase 1: Core Engine (Toyota Way Aligned)
+  - id: CORE-001
+    title: "Arrow storage backend with morsel-based paging"
+    description: |
+      Implement Arrow/Parquet storage with 128MB morsel-based paging to prevent VRAM OOM.
+      Toyota Way: Poka-Yoke (mistake proofing against VRAM exhaustion)
+    status: pending
+    priority: high
+    phase: 1
+    labels: [storage, poka-yoke, phase-1]
+    acceptance_criteria:
+      - Parquet reader with Arrow columnar format
+      - 128MB morsel chunks (MORSEL_SIZE_BYTES constant)
+      - Out-of-core execution for datasets > VRAM
+      - Tests proving no OOM on 10GB file with 8GB VRAM
+    references:
+      - "Funke et al. (2018): GPU paging for out-of-core workloads"
+
+  - id: CORE-002
+    title: "Cost-based backend dispatcher with arithmetic intensity model"
+    description: |
+      Replace naive row count threshold with physics-based cost model.
+      GPU only if: compute_time > 5 * transfer_time (Gregg & Hazelwood 2011)
+    status: pending
+    priority: high
+    phase: 1
+    labels: [backend, cost-model, genchi-genbutsu, phase-1]
+    acceptance_criteria:
+      - Arithmetic intensity calculator (FLOPs/Byte)
+      - PCIe transfer time estimator (32 GB/s Gen4 x16)
+      - 5x rule implementation
+      - Backend selection tests (simple SUM should use SIMD, not GPU)
+    references:
+      - "Gregg & Hazelwood (2011): PCIe bus bottleneck analysis"
+      - "Breß et al. (2014): Operator variant selection"
+
+  - id: CORE-003
+    title: "JIT WGSL compiler for kernel fusion"
+    description: |
+      Compile query-specific WGSL shaders at runtime to fuse operators.
+      Toyota Way: Muda elimination (waste of intermediate memory writes)
+    status: pending
+    priority: high
+    phase: 1
+    labels: [gpu, jit, kernel-fusion, muda-elimination, phase-1]
+    acceptance_criteria:
+      - WGSL code generator from SQL AST
+      - Fused filter+sum kernel (single pass)
+      - Shader compilation cache
+      - Benchmark proving kernel fusion > separate kernels
+    references:
+      - "Wu et al. (2012): Kernel fusion execution model"
+      - "Neumann (2011): JIT compilation for queries"
+
+  - id: CORE-004
+    title: "GPU kernels with parallel reduction"
+    description: |
+      Implement core aggregation kernels: sum, avg, count, min, max
+      Target: 50-100x faster than CPU for 100M+ rows
+    status: pending
+    priority: high
+    phase: 1
+    labels: [gpu, kernels, performance, phase-1]
+    acceptance_criteria:
+      - Parallel reduction sum kernel (WGSL)
+      - Avg kernel (reuse sum + count)
+      - Count kernel (atomic increment)
+      - Min/Max kernel (parallel reduction)
+      - Benchmarks proving 50x+ speedup on 100M rows
+    references:
+      - "HeavyDB (2017): GPU aggregation patterns"
+
+  - id: CORE-005
+    title: "SIMD fallback via Trueno with spawn_blocking isolation"
+    description: |
+      Integrate Trueno for SIMD execution with proper async isolation.
+      Toyota Way: Heijunka (prevent blocking Tokio reactor)
+    status: pending
+    priority: high
+    phase: 1
+    labels: [simd, async, heijunka, phase-1]
+    acceptance_criteria:
+      - Trueno integration (AVX-512/AVX2 auto-detect)
+      - CPU-bound SIMD in tokio::spawn_blocking
+      - Async tests proving reactor not blocked
+      - Rayon thread pool for parallel SIMD
+    references:
+      - "Leis et al. (2014): Morsel-driven parallelism"
+
+  - id: CORE-006
+    title: "Backend equivalence tests (GPU == SIMD == Scalar)"
+    description: |
+      Property-based tests ensuring all backends produce identical results.
+      Toyota Way: Jidoka (built-in quality)
+    status: pending
+    priority: critical
+    phase: 1
+    labels: [testing, equivalence, jidoka, phase-1]
+    acceptance_criteria:
+      - Property-based tests with quickcheck/proptest
+      - Test all aggregations (sum, avg, count, min, max)
+      - Test edge cases (NaN, infinity, overflow)
+      - CI fails on any backend mismatch
+    references:
+      - "Section 7.3 of spec: Backend equivalence tests"
+
+  - id: CORE-007
+    title: "SQL parser for analytics subset"
+    description: |
+      Parse SQL subset: SELECT, WHERE, GROUP BY, aggregations
+      Focus on analytics workload (no JOINs in Phase 1)
+    status: pending
+    priority: medium
+    phase: 1
+    labels: [sql, parser, phase-1]
+    acceptance_criteria:
+      - sqlparser integration
+      - SELECT with WHERE clause
+      - GROUP BY with aggregations
+      - ORDER BY, LIMIT
+      - 100+ parser test cases
+
+  - id: CORE-008
+    title: "PCIe transfer benchmarks and 5x rule validation"
+    description: |
+      Empirically validate the 5x rule with real PCIe measurements.
+      Toyota Way: Genchi Genbutsu (go and see, measure don't guess)
+    status: pending
+    priority: high
+    phase: 1
+    labels: [benchmarks, genchi-genbutsu, phase-1]
+    acceptance_criteria:
+      - Benchmark PCIe transfer time (CPU → GPU VRAM)
+      - Benchmark GPU compute time for simple SUM
+      - Prove transfer_time dominates for small datasets
+      - Prove GPU worthwhile only when compute > 5x transfer
+      - Document results in benchmarks/pcie_analysis.md
+
+  - id: CORE-009
+    title: "Benchmarks vs DuckDB, SQLite, Polars"
+    description: |
+      Competitive benchmarks proving performance claims.
+      Toyota Way: Kaizen (prove all optimizations with data)
+    status: pending
+    priority: medium
+    phase: 1
+    labels: [benchmarks, kaizen, phase-1]
+    acceptance_criteria:
+      - TPC-H style queries (analytics workload)
+      - Compare Trueno-DB GPU vs DuckDB CPU
+      - Compare Trueno-DB SIMD vs SQLite
+      - Document speedup claims with CI reports
+      - Regression tests to detect slowdowns
