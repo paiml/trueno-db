@@ -6,6 +6,26 @@
 
 GPU-aware, compute-intensity-based embedded analytics database with graceful degradation from GPU → SIMD → Scalar.
 
+## Installation
+
+```toml
+[dependencies]
+# Default: SIMD-only (fast compile, small binary)
+trueno-db = "0.1"
+
+# With GPU support (opt-in, slower compile)
+trueno-db = { version = "0.1", features = ["gpu"] }
+```
+
+## Feature Flags
+
+| Feature | Default | Dependencies | Compile Time | Binary Size | Use Case |
+|---------|---------|--------------|--------------|-------------|----------|
+| `simd` | ✅ Yes | 12 | ~18s | -0.4 MB | CI, lightweight deployments |
+| `gpu` | ❌ No | 95 | ~63s | +3.8 MB | Performance-critical production |
+
+**Why SIMD is default**: Per [PMAT integration review](../paiml-mcp-agent-toolkit/docs/specifications/trueno-db-integration-review-response.md), wgpu adds 67 transitive dependencies (+3.8 MB, +45s compile time). Most use cases don't need GPU acceleration.
+
 ## Quick Start
 
 ```rust

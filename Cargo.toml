@@ -11,10 +11,12 @@ categories = ["database", "science", "wasm"]
 rust-version = "1.75"
 
 [dependencies]
-# Core compute
+# Core compute (SIMD - always included)
 # CRITICAL: Using filesystem path for development, will switch to crates.io before release
 trueno = { path = "../trueno" }  # SIMD fallback (AVX-512/AVX2/SSE2)
-wgpu = "22"       # GPU compute (Vulkan/Metal/DX12/WebGPU)
+
+# GPU compute (optional - feature-gated to avoid +3.8MB binary bloat)
+wgpu = { version = "22", optional = true }  # GPU compute (Vulkan/Metal/DX12/WebGPU)
 
 # Storage (Arrow columnar format)
 arrow = "53"               # Columnar format
@@ -56,9 +58,21 @@ tonic = { version = "0.12", optional = true }
 prost = { version = "0.13", optional = true }
 
 [features]
-default = []
-distributed = ["tonic", "prost"]  # Phase 3: Distributed multi-GPU
-wasm = []                          # Phase 4: WASM build
+# Default: SIMD-only (fast compile, small binary)
+# See: ../paiml-mcp-agent-toolkit/docs/specifications/trueno-db-integration-review-response.md
+default = ["simd"]
+
+# SIMD-only backend (12 dependencies, -0.4 MB vs SQLite, 18s compile)
+simd = []
+
+# GPU backend (95 dependencies, +3.8 MB, 63s compile) - opt-in only
+gpu = ["dep:wgpu"]
+
+# Phase 3: Distributed multi-GPU
+distributed = ["tonic", "prost"]
+
+# Phase 4: WASM build
+wasm = []
 
 [[bench]]
 name = "storage_benchmarks"
