@@ -688,6 +688,25 @@ mod tests {
     }
 
     #[test]
+    fn test_top_k_int32_ascending() {
+        use arrow::array::Int32Array;
+        use arrow::datatypes::{DataType, Field, Schema};
+        use std::sync::Arc;
+
+        let schema = Schema::new(vec![Field::new("value", DataType::Int32, false)]);
+        let values = Int32Array::from(vec![5, 2, 8, 1, 9, 3]);
+        let batch = RecordBatch::try_new(Arc::new(schema), vec![Arc::new(values)]).unwrap();
+
+        let result = batch.top_k(0, 3, SortOrder::Ascending).unwrap();
+        assert_eq!(result.num_rows(), 3);
+
+        let col = result.column(0).as_any().downcast_ref::<Int32Array>().unwrap();
+        assert_eq!(col.value(0), 1);
+        assert_eq!(col.value(1), 2);
+        assert_eq!(col.value(2), 3);
+    }
+
+    #[test]
     fn test_top_k_int64() {
         use arrow::array::Int64Array;
         use arrow::datatypes::{DataType, Field, Schema};
@@ -703,6 +722,24 @@ mod tests {
         let col = result.column(0).as_any().downcast_ref::<Int64Array>().unwrap();
         assert_eq!(col.value(0), 50);
         assert_eq!(col.value(1), 100);
+    }
+
+    #[test]
+    fn test_top_k_int64_descending() {
+        use arrow::array::Int64Array;
+        use arrow::datatypes::{DataType, Field, Schema};
+        use std::sync::Arc;
+
+        let schema = Schema::new(vec![Field::new("value", DataType::Int64, false)]);
+        let values = Int64Array::from(vec![100i64, 200, 50, 300, 150]);
+        let batch = RecordBatch::try_new(Arc::new(schema), vec![Arc::new(values)]).unwrap();
+
+        let result = batch.top_k(0, 2, SortOrder::Descending).unwrap();
+        assert_eq!(result.num_rows(), 2);
+
+        let col = result.column(0).as_any().downcast_ref::<Int64Array>().unwrap();
+        assert_eq!(col.value(0), 300);
+        assert_eq!(col.value(1), 200);
     }
 
     #[test]
@@ -725,6 +762,25 @@ mod tests {
     }
 
     #[test]
+    fn test_top_k_float32_ascending() {
+        use arrow::array::Float32Array;
+        use arrow::datatypes::{DataType, Field, Schema};
+        use std::sync::Arc;
+
+        let schema = Schema::new(vec![Field::new("value", DataType::Float32, false)]);
+        let values = Float32Array::from(vec![1.5f32, 2.7, 0.3, 4.2, 3.1]);
+        let batch = RecordBatch::try_new(Arc::new(schema), vec![Arc::new(values)]).unwrap();
+
+        let result = batch.top_k(0, 3, SortOrder::Ascending).unwrap();
+        assert_eq!(result.num_rows(), 3);
+
+        let col = result.column(0).as_any().downcast_ref::<Float32Array>().unwrap();
+        assert!((col.value(0) - 0.3).abs() < 0.001);
+        assert!((col.value(1) - 1.5).abs() < 0.001);
+        assert!((col.value(2) - 2.7).abs() < 0.001);
+    }
+
+    #[test]
     fn test_top_k_unsupported_type() {
         use arrow::array::StringArray;
         use arrow::datatypes::{DataType, Field, Schema};
@@ -737,5 +793,86 @@ mod tests {
         let result = batch.top_k(0, 2, SortOrder::Descending);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("Top-K not supported for data type"));
+    }
+
+    // ========================================================================
+    // Heap Item Trait Tests (for coverage of MinHeapItem/MaxHeapItem)
+    // ========================================================================
+
+    #[test]
+    fn test_min_heap_item_eq() {
+        let item1 = MinHeapItem { value: 42i32, index: 0 };
+        let item2 = MinHeapItem { value: 42i32, index: 1 };
+        let item3 = MinHeapItem { value: 43i32, index: 2 };
+
+        assert_eq!(item1, item2);
+        assert_ne!(item1, item3);
+    }
+
+    #[test]
+    fn test_min_heap_item_ord() {
+        let item1 = MinHeapItem { value: 10i32, index: 0 };
+        let item2 = MinHeapItem { value: 20i32, index: 1 };
+        let item3 = MinHeapItem { value: 30i32, index: 2 };
+
+        // Min-heap: reverse ordering (smaller values at top)
+        assert!(item3 < item2);  // 30 < 20 in min-heap ordering
+        assert!(item2 < item1);  // 20 < 10 in min-heap ordering
+    }
+
+    #[test]
+    fn test_min_heap_item_partial_ord() {
+        let item1 = MinHeapItem { value: 5i32, index: 0 };
+        let item2 = MinHeapItem { value: 10i32, index: 1 };
+
+        assert!(item1.partial_cmp(&item2) == Some(Ordering::Greater));
+    }
+
+    #[test]
+    fn test_max_heap_item_eq() {
+        let item1 = MaxHeapItem { value: 42i32, index: 0 };
+        let item2 = MaxHeapItem { value: 42i32, index: 1 };
+        let item3 = MaxHeapItem { value: 43i32, index: 2 };
+
+        assert_eq!(item1, item2);
+        assert_ne!(item1, item3);
+    }
+
+    #[test]
+    fn test_max_heap_item_ord() {
+        let item1 = MaxHeapItem { value: 10i32, index: 0 };
+        let item2 = MaxHeapItem { value: 20i32, index: 1 };
+        let item3 = MaxHeapItem { value: 30i32, index: 2 };
+
+        // Max-heap: normal ordering (larger values at top)
+        assert!(item3 > item2);
+        assert!(item2 > item1);
+    }
+
+    #[test]
+    fn test_max_heap_item_partial_ord() {
+        let item1 = MaxHeapItem { value: 5i32, index: 0 };
+        let item2 = MaxHeapItem { value: 10i32, index: 1 };
+
+        assert!(item1.partial_cmp(&item2) == Some(Ordering::Less));
+    }
+
+    #[test]
+    fn test_heap_item_with_floats() {
+        let item1 = MinHeapItem { value: 1.5f64, index: 0 };
+        let item2 = MinHeapItem { value: 2.5f64, index: 1 };
+
+        assert_ne!(item1, item2);
+        assert!(item2 < item1);  // Min-heap: reverse ordering
+    }
+
+    #[test]
+    fn test_heap_item_eq_method_with_floats() {
+        let item1 = MaxHeapItem { value: 3.25f64, index: 0 };
+        let item2 = MaxHeapItem { value: 3.25f64, index: 1 };
+        let item3 = MaxHeapItem { value: 2.75f64, index: 2 };
+
+        assert!(item1.eq(&item2));
+        assert!(!item1.eq(&item3));
     }
 }

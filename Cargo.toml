@@ -12,8 +12,7 @@ rust-version = "1.75"
 
 [dependencies]
 # Core compute (SIMD - always included)
-# CRITICAL: Using filesystem path for development, will switch to crates.io before release
-trueno = { path = "../trueno" }  # SIMD fallback (AVX-512/AVX2/SSE2)
+trueno = "0.4.0"  # SIMD fallback (AVX-512/AVX2/SSE2)
 
 # GPU compute (optional - feature-gated to avoid +3.8MB binary bloat)
 wgpu = { version = "22", optional = true }  # GPU compute (Vulkan/Metal/DX12/WebGPU)

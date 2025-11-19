@@ -85,6 +85,7 @@
 - [Getting Started](./dev/getting-started.md)
 - [Building from Source](./dev/building.md)
 - [Running Tests](./dev/running-tests.md)
+- [Examples](./dev/examples.md)
 - [Contributing](./dev/contributing.md)
 - [Roadmap](./dev/roadmap.md)
 
