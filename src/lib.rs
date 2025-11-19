@@ -37,6 +37,7 @@ pub mod backend;
 pub mod error;
 pub mod query;
 pub mod storage;
+pub mod topk;
 
 pub use error::{Error, Result};
 

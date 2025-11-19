@@ -39,6 +39,10 @@ pub enum Error {
     #[error("GPU transfer queue closed (receiver dropped)")]
     QueueClosed,
 
+    /// Invalid input parameter
+    #[error("Invalid input: {0}")]
+    InvalidInput(String),
+
     /// IO error
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
