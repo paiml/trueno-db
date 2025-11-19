@@ -13,27 +13,19 @@
 //! - **Genchi Genbutsu**: Physics-based cost model (5x rule for GPU dispatch)
 //! - **Jidoka**: Backend equivalence tests (GPU == SIMD == Scalar)
 //!
-//! ## Example Usage
+//! ## Example Usage (Phase 1 MVP)
 //!
 //! ```rust,no_run
-//! use trueno_db::Database;
+//! use trueno_db::storage::StorageEngine;
 //!
-//! #[tokio::main]
-//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//!     let db = Database::builder()
-//!         .backend(Backend::CostBased)
-//!         .morsel_size_mb(128)
-//!         .build()?;
+//! // Load Parquet file
+//! let storage = StorageEngine::load_parquet("data/events.parquet")?;
 //!
-//!     db.load_table("events", "data/events.parquet").await?;
-//!
-//!     let result = db.query(
-//!         "SELECT category, sum(value) FROM events GROUP BY category"
-//!     ).execute().await?;
-//!
-//!     println!("Backend: {:?}", result.backend_info());
-//!     Ok(())
+//! // Iterate over 128MB morsels (out-of-core execution)
+//! for morsel in storage.morsels() {
+//!     println!("Morsel: {} rows", morsel.num_rows());
 //! }
+//! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 
 #![warn(missing_docs)]
