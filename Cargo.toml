@@ -61,6 +61,10 @@ distributed = ["tonic", "prost"]  # Phase 3: Distributed multi-GPU
 wasm = []                          # Phase 4: WASM build
 
 [[bench]]
+name = "storage_benchmarks"
+harness = false
+
+[[bench]]
 name = "aggregations"
 harness = false
 
