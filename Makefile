@@ -38,7 +38,7 @@ lint-pedantic: ## Run clippy with pedantic lints (for continuous improvement)
 
 check: lint test ## Run basic quality checks
 
-coverage: ## Generate coverage report (>90% required, <10 min target)
+coverage: ## Generate coverage report (≥85% minimum, 95% target, certeza formula)
 	@echo "📊 Generating coverage report (target: >90%, <10 min)..."
 	@# Temporarily disable mold linker (breaks LLVM coverage)
 	@test -f ~/.cargo/config.toml && mv ~/.cargo/config.toml ~/.cargo/config.toml.cov-backup || true
