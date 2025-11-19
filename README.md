@@ -73,7 +73,7 @@ trueno-db = { version = "0.1", features = ["gpu"] }
 | `simd` | ✅ Yes | 12 | ~18s | -0.4 MB | CI, lightweight deployments |
 | `gpu` | ❌ No | 95 | ~63s | +3.8 MB | Performance-critical production |
 
-**Why SIMD is default**: Per [PMAT integration review](../paiml-mcp-agent-toolkit/docs/specifications/trueno-db-integration-review-response.md), wgpu adds 67 transitive dependencies (+3.8 MB, +45s compile time). Most use cases don't need GPU acceleration.
+**Why SIMD is default**: wgpu adds 67 transitive dependencies (+3.8 MB, +45s compile time). Most use cases don't need GPU acceleration.
 
 ## Quick Start
 

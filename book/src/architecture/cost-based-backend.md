@@ -239,6 +239,4 @@ enum Backend {
 
 ## Next Steps
 
-- [Physics-Based Cost Model](./cost-model.md)
-- [5x Transfer Rule](./5x-rule.md)
-- [Performance Characteristics](./performance.md)
+See the [Backend Dispatcher](../components/dispatcher/selection-algorithm.md) section for implementation details of the cost-based backend selection algorithm.
