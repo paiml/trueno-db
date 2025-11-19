@@ -1,0 +1,37 @@
+# cargo-deny configuration for trueno-db
+# https://embarkstudios.github.io/cargo-deny/
+
+[advisories]
+version = 2
+ignore = [
+    "RUSTSEC-2024-0436", # paste - indirect dep from parquet/wgpu, no security impact
+]
+
+[licenses]
+version = 2
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "CC0-1.0",
+    "MPL-2.0",
+]
+confidence-threshold = 0.8
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+# Skip crates that have multiple versions due to ecosystem compatibility
+skip = [
+    { crate = "windows-sys@*" },
+    { crate = "windows_x86_64_msvc@*" },
+]
+
+[sources]
+unknown-registry = "warn"
+unknown-git = "warn"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
