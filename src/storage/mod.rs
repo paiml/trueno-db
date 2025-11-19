@@ -22,6 +22,14 @@ pub struct StorageEngine {
 }
 
 impl StorageEngine {
+    /// Create a new storage engine from existing batches
+    ///
+    /// Useful for testing and benchmarking
+    #[must_use]
+    pub fn new(batches: Vec<RecordBatch>) -> Self {
+        Self { batches }
+    }
+
     /// Load table from Parquet file
     ///
     /// # Errors
