@@ -96,17 +96,24 @@ roadmap:
     description: |
       Property-based tests ensuring all backends produce identical results.
       Toyota Way: Jidoka (built-in quality)
-    status: pending
+    status: completed
     priority: critical
     phase: 1
     labels: [testing, equivalence, jidoka, phase-1]
     acceptance_criteria:
-      - Property-based tests with quickcheck/proptest
-      - Test all aggregations (sum, avg, count, min, max)
-      - Test edge cases (NaN, infinity, overflow)
-      - CI fails on any backend mismatch
+      - Property-based tests with quickcheck/proptest ✅
+      - Test all aggregations (sum, avg, count, min, max) ✅
+      - Test edge cases (NaN, infinity, overflow) ✅
+      - CI fails on any backend mismatch ✅
+    implementation:
+      - 7 property tests using proptest (i32/f32 for sum, avg; i32 for count, min, max)
+      - 5 edge case tests (empty, NaN, infinity, overflow, 1M elements)
+      - Wrapping semantics for integer overflow
+      - IEEE 754 compliant float handling (infinity/NaN consistency)
+      - Pre-commit hooks enforce 98/98 tests passing
     references:
       - "Section 7.3 of spec: Backend equivalence tests"
+      - "tests/backend_equivalence_tests.rs"
 
   - id: CORE-007
     title: "SQL parser for analytics subset"
