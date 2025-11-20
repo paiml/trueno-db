@@ -22,6 +22,7 @@
 //! - [ ] CI fails on any backend mismatch
 
 use proptest::prelude::*;
+use trueno::Vector;
 
 /// Aggregation operation trait
 ///
@@ -75,15 +76,35 @@ impl Aggregation<i32> for ScalarBackend {
 }
 
 impl Aggregation<f32> for ScalarBackend {
+    /// Scalar sum using Kahan (compensated) summation for numerical stability
+    ///
+    /// This ensures equivalence with SIMD backend which also uses Kahan summation.
+    /// Critical for handling large numbers mixed with small numbers.
     fn sum(&self, data: &[f32]) -> f32 {
-        data.iter().sum()
+        // Kahan summation algorithm (compensated summation)
+        let mut sum = 0.0_f32;
+        let mut compensation = 0.0_f32;
+
+        for &value in data {
+            // Early exit for infinity/NaN to avoid compensation artifacts
+            if value.is_infinite() || value.is_nan() {
+                return data.iter().sum(); // Fallback to naive sum for special values
+            }
+
+            let y = value - compensation;
+            let t = sum + y;
+            compensation = (t - sum) - y;
+            sum = t;
+        }
+        sum
     }
 
+    /// Scalar average using Kahan summation
     fn avg(&self, data: &[f32]) -> Option<f64> {
         if data.is_empty() {
             None
         } else {
-            Some(data.iter().sum::<f32>() as f64 / data.len() as f64)
+            Some(self.sum(data) as f64 / data.len() as f64)
         }
     }
 
@@ -105,11 +126,12 @@ impl Aggregation<f32> for ScalarBackend {
 }
 
 // ============================================================================
-// SIMD Backend (Currently delegates to Scalar - will use trueno in future)
+// SIMD Backend (CORE-005: Trueno integration with auto-detect SIMD)
 // ============================================================================
 
 impl Aggregation<i32> for SimdBackend {
     fn sum(&self, data: &[i32]) -> i32 {
+        // Note: i32 operations still use scalar until trueno adds i32 support
         ScalarBackend.sum(data)
     }
 
@@ -131,24 +153,54 @@ impl Aggregation<i32> for SimdBackend {
 }
 
 impl Aggregation<f32> for SimdBackend {
+    /// SIMD-accelerated sum via trueno (AVX-512/AVX2/SSE2 auto-detect)
+    /// Uses Kahan (compensated) summation for numerical stability
     fn sum(&self, data: &[f32]) -> f32 {
-        ScalarBackend.sum(data)
+        if data.is_empty() {
+            return 0.0;
+        }
+
+        // Check for infinity/NaN - use regular sum for special values
+        // (trueno's sum_kahan has issues with infinity)
+        if data.iter().any(|x| x.is_infinite() || x.is_nan()) {
+            return Vector::from_slice(data).sum().unwrap_or(0.0);
+        }
+
+        // Toyota Way: Heijunka - trueno uses SIMD but doesn't block
+        // Uses Kahan summation for equivalence with scalar backend
+        Vector::from_slice(data).sum_kahan().unwrap_or(0.0)
     }
 
+    /// SIMD-accelerated average with Kahan summation
     fn avg(&self, data: &[f32]) -> Option<f64> {
-        ScalarBackend.avg(data)
+        if data.is_empty() {
+            None
+        } else {
+            let sum = self.sum(data); // Use sum() which handles special values
+            Some(sum as f64 / data.len() as f64)
+        }
     }
 
     fn count(&self, data: &[f32]) -> usize {
-        ScalarBackend.count(data)
+        data.len()
     }
 
+    /// SIMD-accelerated min via trueno
     fn min(&self, data: &[f32]) -> Option<f32> {
-        ScalarBackend.min(data)
+        if data.is_empty() {
+            None
+        } else {
+            Vector::from_slice(data).min().ok()
+        }
     }
 
+    /// SIMD-accelerated max via trueno
     fn max(&self, data: &[f32]) -> Option<f32> {
-        ScalarBackend.max(data)
+        if data.is_empty() {
+            None
+        } else {
+            Vector::from_slice(data).max().ok()
+        }
     }
 }
 
