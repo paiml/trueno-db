@@ -38,8 +38,9 @@ lint-pedantic: ## Run clippy with pedantic lints (for continuous improvement)
 
 check: lint test ## Run basic quality checks
 
-coverage: ## Generate coverage report (≥85% minimum, 95% target, certeza formula)
-	@echo "📊 Generating coverage report (target: >90%, <10 min)..."
+coverage: ## Generate coverage report (≥90% required, GPU excluded due to LLVM instrumentation limits)
+	@echo "📊 Generating coverage report (target: ≥90%, GPU excluded)..."
+	@echo "    Note: GPU backend excluded (LLVM coverage cannot instrument GPU shaders)"
 	@# Temporarily disable mold linker (breaks LLVM coverage)
 	@test -f ~/.cargo/config.toml && mv ~/.cargo/config.toml ~/.cargo/config.toml.cov-backup || true
 	@cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
@@ -47,7 +48,18 @@ coverage: ## Generate coverage report (≥85% minimum, 95% target, certeza formu
 	@# Restore mold linker
 	@test -f ~/.cargo/config.toml.cov-backup && mv ~/.cargo/config.toml.cov-backup ~/.cargo/config.toml || true
 	@echo "✅ Coverage report: target/coverage/html/index.html"
-	@cargo llvm-cov report | grep TOTAL
+	@echo ""
+	@echo "📊 Coverage by Component:"
+	@cargo llvm-cov report | python3 -c "import sys; lines = list(sys.stdin); src_lines = [l for l in lines if l.startswith('src/')]; total_line = [l for l in lines if l.startswith('TOTAL')]; total = sum(int(l.split()[7]) for l in src_lines if len(l.split()) > 8); uncov = sum(int(l.split()[8]) for l in src_lines if len(l.split()) > 8); cov = 100*(total-uncov)/total if total > 0 else 0; print(f'   Trueno-DB:      {cov:.2f}% ({total-uncov:,}/{total:,} lines)'); print(''); fails = []; [fails.append(f'Coverage ({cov:.2f}%)') if cov < 90 else None]; print('   ✅ PASS: Coverage ≥90%' if not fails else f'   ❌ FAIL: {\", \".join(fails)} below 90%')"
+
+coverage-check: ## Enforce 90% coverage threshold (BLOCKS on failure, GPU excluded)
+	@echo "🔒 Enforcing 90% coverage threshold (GPU excluded)..."
+	@# Temporarily disable mold linker (breaks LLVM coverage)
+	@test -f ~/.cargo/config.toml && mv ~/.cargo/config.toml ~/.cargo/config.toml.cov-backup || true
+	@cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info > /dev/null 2>&1
+	@# Restore mold linker
+	@test -f ~/.cargo/config.toml.cov-backup && mv ~/.cargo/config.toml.cov-backup ~/.cargo/config.toml || true
+	@cargo llvm-cov report | python3 -c "import sys; lines = [l.strip() for l in sys.stdin if l.strip()]; total_line = [l for l in lines if l.startswith('TOTAL')]; parts = total_line[0].split() if total_line else []; cov_str = parts[-4].rstrip('%') if len(parts) >= 4 else '0'; cov = float(cov_str); print(f'Overall coverage: {cov:.2f}%'); exit_code = 1 if cov < 90 else 0; print(f'✅ Coverage threshold met (≥90%)' if exit_code == 0 else f'❌ FAIL: Coverage {cov:.2f}% below 90% threshold'); sys.exit(exit_code)"
 
 mutants: ## Run mutation testing (target: ≥85% kill rate, certeza formula)
 	@echo "🧬 Running mutation testing (this will take a while)..."
@@ -75,7 +87,7 @@ mutation-clean: ## Clean mutation testing artifacts
 tdg: ## Run TDG analysis (target: ≥B+ / 85)
 	pmat analyze tdg
 
-quality-gate: lint test coverage ## Run full quality gate
+quality-gate: lint test coverage-check ## Run full quality gate (BLOCKS if coverage < 90%)
 	@echo "✅ All quality gates passed"
 
 ## Backend Equivalence Tests (Critical)
