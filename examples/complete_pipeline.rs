@@ -150,17 +150,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .column(2)
         .as_any()
         .downcast_ref::<Float64Array>()
-        .unwrap();
+        .expect("Example should work with valid test data");
     let id_col = top10_high
         .column(0)
         .as_any()
         .downcast_ref::<Int32Array>()
-        .unwrap();
+        .expect("Example should work with valid test data");
     let user_col = top10_high
         .column(1)
         .as_any()
         .downcast_ref::<StringArray>()
-        .unwrap();
+        .expect("Example should work with valid test data");
 
     for i in 0..top10_high.num_rows().min(5) {
         println!(

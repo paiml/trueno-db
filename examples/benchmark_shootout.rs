@@ -97,7 +97,7 @@ fn generate_data(rows: usize) -> RecordBatch {
             Arc::new(Float64Array::from(values)),
         ],
     )
-    .unwrap()
+    .expect("Example should work with valid test data")
 }
 
 fn benchmark_topk(batch: &RecordBatch, k: usize, order: SortOrder) {
@@ -107,18 +107,18 @@ fn benchmark_topk(batch: &RecordBatch, k: usize, order: SortOrder) {
     };
 
     // Warmup run
-    let _ = batch.top_k(1, k, order).unwrap();
+    let _ = batch.top_k(1, k, order).expect("Example should work with valid test data");
 
     // Timed run
     let start = Instant::now();
-    let result = batch.top_k(1, k, order).unwrap();
+    let result = batch.top_k(1, k, order).expect("Example should work with valid test data");
     let elapsed = start.elapsed();
 
     let values = result
         .column(1)
         .as_any()
         .downcast_ref::<Float64Array>()
-        .unwrap();
+        .expect("Example should work with valid test data");
 
     println!(
         "    SIMD-optimized: {:.3}ms  (order: {}, k={}, result: {} rows)",

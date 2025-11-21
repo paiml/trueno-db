@@ -215,7 +215,7 @@ fn generate_market_data(num_days: usize) -> RecordBatch {
             Arc::new(Float64Array::from(intraday_ranges)),
         ],
     )
-    .unwrap();
+    .expect("Example should work with valid test data");
 
     println!("✅ Loaded {} trading days with 6 columns", num_days);
     println!();
@@ -257,7 +257,7 @@ fn run_crash_query(
 
     // Execute query with timing
     let start = Instant::now();
-    let result = batch.top_k(value_column, k, order).unwrap();
+    let result = batch.top_k(value_column, k, order).expect("Example should work with valid test data");
     let elapsed = start.elapsed();
 
     println!(
@@ -276,17 +276,17 @@ fn run_crash_query(
         .column(1)
         .as_any()
         .downcast_ref::<StringArray>()
-        .unwrap();
+        .expect("Example should work with valid test data");
     let index_levels = result
         .column(2)
         .as_any()
         .downcast_ref::<Float64Array>()
-        .unwrap();
+        .expect("Example should work with valid test data");
     let values = result
         .column(value_column)
         .as_any()
         .downcast_ref::<Float64Array>()
-        .unwrap();
+        .expect("Example should work with valid test data");
 
     let display_count = result.num_rows().min(10);
 

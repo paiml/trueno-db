@@ -159,7 +159,7 @@ fn generate_match_data(num_matches: usize) -> RecordBatch {
             Arc::new(Float64Array::from(accuracy)),
         ],
     )
-    .unwrap();
+    .expect("Example should work with valid test data");
 
     println!("✅ Generated {} matches with 5 columns", num_matches);
     println!();
@@ -198,7 +198,7 @@ fn run_leaderboard_query(
 
     // Execute query with timing
     let start = Instant::now();
-    let result = batch.top_k(value_column, k, order).unwrap();
+    let result = batch.top_k(value_column, k, order).expect("Example should work with valid test data");
     let elapsed = start.elapsed();
 
     println!(
@@ -217,12 +217,12 @@ fn run_leaderboard_query(
         .column(0)
         .as_any()
         .downcast_ref::<Int32Array>()
-        .unwrap();
+        .expect("Example should work with valid test data");
     let usernames = result
         .column(1)
         .as_any()
         .downcast_ref::<StringArray>()
-        .unwrap();
+        .expect("Example should work with valid test data");
 
     let display_count = result.num_rows().min(10);
 
@@ -237,7 +237,7 @@ fn run_leaderboard_query(
                 .column(value_column)
                 .as_any()
                 .downcast_ref::<Int32Array>()
-                .unwrap();
+                .expect("Example should work with valid test data");
             format!("{} kills", kills.value(i))
         } else {
             // Score or Accuracy (Float64)
@@ -245,7 +245,7 @@ fn run_leaderboard_query(
                 .column(value_column)
                 .as_any()
                 .downcast_ref::<Float64Array>()
-                .unwrap();
+                .expect("Example should work with valid test data");
             if value_column == 4 {
                 format!("{:.1}%", values.value(i))
             } else {
