@@ -35,6 +35,8 @@
 
 pub mod backend;
 pub mod error;
+#[cfg(feature = "gpu")]
+pub mod gpu;
 pub mod query;
 pub mod storage;
 pub mod topk;

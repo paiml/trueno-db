@@ -15,7 +15,9 @@ rust-version = "1.75"
 trueno = "0.4.0"  # SIMD fallback (AVX-512/AVX2/SSE2)
 
 # GPU compute (optional - feature-gated to avoid +3.8MB binary bloat)
-wgpu = { version = "22", optional = true }  # GPU compute (Vulkan/Metal/DX12/WebGPU)
+wgpu = { version = "22", optional = true, features = ["wgsl"] }  # GPU compute (Vulkan/Metal/DX12/WebGPU)
+bytemuck = { version = "1", features = ["derive"], optional = true }  # Safe byte casting for GPU buffers
+futures-intrusive = { version = "0.5", optional = true }  # Async primitives for GPU
 
 # Storage (Arrow columnar format)
 arrow = "53"               # Columnar format
@@ -66,7 +68,7 @@ default = ["simd"]
 simd = []
 
 # GPU backend (95 dependencies, +3.8 MB, 63s compile) - opt-in only
-gpu = ["dep:wgpu"]
+gpu = ["dep:wgpu", "dep:bytemuck", "dep:futures-intrusive"]
 
 # Phase 3: Distributed multi-GPU
 distributed = ["tonic", "prost"]
