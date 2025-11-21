@@ -106,3 +106,64 @@ fn test_reject_non_select() {
     let result = engine.parse("INSERT INTO users (name) VALUES ('Alice')");
     assert!(result.is_err(), "Only SELECT supported");
 }
+
+#[test]
+fn test_query_engine_default() {
+    // Test default constructor
+    let engine = QueryEngine::default();
+    let plan = engine.parse("SELECT * FROM users").unwrap();
+    assert_eq!(plan.table, "users");
+}
+
+#[test]
+fn test_reject_multiple_from_tables() {
+    // Test error when multiple tables in FROM clause (without JOIN)
+    let engine = QueryEngine::new();
+    let result = engine.parse("SELECT * FROM users, orders");
+    assert!(result.is_err(), "Multiple FROM tables should be rejected");
+    assert!(result.unwrap_err().to_string().contains("Multiple tables"));
+}
+
+#[test]
+fn test_reject_qualified_wildcard() {
+    // Test error when using table.* syntax
+    let engine = QueryEngine::new();
+    let result = engine.parse("SELECT users.* FROM users");
+    assert!(result.is_err(), "Qualified wildcards should be rejected");
+    assert!(result.unwrap_err().to_string().contains("Qualified wildcards"));
+}
+
+#[test]
+fn test_order_by_ascending() {
+    // Test ORDER BY ASC (default ascending)
+    let engine = QueryEngine::new();
+
+    // Explicit ASC
+    let plan1 = engine.parse("SELECT * FROM data ORDER BY score ASC").unwrap();
+    assert_eq!(plan1.order_by.len(), 1);
+    assert_eq!(plan1.order_by[0].1, OrderDirection::Asc);
+
+    // Implicit ASC (default)
+    let plan2 = engine.parse("SELECT * FROM data ORDER BY score").unwrap();
+    assert_eq!(plan2.order_by.len(), 1);
+    assert_eq!(plan2.order_by[0].1, OrderDirection::Asc);
+}
+
+#[test]
+fn test_column_alias_without_aggregation() {
+    // Test aliasing regular columns (not aggregations)
+    let engine = QueryEngine::new();
+    let plan = engine.parse("SELECT id as user_id, name as username FROM users").unwrap();
+
+    assert_eq!(plan.columns, vec!["user_id", "username"]);
+    assert_eq!(plan.aggregations.len(), 0);
+}
+
+#[test]
+fn test_invalid_sql_syntax() {
+    // Test that invalid SQL returns ParseError
+    let engine = QueryEngine::new();
+    let result = engine.parse("SELECT FROM WHERE");
+    assert!(result.is_err(), "Invalid SQL should fail");
+    assert!(result.unwrap_err().to_string().contains("parse error"));
+}
