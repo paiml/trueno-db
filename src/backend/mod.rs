@@ -65,4 +65,112 @@ impl BackendDispatcher {
             super::Backend::Simd
         }
     }
+
+    /// Calculate arithmetic intensity (FLOPs per byte)
+    ///
+    /// Higher arithmetic intensity means more compute per data transfer,
+    /// making GPU acceleration more beneficial.
+    ///
+    /// # Arguments
+    /// * `total_flops` - Total floating point operations
+    /// * `total_bytes` - Total data size in bytes
+    ///
+    /// # Returns
+    /// Arithmetic intensity ratio (FLOPs/Byte)
+    ///
+    /// # Example
+    /// ```
+    /// use trueno_db::backend::BackendDispatcher;
+    ///
+    /// // Matrix multiply: N^3 FLOPs for N^2 elements = N FLOPs/element
+    /// let intensity = BackendDispatcher::arithmetic_intensity(1_000_000_000.0, 100_000_000);
+    /// assert_eq!(intensity, 10.0); // 10 FLOPs per byte
+    /// ```
+    #[must_use]
+    #[allow(clippy::cast_precision_loss)]
+    pub const fn arithmetic_intensity(total_flops: f64, total_bytes: usize) -> f64 {
+        total_flops / total_bytes as f64
+    }
+
+    /// Estimate FLOPs for simple aggregation (SUM, AVG, COUNT, MIN, MAX)
+    ///
+    /// Simple aggregations perform ~1 FLOP per element (single pass)
+    ///
+    /// # Arguments
+    /// * `num_elements` - Number of elements to aggregate
+    ///
+    /// # Returns
+    /// Estimated FLOPs
+    ///
+    /// # Example
+    /// ```
+    /// use trueno_db::backend::BackendDispatcher;
+    ///
+    /// // SUM over 100M elements = 100M FLOPs
+    /// let flops = BackendDispatcher::estimate_simple_aggregation_flops(100_000_000);
+    /// assert_eq!(flops, 100_000_000.0);
+    /// ```
+    #[must_use]
+    #[allow(clippy::cast_precision_loss)]
+    pub const fn estimate_simple_aggregation_flops(num_elements: usize) -> f64 {
+        num_elements as f64
+    }
+
+    /// Estimate FLOPs for GROUP BY aggregation
+    ///
+    /// GROUP BY requires hashing (5 FLOPs/element) + aggregation (1 FLOP/element)
+    ///
+    /// # Arguments
+    /// * `num_elements` - Number of elements to process
+    ///
+    /// # Returns
+    /// Estimated FLOPs
+    ///
+    /// # Example
+    /// ```
+    /// use trueno_db::backend::BackendDispatcher;
+    ///
+    /// // GROUP BY over 100M elements = 600M FLOPs
+    /// let flops = BackendDispatcher::estimate_group_by_flops(100_000_000);
+    /// assert_eq!(flops, 600_000_000.0);
+    /// ```
+    #[must_use]
+    #[allow(clippy::cast_precision_loss)]
+    pub const fn estimate_group_by_flops(num_elements: usize) -> f64 {
+        // Hashing: 5 FLOPs/element, Aggregation: 1 FLOP/element
+        (num_elements as f64) * 6.0
+    }
+
+    /// Estimate FLOPs for WHERE filter
+    ///
+    /// Filters require predicate evaluation (~2 FLOPs per element)
+    ///
+    /// # Arguments
+    /// * `num_elements` - Number of elements to filter
+    ///
+    /// # Returns
+    /// Estimated FLOPs
+    #[must_use]
+    #[allow(clippy::cast_precision_loss)]
+    pub const fn estimate_filter_flops(num_elements: usize) -> f64 {
+        (num_elements as f64) * 2.0
+    }
+
+    /// Estimate FLOPs for JOIN operation
+    ///
+    /// Hash join: Build hash table (5 FLOPs/elem) + Probe (5 FLOPs/elem)
+    ///
+    /// # Arguments
+    /// * `left_size` - Number of elements in left table
+    /// * `right_size` - Number of elements in right table
+    ///
+    /// # Returns
+    /// Estimated FLOPs
+    #[must_use]
+    #[allow(clippy::cast_precision_loss)]
+    pub const fn estimate_join_flops(left_size: usize, right_size: usize) -> f64 {
+        // Build phase: 5 FLOPs per left element
+        // Probe phase: 5 FLOPs per right element
+        ((left_size + right_size) as f64) * 5.0
+    }
 }
