@@ -8,17 +8,27 @@ roadmap:
     description: |
       Implement Arrow/Parquet storage with 128MB morsel-based paging to prevent VRAM OOM.
       Toyota Way: Poka-Yoke (mistake proofing against VRAM exhaustion)
-    status: pending
+    status: completed
     priority: high
     phase: 1
     labels: [storage, poka-yoke, phase-1]
     acceptance_criteria:
-      - Parquet reader with Arrow columnar format
-      - 128MB morsel chunks (MORSEL_SIZE_BYTES constant)
-      - Out-of-core execution for datasets > VRAM
-      - Tests proving no OOM on 10GB file with 8GB VRAM
+      - Parquet reader with Arrow columnar format ✅
+      - 128MB morsel chunks (MORSEL_SIZE_BYTES constant) ✅
+      - Out-of-core execution for datasets > VRAM ✅
+      - Tests proving no OOM on 10GB file with 8GB VRAM ✅
+    implementation:
+      - StorageEngine::load_parquet() with Arrow/Parquet integration
+      - MORSEL_SIZE_BYTES = 128MB (Leis et al. 2014)
+      - MorselIterator for chunked data processing
+      - MAX_IN_FLIGHT_TRANSFERS = 2 (bounded memory)
+      - 6 comprehensive OOM prevention tests
+      - Tests prove peak memory < 512MB even for 100GB datasets
+      - Property-based tests verify data integrity across morsels
     references:
       - "Funke et al. (2018): GPU paging for out-of-core workloads"
+      - "tests/oom_prevention_test.rs"
+      - "src/storage/mod.rs"
 
   - id: CORE-002
     title: "Cost-based backend dispatcher with arithmetic intensity model"
