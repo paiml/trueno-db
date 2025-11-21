@@ -142,7 +142,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for chunk_idx in 0..10 {
         let data: Vec<i32> = ((chunk_idx * chunk_size + 1)..=((chunk_idx + 1) * chunk_size))
-            .map(|x| (x % 1_000_000) as i32)
+            .map(|x| x % 1_000_000)
             .collect();
         let array = Int32Array::from(data);
         let chunk_sum = gpu.sum_i32(&array).await?;

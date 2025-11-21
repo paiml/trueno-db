@@ -124,8 +124,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("SQL: SELECT COUNT(*) FROM sales WHERE amount >= 250 AND amount <= 750");
 
     // For this we'd need a compound filter, so we'll use CPU for now
-    let mid_range_count = sales_data.iter().filter(|&&x| x >= 250 && x <= 750).count();
-    let mid_range_sum: i64 = sales_data.iter().filter(|&&x| x >= 250 && x <= 750).map(|&x| x as i64).sum();
+    let mid_range_count = sales_data.iter().filter(|&&x| (250..=750).contains(&x)).count();
+    let mid_range_sum: i64 = sales_data.iter().filter(|&&x| (250..=750).contains(&x)).map(|&x| x as i64).sum();
 
     println!("  Mid-Range Transaction Count: {}", mid_range_count);
     println!("  Mid-Range Revenue: ${}", mid_range_sum);
