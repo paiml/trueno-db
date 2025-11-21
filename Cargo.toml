@@ -40,7 +40,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [dev-dependencies]
 # Testing
-criterion = { version = "0.5", features = ["html_reports"] }
+criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
 proptest = "1.5"           # Property-based testing
 quickcheck = "1"           # Property-based testing (backend equivalence)
 rand = "0.8"               # Random data generation for examples

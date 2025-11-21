@@ -22,8 +22,10 @@ pub mod kernels;
 
 /// GPU compute engine for aggregations
 pub struct GpuEngine {
-    device: wgpu::Device,
-    queue: wgpu::Queue,
+    /// GPU device handle (public for benchmarking)
+    pub device: wgpu::Device,
+    /// GPU command queue (public for benchmarking)
+    pub queue: wgpu::Queue,
 }
 
 impl GpuEngine {
