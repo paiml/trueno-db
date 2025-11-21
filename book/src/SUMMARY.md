@@ -89,6 +89,10 @@
 - [Contributing](./dev/contributing.md)
 - [Roadmap](./dev/roadmap.md)
 
+# Milestones
+
+- [Phase 1 MVP: Complete](./milestones/phase1-mvp.md)
+
 # Case Studies
 
 - [CORE-001: Arrow Storage Backend](./case-studies/core-001.md)
