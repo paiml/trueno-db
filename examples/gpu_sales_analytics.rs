@@ -59,7 +59,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  GPU Execution Time: {:?}", gpu_time);
     println!("  Total Revenue: ${}", total_revenue);
     println!("  Transactions: {}", num_transactions);
-    println!("  Average: ${:.2}", total_revenue as f64 / num_transactions as f64);
+    println!(
+        "  Average: ${:.2}",
+        total_revenue as f64 / num_transactions as f64
+    );
     println!();
 
     // Query 2: Find Minimum Sale
@@ -99,7 +102,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  GPU Execution Time: {:?}", gpu_time);
     println!("  Total High-Value Revenue: ${}", high_value_sum);
     println!("  High-Value Transaction Count: {}", high_value_count);
-    println!("  Percentage: {:.1}%", (high_value_count as f64 / num_transactions as f64) * 100.0);
+    println!(
+        "  Percentage: {:.1}%",
+        (high_value_count as f64 / num_transactions as f64) * 100.0
+    );
     println!("  🎯 Toyota Way: Kernel fusion (filter+sum in single GPU pass)");
     println!();
 
@@ -116,7 +122,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  GPU Execution Time: {:?}", gpu_time);
     println!("  Total Low-Value Revenue: ${}", low_value_sum);
     println!("  Low-Value Transaction Count: {}", low_value_count);
-    println!("  Percentage: {:.1}%", (low_value_count as f64 / num_transactions as f64) * 100.0);
+    println!(
+        "  Percentage: {:.1}%",
+        (low_value_count as f64 / num_transactions as f64) * 100.0
+    );
     println!();
 
     // Query 6: Mid-Range Transactions
@@ -124,18 +133,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("SQL: SELECT COUNT(*) FROM sales WHERE amount >= 250 AND amount <= 750");
 
     // For this we'd need a compound filter, so we'll use CPU for now
-    let mid_range_count = sales_data.iter().filter(|&&x| (250..=750).contains(&x)).count();
-    let mid_range_sum: i64 = sales_data.iter().filter(|&&x| (250..=750).contains(&x)).map(|&x| x as i64).sum();
+    let mid_range_count = sales_data
+        .iter()
+        .filter(|&&x| (250..=750).contains(&x))
+        .count();
+    let mid_range_sum: i64 = sales_data
+        .iter()
+        .filter(|&&x| (250..=750).contains(&x))
+        .map(|&x| x as i64)
+        .sum();
 
     println!("  Mid-Range Transaction Count: {}", mid_range_count);
     println!("  Mid-Range Revenue: ${}", mid_range_sum);
-    println!("  Percentage: {:.1}%", (mid_range_count as f64 / num_transactions as f64) * 100.0);
+    println!(
+        "  Percentage: {:.1}%",
+        (mid_range_count as f64 / num_transactions as f64) * 100.0
+    );
     println!("  Note: Compound filters will use GPU in Phase 2");
     println!();
 
     // Performance Summary
     println!("=== Performance Summary ===");
-    println!("  Dataset Size: {} transactions ({:.1} MB)",
+    println!(
+        "  Dataset Size: {} transactions ({:.1} MB)",
         num_transactions,
         (num_transactions * 4) as f64 / 1_048_576.0
     );
@@ -146,15 +166,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("=== Dashboard Insights ===");
     println!("  📈 Total Revenue: ${}", total_revenue);
-    println!("  💎 High-Value (>$500): ${} ({:.1}%)",
+    println!(
+        "  💎 High-Value (>$500): ${} ({:.1}%)",
         high_value_sum,
         (high_value_count as f64 / num_transactions as f64) * 100.0
     );
-    println!("  💰 Mid-Range ($250-$750): ${} ({:.1}%)",
+    println!(
+        "  💰 Mid-Range ($250-$750): ${} ({:.1}%)",
         mid_range_sum,
         (mid_range_count as f64 / num_transactions as f64) * 100.0
     );
-    println!("  📊 Low-Value (≤$100): ${} ({:.1}%)",
+    println!(
+        "  📊 Low-Value (≤$100): ${} ({:.1}%)",
         low_value_sum,
         (low_value_count as f64 / num_transactions as f64) * 100.0
     );

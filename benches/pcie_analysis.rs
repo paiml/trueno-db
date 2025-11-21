@@ -113,9 +113,8 @@ fn bench_gpu_compute(c: &mut Criterion) {
             BenchmarkId::new("sum_i32", format!("{}MB", size_mb as usize)),
             &array,
             |b, array| {
-                b.to_async(&runtime).iter(|| async {
-                    engine.sum_i32(black_box(array)).await.unwrap()
-                });
+                b.to_async(&runtime)
+                    .iter(|| async { engine.sum_i32(black_box(array)).await.unwrap() });
             },
         );
     }

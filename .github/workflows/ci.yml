@@ -141,7 +141,7 @@ jobs:
           key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Build examples
-        run: cargo build --examples --release
+        run: cargo build --examples --release --all-features
 
       - name: Run benchmark_shootout
         run: timeout 30 cargo run --example benchmark_shootout --release || true

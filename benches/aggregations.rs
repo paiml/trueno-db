@@ -50,9 +50,7 @@ fn bench_sum(c: &mut Criterion) {
         BenchmarkId::new("scalar_baseline", MEDIUM_SIZE),
         &medium_data,
         |b, data| {
-            b.iter(|| {
-                black_box(data).iter().sum::<f32>()
-            });
+            b.iter(|| black_box(data).iter().sum::<f32>());
         },
     );
 

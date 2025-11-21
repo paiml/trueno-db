@@ -57,7 +57,10 @@ fn test_morsel_size_bounded() {
         );
     }
 
-    assert!(morsel_count > 0, "Should have processed at least one morsel");
+    assert!(
+        morsel_count > 0,
+        "Should have processed at least one morsel"
+    );
     assert_eq!(
         total_rows,
         10 * batch_size,
@@ -127,8 +130,12 @@ fn test_morsel_iteration_preserves_data() {
     for batch_idx in 0..20 {
         // 20 batches
         let batch_size = 500_000; // 500K rows/batch
-        let ids: Vec<i32> = (0..batch_size).map(|i| i + (batch_idx * batch_size)).collect();
-        let values: Vec<f32> = (0..batch_size).map(|i| (i + batch_idx * batch_size) as f32).collect();
+        let ids: Vec<i32> = (0..batch_size)
+            .map(|i| i + (batch_idx * batch_size))
+            .collect();
+        let values: Vec<f32> = (0..batch_size)
+            .map(|i| (i + batch_idx * batch_size) as f32)
+            .collect();
 
         expected_sum += values.iter().map(|v| *v as i64).sum::<i64>();
 

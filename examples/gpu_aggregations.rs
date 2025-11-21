@@ -154,7 +154,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Data: 10M integers (processed in 1M chunks)");
     println!("  GPU Result: {}", total_sum);
     println!("  GPU Time: {:?}", gpu_time);
-    println!("  Throughput: {:.2} GB/s", (10_000_000 * 4) as f64 / gpu_time.as_secs_f64() / 1_000_000_000.0);
+    println!(
+        "  Throughput: {:.2} GB/s",
+        (10_000_000 * 4) as f64 / gpu_time.as_secs_f64() / 1_000_000_000.0
+    );
     println!();
 
     // GPU Device Information

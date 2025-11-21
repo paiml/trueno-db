@@ -7,7 +7,11 @@ fn test_query_engine_parse() {
     // Test basic SQL parsing
     let engine = QueryEngine::new();
     let result = engine.parse("SELECT * FROM users");
-    assert!(result.is_ok(), "Query parsing should succeed: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Query parsing should succeed: {:?}",
+        result.err()
+    );
 
     let plan = result.unwrap();
     assert_eq!(plan.table, "users");
@@ -41,7 +45,9 @@ fn test_query_engine_parse_empty() {
 #[test]
 fn test_where_clause() {
     let engine = QueryEngine::new();
-    let plan = engine.parse("SELECT id, name FROM users WHERE age > 18").unwrap();
+    let plan = engine
+        .parse("SELECT id, name FROM users WHERE age > 18")
+        .unwrap();
 
     assert_eq!(plan.table, "users");
     assert_eq!(plan.columns, vec!["id", "name"]);
@@ -52,7 +58,9 @@ fn test_where_clause() {
 #[test]
 fn test_group_by_with_aggregation() {
     let engine = QueryEngine::new();
-    let plan = engine.parse("SELECT category, COUNT(*) as total FROM events GROUP BY category").unwrap();
+    let plan = engine
+        .parse("SELECT category, COUNT(*) as total FROM events GROUP BY category")
+        .unwrap();
 
     assert_eq!(plan.table, "events");
     assert_eq!(plan.group_by, vec!["category"]);
@@ -63,7 +71,9 @@ fn test_group_by_with_aggregation() {
 #[test]
 fn test_order_by_limit() {
     let engine = QueryEngine::new();
-    let plan = engine.parse("SELECT * FROM data ORDER BY score DESC LIMIT 10").unwrap();
+    let plan = engine
+        .parse("SELECT * FROM data ORDER BY score DESC LIMIT 10")
+        .unwrap();
 
     assert_eq!(plan.table, "data");
     assert_eq!(plan.order_by.len(), 1);
@@ -130,7 +140,10 @@ fn test_reject_qualified_wildcard() {
     let engine = QueryEngine::new();
     let result = engine.parse("SELECT users.* FROM users");
     assert!(result.is_err(), "Qualified wildcards should be rejected");
-    assert!(result.unwrap_err().to_string().contains("Qualified wildcards"));
+    assert!(result
+        .unwrap_err()
+        .to_string()
+        .contains("Qualified wildcards"));
 }
 
 #[test]
@@ -139,7 +152,9 @@ fn test_order_by_ascending() {
     let engine = QueryEngine::new();
 
     // Explicit ASC
-    let plan1 = engine.parse("SELECT * FROM data ORDER BY score ASC").unwrap();
+    let plan1 = engine
+        .parse("SELECT * FROM data ORDER BY score ASC")
+        .unwrap();
     assert_eq!(plan1.order_by.len(), 1);
     assert_eq!(plan1.order_by[0].1, OrderDirection::Asc);
 
@@ -153,7 +168,9 @@ fn test_order_by_ascending() {
 fn test_column_alias_without_aggregation() {
     // Test aliasing regular columns (not aggregations)
     let engine = QueryEngine::new();
-    let plan = engine.parse("SELECT id as user_id, name as username FROM users").unwrap();
+    let plan = engine
+        .parse("SELECT id as user_id, name as username FROM users")
+        .unwrap();
 
     assert_eq!(plan.columns, vec!["user_id", "username"]);
     assert_eq!(plan.aggregations.len(), 0);

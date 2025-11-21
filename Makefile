@@ -114,6 +114,16 @@ bench-simd: ## Benchmark SIMD backend
 bench-comparison: ## Compare all backends
 	cargo bench --bench backend_comparison
 
+bench-competitive: ## Benchmark vs DuckDB/SQLite (temporarily disables mold linker)
+	@echo "🏁 Running competitive benchmarks (Trueno vs DuckDB vs SQLite)..."
+	@echo "    Note: Mold linker temporarily disabled (DuckDB build compatibility)"
+	@# Temporarily disable mold linker (breaks DuckDB build)
+	@test -f ~/.cargo/config.toml && mv ~/.cargo/config.toml ~/.cargo/config.toml.bench-backup || true
+	@cargo bench --bench competitive_benchmarks
+	@# Restore mold linker
+	@test -f ~/.cargo/config.toml.bench-backup && mv ~/.cargo/config.toml.bench-backup ~/.cargo/config.toml || true
+	@echo "✅ Competitive benchmarks complete"
+
 ## Documentation
 
 book: ## Build the mdBook

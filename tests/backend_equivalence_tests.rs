@@ -445,8 +445,14 @@ mod edge_cases {
         let scalar_sum = ScalarBackend.sum(&data_overflow);
 
         // All backends should overflow consistently (wrapping)
-        assert_eq!(gpu_sum, simd_sum, "GPU and SIMD disagree on overflow behavior");
-        assert_eq!(simd_sum, scalar_sum, "SIMD and Scalar disagree on overflow behavior");
+        assert_eq!(
+            gpu_sum, simd_sum,
+            "GPU and SIMD disagree on overflow behavior"
+        );
+        assert_eq!(
+            simd_sum, scalar_sum,
+            "SIMD and Scalar disagree on overflow behavior"
+        );
     }
 
     #[test]

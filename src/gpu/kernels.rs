@@ -357,7 +357,11 @@ pub async fn sum_f32(
 /// # Errors
 /// Does not return errors in current implementation
 #[allow(clippy::unused_async)]
-pub async fn count(_device: &wgpu::Device, _queue: &wgpu::Queue, data: &dyn Array) -> Result<usize> {
+pub async fn count(
+    _device: &wgpu::Device,
+    _queue: &wgpu::Queue,
+    data: &dyn Array,
+) -> Result<usize> {
     // COUNT is trivial - just return array length
     Ok(data.len())
 }
@@ -714,6 +718,9 @@ mod tests {
 
         let result = sum_f32(&device, &queue, &data).await;
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("not yet implemented"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("not yet implemented"));
     }
 }

@@ -46,7 +46,7 @@ quickcheck = "1"           # Property-based testing (backend equivalence)
 rand = "0.8"               # Random data generation for examples
 
 # Competitive benchmarks (CORE-009) - only used when running benchmarks
-duckdb = "1.1"  # DuckDB comparison
+duckdb = { version = "1.1", features = ["bundled"] }  # DuckDB comparison (bundled = build from source)
 rusqlite = "0.32"  # SQLite comparison
 
 # Coverage

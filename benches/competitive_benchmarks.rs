@@ -59,10 +59,13 @@ fn bench_sum_competitive(c: &mut Criterion) {
 
     // DuckDB comparison
     if let Ok(conn) = DuckDB::open_in_memory() {
-        if conn.execute_batch(
-            "CREATE TABLE data(value INTEGER);
+        if conn
+            .execute_batch(
+                "CREATE TABLE data(value INTEGER);
              INSERT INTO data SELECT * FROM range(0, 1000000);",
-        ).is_ok() {
+            )
+            .is_ok()
+        {
             group.bench_function(BenchmarkId::new("duckdb", "1M_rows"), |b| {
                 b.iter(|| {
                     let result: i64 = conn
@@ -80,7 +83,10 @@ fn bench_sum_competitive(c: &mut Criterion) {
 
     // SQLite comparison
     if let Ok(conn) = SQLite::open_in_memory() {
-        if conn.execute_batch("CREATE TABLE data(value INTEGER); BEGIN;").is_ok() {
+        if conn
+            .execute_batch("CREATE TABLE data(value INTEGER); BEGIN;")
+            .is_ok()
+        {
             if let Ok(mut stmt) = conn.prepare("INSERT INTO data VALUES (?)") {
                 let mut success = true;
                 for i in 0..MEDIUM {
@@ -146,10 +152,13 @@ fn bench_avg_competitive(c: &mut Criterion) {
 
     // DuckDB comparison
     if let Ok(conn) = DuckDB::open_in_memory() {
-        if conn.execute_batch(
-            "CREATE TABLE data(value DOUBLE);
+        if conn
+            .execute_batch(
+                "CREATE TABLE data(value DOUBLE);
              INSERT INTO data SELECT CAST(range AS DOUBLE) FROM range(0, 1000000);",
-        ).is_ok() {
+            )
+            .is_ok()
+        {
             group.bench_function(BenchmarkId::new("duckdb", "1M_rows"), |b| {
                 b.iter(|| {
                     let result: f64 = conn
@@ -167,7 +176,10 @@ fn bench_avg_competitive(c: &mut Criterion) {
 
     // SQLite comparison
     if let Ok(conn) = SQLite::open_in_memory() {
-        if conn.execute_batch("CREATE TABLE data(value REAL); BEGIN;").is_ok() {
+        if conn
+            .execute_batch("CREATE TABLE data(value REAL); BEGIN;")
+            .is_ok()
+        {
             if let Ok(mut stmt) = conn.prepare("INSERT INTO data VALUES (?)") {
                 let mut success = true;
                 for i in 0..MEDIUM {
