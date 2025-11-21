@@ -17,7 +17,9 @@
 use crate::{Error, Result};
 use arrow::array::{Array, Float32Array, Int32Array};
 use wgpu;
+use wgpu::util::DeviceExt;
 
+pub mod jit;
 pub mod kernels;
 
 /// GPU compute engine for aggregations
@@ -26,6 +28,8 @@ pub struct GpuEngine {
     pub device: wgpu::Device,
     /// GPU command queue (public for benchmarking)
     pub queue: wgpu::Queue,
+    /// JIT compiler for kernel fusion
+    jit: jit::JitCompiler,
 }
 
 impl GpuEngine {
@@ -63,7 +67,11 @@ impl GpuEngine {
             .await
             .map_err(|e| Error::GpuInitFailed(format!("Failed to create device: {e}")))?;
 
-        Ok(Self { device, queue })
+        Ok(Self {
+            device,
+            queue,
+            jit: jit::JitCompiler::new(),
+        })
     }
 
     /// Execute SUM aggregation on GPU
@@ -125,6 +133,188 @@ impl GpuEngine {
         } else {
             Ok(sum / count as f32)
         }
+    }
+
+    /// Execute fused filter+sum aggregation on GPU (JIT-compiled kernel)
+    ///
+    /// Toyota Way: Muda elimination - fuses filter and sum in single pass,
+    /// eliminating intermediate buffer write.
+    ///
+    /// # Arguments
+    /// * `data` - Input array (Int32)
+    /// * `filter_threshold` - Filter threshold value (e.g., WHERE value > 1000)
+    /// * `filter_op` - Filter operator ("gt", "lt", "eq", "gte", "lte", "ne")
+    ///
+    /// # Returns
+    /// Sum of filtered elements
+    ///
+    /// # Errors
+    /// Returns error if GPU execution fails
+    ///
+    /// # Example
+    /// ```ignore
+    /// // Equivalent to: SELECT SUM(value) FROM data WHERE value > 1000
+    /// let result = engine.fused_filter_sum(&data, 1000, "gt").await?;
+    /// ```
+    #[allow(clippy::too_many_lines)]
+    #[allow(clippy::cast_possible_truncation)]
+    pub async fn fused_filter_sum(
+        &self,
+        data: &Int32Array,
+        filter_threshold: i32,
+        filter_op: &str,
+    ) -> Result<i32> {
+        // JIT compile the fused kernel (cached automatically)
+        let shader_module =
+            self.jit
+                .compile_fused_filter_sum(&self.device, filter_threshold, filter_op);
+
+        // Prepare input data
+        let input_data: Vec<i32> = data.values().to_vec();
+        let input_size = input_data.len();
+
+        if input_size == 0 {
+            return Ok(0);
+        }
+
+        // Create GPU buffers
+        let input_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Fused Filter+Sum Input"),
+                contents: bytemuck::cast_slice(&input_data),
+                usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+            });
+
+        let output_buffer = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Fused Filter+Sum Output"),
+                contents: bytemuck::cast_slice(&[0i32]),
+                usage: wgpu::BufferUsages::STORAGE
+                    | wgpu::BufferUsages::COPY_SRC
+                    | wgpu::BufferUsages::COPY_DST,
+            });
+
+        // Create bind group layout
+        let bind_group_layout =
+            self.device
+                .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                    label: Some("Fused Filter+Sum Bind Group Layout"),
+                    entries: &[
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 0,
+                            visibility: wgpu::ShaderStages::COMPUTE,
+                            ty: wgpu::BindingType::Buffer {
+                                ty: wgpu::BufferBindingType::Storage { read_only: true },
+                                has_dynamic_offset: false,
+                                min_binding_size: None,
+                            },
+                            count: None,
+                        },
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 1,
+                            visibility: wgpu::ShaderStages::COMPUTE,
+                            ty: wgpu::BindingType::Buffer {
+                                ty: wgpu::BufferBindingType::Storage { read_only: false },
+                                has_dynamic_offset: false,
+                                min_binding_size: None,
+                            },
+                            count: None,
+                        },
+                    ],
+                });
+
+        // Create bind group
+        let bind_group = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("Fused Filter+Sum Bind Group"),
+            layout: &bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: input_buffer.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: output_buffer.as_entire_binding(),
+                },
+            ],
+        });
+
+        // Create compute pipeline
+        let pipeline_layout =
+            self.device
+                .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                    label: Some("Fused Filter+Sum Pipeline Layout"),
+                    bind_group_layouts: &[&bind_group_layout],
+                    push_constant_ranges: &[],
+                });
+
+        let compute_pipeline =
+            self.device
+                .create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+                    label: Some("Fused Filter+Sum Pipeline"),
+                    layout: Some(&pipeline_layout),
+                    module: &shader_module,
+                    entry_point: "fused_filter_sum",
+                    compilation_options: wgpu::PipelineCompilationOptions::default(),
+                    cache: None,
+                });
+
+        // Create command encoder and execute
+        let mut encoder = self
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("Fused Filter+Sum Encoder"),
+            });
+
+        {
+            let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                label: Some("Fused Filter+Sum Pass"),
+                timestamp_writes: None,
+            });
+            compute_pass.set_pipeline(&compute_pipeline);
+            compute_pass.set_bind_group(0, &bind_group, &[]);
+
+            // Dispatch workgroups (256 threads per workgroup)
+            let workgroup_count = (input_size as u32).div_ceil(256);
+            compute_pass.dispatch_workgroups(workgroup_count, 1, 1);
+        }
+
+        // Copy output to staging buffer
+        let staging_buffer = self.device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Fused Filter+Sum Staging Buffer"),
+            size: 4,
+            usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+
+        encoder.copy_buffer_to_buffer(&output_buffer, 0, &staging_buffer, 0, 4);
+
+        // Submit commands
+        self.queue.submit(Some(encoder.finish()));
+
+        // Read result
+        let buffer_slice = staging_buffer.slice(..);
+        let (tx, rx) = futures_intrusive::channel::shared::oneshot_channel();
+        buffer_slice.map_async(wgpu::MapMode::Read, move |result| {
+            tx.send(result).ok();
+        });
+
+        self.device.poll(wgpu::Maintain::Wait);
+
+        rx.receive()
+            .await
+            .ok_or_else(|| Error::Other("Failed to receive buffer map result".to_string()))?
+            .map_err(|e| Error::Other(format!("Buffer mapping failed: {e}")))?;
+
+        let data_view = buffer_slice.get_mapped_range();
+        let result = i32::from_le_bytes([data_view[0], data_view[1], data_view[2], data_view[3]]);
+
+        drop(data_view);
+        staging_buffer.unmap();
+
+        Ok(result)
     }
 }
 
