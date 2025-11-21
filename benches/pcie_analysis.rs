@@ -21,7 +21,11 @@
 //!
 //! Run with: cargo bench --bench pcie_analysis --features gpu
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
+
+#[cfg(feature = "gpu")]
+use criterion::{black_box, BenchmarkId};
+#[cfg(feature = "gpu")]
 use std::time::Instant;
 
 #[cfg(feature = "gpu")]
@@ -32,9 +36,13 @@ use trueno_db::gpu::GpuEngine;
 use wgpu::util::DeviceExt;
 
 // Dataset sizes for testing
+#[allow(dead_code)]
 const SMALL: usize = 1_000; // 1K rows = 4KB
+#[allow(dead_code)]
 const MEDIUM: usize = 100_000; // 100K rows = 400KB
+#[allow(dead_code)]
 const LARGE: usize = 1_000_000; // 1M rows = 4MB
+#[allow(dead_code)]
 const XLARGE: usize = 10_000_000; // 10M rows = 40MB
 
 #[cfg(feature = "gpu")]
@@ -192,6 +200,11 @@ criterion_group!(
 );
 
 #[cfg(not(feature = "gpu"))]
-criterion_group!(pcie_benches,);
+fn bench_gpu_not_available(_c: &mut Criterion) {
+    eprintln!("GPU benchmarks require --features gpu");
+}
+
+#[cfg(not(feature = "gpu"))]
+criterion_group!(pcie_benches, bench_gpu_not_available);
 
 criterion_main!(pcie_benches);

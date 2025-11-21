@@ -45,6 +45,10 @@ proptest = "1.5"           # Property-based testing
 quickcheck = "1"           # Property-based testing (backend equivalence)
 rand = "0.8"               # Random data generation for examples
 
+# Competitive benchmarks (CORE-009) - only used when running benchmarks
+duckdb = "1.1"  # DuckDB comparison
+rusqlite = "0.32"  # SQLite comparison
+
 # Coverage
 cargo-llvm-cov = "0.6"
 
