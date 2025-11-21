@@ -363,31 +363,293 @@ pub async fn count(_device: &wgpu::Device, _queue: &wgpu::Queue, data: &dyn Arra
 }
 
 /// Execute MIN aggregation on GPU (i32)
-/// Placeholder - not yet implemented
 ///
 /// # Errors
-/// Returns error (not yet implemented)
-#[allow(clippy::unused_async)]
-pub async fn min_i32(
-    _device: &wgpu::Device,
-    _queue: &wgpu::Queue,
-    _data: &Int32Array,
-) -> Result<i32> {
-    // Placeholder implementation
-    Err(Error::Other("MIN not yet implemented".to_string()))
+/// Returns error if GPU execution fails
+///
+/// # Panics
+/// May panic if buffer mapping fails (internal GPU error)
+#[allow(clippy::too_many_lines)]
+#[allow(clippy::cast_possible_truncation)]
+pub async fn min_i32(device: &wgpu::Device, queue: &wgpu::Queue, data: &Int32Array) -> Result<i32> {
+    let input_data: Vec<i32> = data.values().to_vec();
+    let input_size = input_data.len();
+
+    if input_size == 0 {
+        return Ok(i32::MAX); // Empty array minimum is i32::MAX
+    }
+
+    // Create input buffer
+    let input_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        label: Some("MIN Input Buffer"),
+        contents: bytemuck::cast_slice(&input_data),
+        usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+    });
+
+    // Create output buffer (initialized to i32::MAX)
+    let output_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        label: Some("MIN Output Buffer"),
+        contents: bytemuck::cast_slice(&[i32::MAX]),
+        usage: wgpu::BufferUsages::STORAGE
+            | wgpu::BufferUsages::COPY_SRC
+            | wgpu::BufferUsages::COPY_DST,
+    });
+
+    // Create compute pipeline
+    let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        label: Some("MIN i32 Shader"),
+        source: wgpu::ShaderSource::Wgsl(MIN_I32_SHADER.into()),
+    });
+
+    let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+        label: Some("MIN Bind Group Layout"),
+        entries: &[
+            wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::COMPUTE,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Storage { read_only: true },
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            },
+            wgpu::BindGroupLayoutEntry {
+                binding: 1,
+                visibility: wgpu::ShaderStages::COMPUTE,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Storage { read_only: false },
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            },
+        ],
+    });
+
+    let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+        label: Some("MIN Pipeline Layout"),
+        bind_group_layouts: &[&bind_group_layout],
+        push_constant_ranges: &[],
+    });
+
+    let compute_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+        label: Some("MIN i32 Pipeline"),
+        layout: Some(&pipeline_layout),
+        module: &shader,
+        entry_point: "min_reduce",
+        compilation_options: wgpu::PipelineCompilationOptions::default(),
+        cache: None,
+    });
+
+    // Create bind group
+    let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: Some("MIN Bind Group"),
+        layout: &bind_group_layout,
+        entries: &[
+            wgpu::BindGroupEntry {
+                binding: 0,
+                resource: input_buffer.as_entire_binding(),
+            },
+            wgpu::BindGroupEntry {
+                binding: 1,
+                resource: output_buffer.as_entire_binding(),
+            },
+        ],
+    });
+
+    // Execute compute shader
+    let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
+        label: Some("MIN Compute Encoder"),
+    });
+
+    {
+        let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+            label: Some("MIN Compute Pass"),
+            timestamp_writes: None,
+        });
+        compute_pass.set_pipeline(&compute_pipeline);
+        compute_pass.set_bind_group(0, &bind_group, &[]);
+
+        let workgroup_count = (input_size as u32).div_ceil(WORKGROUP_SIZE);
+        compute_pass.dispatch_workgroups(workgroup_count, 1, 1);
+    }
+
+    // Read result buffer
+    let staging_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some("MIN Staging Buffer"),
+        size: 4, // i32 = 4 bytes
+        usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
+        mapped_at_creation: false,
+    });
+
+    encoder.copy_buffer_to_buffer(&output_buffer, 0, &staging_buffer, 0, 4);
+    queue.submit(Some(encoder.finish()));
+
+    // Map buffer and read result
+    let buffer_slice = staging_buffer.slice(..);
+    let (sender, receiver) = futures_intrusive::channel::shared::oneshot_channel();
+    buffer_slice.map_async(wgpu::MapMode::Read, move |result| {
+        sender.send(result).unwrap();
+    });
+    device.poll(wgpu::Maintain::Wait);
+
+    receiver
+        .receive()
+        .await
+        .ok_or_else(|| Error::Other("Failed to receive mapping result".to_string()))?
+        .map_err(|e| Error::Other(format!("Buffer mapping failed: {e:?}")))?;
+
+    let data = buffer_slice.get_mapped_range();
+    let result = i32::from_le_bytes(data[0..4].try_into().unwrap());
+    drop(data);
+    staging_buffer.unmap();
+
+    Ok(result)
 }
 
 /// Execute MAX aggregation on GPU (i32)
-/// Placeholder - not yet implemented
 ///
 /// # Errors
-/// Returns error (not yet implemented)
-#[allow(clippy::unused_async)]
-pub async fn max_i32(
-    _device: &wgpu::Device,
-    _queue: &wgpu::Queue,
-    _data: &Int32Array,
-) -> Result<i32> {
-    // Placeholder implementation
-    Err(Error::Other("MAX not yet implemented".to_string()))
+/// Returns error if GPU execution fails
+///
+/// # Panics
+/// May panic if buffer mapping fails (internal GPU error)
+#[allow(clippy::too_many_lines)]
+#[allow(clippy::cast_possible_truncation)]
+pub async fn max_i32(device: &wgpu::Device, queue: &wgpu::Queue, data: &Int32Array) -> Result<i32> {
+    let input_data: Vec<i32> = data.values().to_vec();
+    let input_size = input_data.len();
+
+    if input_size == 0 {
+        return Ok(i32::MIN); // Empty array maximum is i32::MIN
+    }
+
+    // Create input buffer
+    let input_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        label: Some("MAX Input Buffer"),
+        contents: bytemuck::cast_slice(&input_data),
+        usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
+    });
+
+    // Create output buffer (initialized to i32::MIN)
+    let output_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        label: Some("MAX Output Buffer"),
+        contents: bytemuck::cast_slice(&[i32::MIN]),
+        usage: wgpu::BufferUsages::STORAGE
+            | wgpu::BufferUsages::COPY_SRC
+            | wgpu::BufferUsages::COPY_DST,
+    });
+
+    // Create compute pipeline
+    let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        label: Some("MAX i32 Shader"),
+        source: wgpu::ShaderSource::Wgsl(MAX_I32_SHADER.into()),
+    });
+
+    let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+        label: Some("MAX Bind Group Layout"),
+        entries: &[
+            wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::COMPUTE,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Storage { read_only: true },
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            },
+            wgpu::BindGroupLayoutEntry {
+                binding: 1,
+                visibility: wgpu::ShaderStages::COMPUTE,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Storage { read_only: false },
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            },
+        ],
+    });
+
+    let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+        label: Some("MAX Pipeline Layout"),
+        bind_group_layouts: &[&bind_group_layout],
+        push_constant_ranges: &[],
+    });
+
+    let compute_pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+        label: Some("MAX i32 Pipeline"),
+        layout: Some(&pipeline_layout),
+        module: &shader,
+        entry_point: "max_reduce",
+        compilation_options: wgpu::PipelineCompilationOptions::default(),
+        cache: None,
+    });
+
+    // Create bind group
+    let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+        label: Some("MAX Bind Group"),
+        layout: &bind_group_layout,
+        entries: &[
+            wgpu::BindGroupEntry {
+                binding: 0,
+                resource: input_buffer.as_entire_binding(),
+            },
+            wgpu::BindGroupEntry {
+                binding: 1,
+                resource: output_buffer.as_entire_binding(),
+            },
+        ],
+    });
+
+    // Execute compute shader
+    let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
+        label: Some("MAX Compute Encoder"),
+    });
+
+    {
+        let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+            label: Some("MAX Compute Pass"),
+            timestamp_writes: None,
+        });
+        compute_pass.set_pipeline(&compute_pipeline);
+        compute_pass.set_bind_group(0, &bind_group, &[]);
+
+        let workgroup_count = (input_size as u32).div_ceil(WORKGROUP_SIZE);
+        compute_pass.dispatch_workgroups(workgroup_count, 1, 1);
+    }
+
+    // Read result buffer
+    let staging_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some("MAX Staging Buffer"),
+        size: 4, // i32 = 4 bytes
+        usage: wgpu::BufferUsages::MAP_READ | wgpu::BufferUsages::COPY_DST,
+        mapped_at_creation: false,
+    });
+
+    encoder.copy_buffer_to_buffer(&output_buffer, 0, &staging_buffer, 0, 4);
+    queue.submit(Some(encoder.finish()));
+
+    // Map buffer and read result
+    let buffer_slice = staging_buffer.slice(..);
+    let (sender, receiver) = futures_intrusive::channel::shared::oneshot_channel();
+    buffer_slice.map_async(wgpu::MapMode::Read, move |result| {
+        sender.send(result).unwrap();
+    });
+    device.poll(wgpu::Maintain::Wait);
+
+    receiver
+        .receive()
+        .await
+        .ok_or_else(|| Error::Other("Failed to receive mapping result".to_string()))?
+        .map_err(|e| Error::Other(format!("Buffer mapping failed: {e:?}")))?;
+
+    let data = buffer_slice.get_mapped_range();
+    let result = i32::from_le_bytes(data[0..4].try_into().unwrap());
+    drop(data);
+    staging_buffer.unmap();
+
+    Ok(result)
 }
