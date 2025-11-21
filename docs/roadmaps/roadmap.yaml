@@ -25,18 +25,31 @@ roadmap:
     description: |
       Replace naive row count threshold with physics-based cost model.
       GPU only if: compute_time > 5 * transfer_time (Gregg & Hazelwood 2011)
-    status: pending
+    status: completed
     priority: high
     phase: 1
     labels: [backend, cost-model, genchi-genbutsu, phase-1]
     acceptance_criteria:
-      - Arithmetic intensity calculator (FLOPs/Byte)
-      - PCIe transfer time estimator (32 GB/s Gen4 x16)
-      - 5x rule implementation
-      - Backend selection tests (simple SUM should use SIMD, not GPU)
+      - Arithmetic intensity calculator (FLOPs/Byte) ✅
+      - PCIe transfer time estimator (32 GB/s Gen4 x16) ✅
+      - 5x rule implementation ✅
+      - Backend selection tests (simple SUM should use SIMD, not GPU) ✅
+      - FLOPs estimation helpers for SQL operations ✅
+    implementation:
+      - BackendDispatcher::select() implements 5x rule
+      - arithmetic_intensity() calculates FLOPs/Byte ratio
+      - estimate_simple_aggregation_flops() for SUM/AVG/COUNT/MIN/MAX (1 FLOP/elem)
+      - estimate_group_by_flops() for GROUP BY (6 FLOPs/elem)
+      - estimate_filter_flops() for WHERE (2 FLOPs/elem)
+      - estimate_join_flops() for hash joins (5 FLOPs/elem)
+      - All helpers are const fn for compile-time optimization
+      - 11 comprehensive backend selection tests
+      - Realistic SQL operation tests validate cost model accuracy
     references:
       - "Gregg & Hazelwood (2011): PCIe bus bottleneck analysis"
       - "Breß et al. (2014): Operator variant selection"
+      - "src/backend/mod.rs"
+      - "tests/backend_selection_test.rs"
 
   - id: CORE-003
     title: "JIT WGSL compiler for kernel fusion"
