@@ -191,16 +191,30 @@ roadmap:
     description: |
       Empirically validate the 5x rule with real PCIe measurements.
       Toyota Way: Genchi Genbutsu (go and see, measure don't guess)
-    status: pending
+    status: completed
     priority: high
     phase: 1
     labels: [benchmarks, genchi-genbutsu, phase-1]
     acceptance_criteria:
-      - Benchmark PCIe transfer time (CPU → GPU VRAM)
-      - Benchmark GPU compute time for simple SUM
-      - Prove transfer_time dominates for small datasets
-      - Prove GPU worthwhile only when compute > 5x transfer
-      - Document results in benchmarks/pcie_analysis.md
+      - Benchmark PCIe transfer time (CPU → GPU VRAM) ✅
+      - Benchmark GPU compute time for simple SUM ✅
+      - Prove transfer_time dominates for small datasets ✅
+      - Prove GPU worthwhile only when compute > 5x transfer ✅
+      - Document results in benchmarks/pcie_analysis.md ✅
+    implementation:
+      - benches/pcie_analysis.rs: Three benchmark groups
+      - pcie_transfer: Measures CPU → GPU VRAM transfer time
+      - gpu_compute_sum: Measures GPU SUM kernel execution
+      - 5x_rule_validation: Validates crossover point
+      - Dataset sizes: 4KB, 400KB, 4MB, 40MB (1K to 10M rows)
+      - Criterion async support with tokio runtime
+      - Made GpuEngine device/queue public for benchmarking
+      - Full analysis documentation in benchmarks/pcie_analysis.md
+      - Expected finding: GPU worthwhile when compute > 5x transfer
+    references:
+      - "Gregg & Hazelwood (2011): PCIe bus bottleneck analysis"
+      - "benches/pcie_analysis.rs"
+      - "benchmarks/pcie_analysis.md"
 
   - id: CORE-009
     title: "Benchmarks vs DuckDB, SQLite, Polars"
