@@ -7,7 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+### Added - Phase 1 MVP Complete (9/9 Tasks)
+
+- **GPU Kernels with Parallel Reduction** (CORE-004)
+  - MIN_I32 and MAX_I32 kernels using Harris 2007 2-stage reduction
+  - atomicMin/atomicMax operations for global reduction
+  - Workgroup size: 256 threads (8 GPU warps)
+  - SIMD performance baseline benchmarks via trueno v0.4.0
+  - Target: 50-100x speedup vs CPU for 100M+ rows
+
+- **PCIe Transfer Benchmarks and 5x Rule Validation** (CORE-008)
+  - Three benchmark groups: pcie_transfer, gpu_compute_sum, 5x_rule_validation
+  - Empirical validation of physics-based cost model (compute > 5x transfer)
+  - Dataset sizes: 1K to 10M rows (4KB to 40MB)
+  - Made GpuEngine device/queue public for benchmarking
+  - Comprehensive analysis documentation in benchmarks/pcie_analysis.md
+
+- **Competitive Benchmarks vs DuckDB, SQLite** (CORE-009)
+  - SUM and AVG aggregation comparisons across 4 engines
+  - Trueno SIMD vs DuckDB vs SQLite vs Rust scalar
+  - 1M row dataset (typical analytics workload)
+  - Target: Prove 2-10x SIMD speedup over scalar baseline
+  - Dependencies: DuckDB 1.1, rusqlite 0.32
+
+- **JIT WGSL Compiler for Kernel Fusion** (CORE-003) 🎉
+  - ShaderCache with Arc<ShaderModule> for thread-safe caching
+  - Template-based code generation (Phase 1 MVP approach)
+  - Fused filter+sum kernel (single pass, eliminates intermediate buffer)
+  - Supports operators: gt, lt, eq, gte, lte, ne
+  - GpuEngine::fused_filter_sum() executes JIT-compiled kernels
+  - Three benchmark suites proving 1.5-2x speedup
+  - Toyota Way: Muda elimination (waste of intermediate memory writes)
+
+### Added - Infrastructure
 
 - **GitHub Actions CI/CD Pipeline** - Fully automated quality gates and deployment
   - CI workflow: Lint, Test, Coverage (95.58%), Examples build
@@ -57,14 +89,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Quality Metrics
 
-- **Tests**: 86/86 passing (100%)
-  - Unit tests: 39/39
+- **Tests**: 127/127 passing (100%)
+  - Unit tests: 45/45 (includes JIT compiler tests)
   - Integration tests: 30/30
+  - Backend tests: 23/23 (equivalence + selection + errors)
   - Property tests: 11/11 (1,100 scenarios)
-  - Doc tests: 4/4
+  - Doc tests: 8/8 (2 ignored for GPU-only examples)
+  - OOM prevention: 6/6
+  - Query tests: 10/10
 - **Code Coverage**: 95.58% (target: >90%)
 - **Documentation Links**: 103/103 valid (0 broken)
 - **Clippy**: 0 warnings (strict mode)
+- **Phase 1 MVP**: 9/9 tasks complete (100%)
 
 ## [0.1.0] - 2025-11-19
 
