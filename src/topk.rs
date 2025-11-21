@@ -71,17 +71,20 @@ pub trait TopKSelection {
     /// use arrow::datatypes::{DataType, Field, Schema};
     /// use std::sync::Arc;
     ///
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let schema = Arc::new(Schema::new(vec![
     ///     Field::new("score", DataType::Float64, false),
     /// ]));
     /// let batch = RecordBatch::try_new(
     ///     schema,
     ///     vec![Arc::new(Float64Array::from(vec![1.0, 5.0, 3.0, 9.0, 2.0]))],
-    /// ).unwrap();
+    /// )?;
     ///
     /// // Get top 3 highest scores
-    /// let top3 = batch.top_k(0, 3, SortOrder::Descending).unwrap();
+    /// let top3 = batch.top_k(0, 3, SortOrder::Descending)?;
     /// assert_eq!(top3.num_rows(), 3);
+    /// # Ok(())
+    /// # }
     /// ```
     fn top_k(&self, column_index: usize, k: usize, order: SortOrder) -> crate::Result<RecordBatch>;
 }
@@ -126,19 +129,39 @@ fn select_top_k_indices(
 ) -> crate::Result<Vec<usize>> {
     match column.data_type() {
         arrow::datatypes::DataType::Int32 => {
-            let array = column.as_any().downcast_ref::<Int32Array>().unwrap();
+            let array = column
+                .as_any()
+                .downcast_ref::<Int32Array>()
+                .ok_or_else(|| {
+                    Error::Other("Failed to downcast Int32 column to Int32Array".to_string())
+                })?;
             select_top_k_i32(array, k, order)
         }
         arrow::datatypes::DataType::Int64 => {
-            let array = column.as_any().downcast_ref::<Int64Array>().unwrap();
+            let array = column
+                .as_any()
+                .downcast_ref::<Int64Array>()
+                .ok_or_else(|| {
+                    Error::Other("Failed to downcast Int64 column to Int64Array".to_string())
+                })?;
             select_top_k_i64(array, k, order)
         }
         arrow::datatypes::DataType::Float32 => {
-            let array = column.as_any().downcast_ref::<Float32Array>().unwrap();
+            let array = column
+                .as_any()
+                .downcast_ref::<Float32Array>()
+                .ok_or_else(|| {
+                    Error::Other("Failed to downcast Float32 column to Float32Array".to_string())
+                })?;
             select_top_k_f32(array, k, order)
         }
         arrow::datatypes::DataType::Float64 => {
-            let array = column.as_any().downcast_ref::<Float64Array>().unwrap();
+            let array = column
+                .as_any()
+                .downcast_ref::<Float64Array>()
+                .ok_or_else(|| {
+                    Error::Other("Failed to downcast Float64 column to Float64Array".to_string())
+                })?;
             select_top_k_f64(array, k, order)
         }
         dt => Err(Error::InvalidInput(format!(
@@ -409,27 +432,52 @@ fn build_batch_from_indices(batch: &RecordBatch, indices: &[usize]) -> crate::Re
 
         let new_array: ArrayRef = match column.data_type() {
             DataType::Int32 => {
-                let array = column.as_any().downcast_ref::<Int32Array>().unwrap();
+                let array = column
+                    .as_any()
+                    .downcast_ref::<Int32Array>()
+                    .ok_or_else(|| {
+                        Error::Other("Failed to downcast Int32 column to Int32Array".to_string())
+                    })?;
                 let values: Vec<i32> = indices.iter().map(|&idx| array.value(idx)).collect();
                 Arc::new(Int32Array::from(values))
             }
             DataType::Int64 => {
-                let array = column.as_any().downcast_ref::<Int64Array>().unwrap();
+                let array = column
+                    .as_any()
+                    .downcast_ref::<Int64Array>()
+                    .ok_or_else(|| {
+                        Error::Other("Failed to downcast Int64 column to Int64Array".to_string())
+                    })?;
                 let values: Vec<i64> = indices.iter().map(|&idx| array.value(idx)).collect();
                 Arc::new(Int64Array::from(values))
             }
             DataType::Float32 => {
-                let array = column.as_any().downcast_ref::<Float32Array>().unwrap();
+                let array = column
+                    .as_any()
+                    .downcast_ref::<Float32Array>()
+                    .ok_or_else(|| {
+                        Error::Other("Failed to downcast Float32 column to Float32Array".to_string())
+                    })?;
                 let values: Vec<f32> = indices.iter().map(|&idx| array.value(idx)).collect();
                 Arc::new(Float32Array::from(values))
             }
             DataType::Float64 => {
-                let array = column.as_any().downcast_ref::<Float64Array>().unwrap();
+                let array = column
+                    .as_any()
+                    .downcast_ref::<Float64Array>()
+                    .ok_or_else(|| {
+                        Error::Other("Failed to downcast Float64 column to Float64Array".to_string())
+                    })?;
                 let values: Vec<f64> = indices.iter().map(|&idx| array.value(idx)).collect();
                 Arc::new(Float64Array::from(values))
             }
             DataType::Utf8 => {
-                let array = column.as_any().downcast_ref::<StringArray>().unwrap();
+                let array = column
+                    .as_any()
+                    .downcast_ref::<StringArray>()
+                    .ok_or_else(|| {
+                        Error::Other("Failed to downcast Utf8 column to StringArray".to_string())
+                    })?;
                 let values: Vec<&str> = indices.iter().map(|&idx| array.value(idx)).collect();
                 Arc::new(StringArray::from(values))
             }
@@ -467,7 +515,12 @@ fn sort_all_rows(
     let indices_array = indices
         .as_any()
         .downcast_ref::<arrow::array::UInt32Array>()
-        .unwrap();
+        .ok_or_else(|| {
+            Error::Other(
+                "Failed to downcast sort indices to UInt32Array (expected from sort_to_indices)"
+                    .to_string(),
+            )
+        })?;
     let indices_vec: Vec<usize> = (0..indices_array.len())
         .map(|i| indices_array.value(i) as usize)
         .collect();

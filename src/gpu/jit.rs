@@ -52,7 +52,10 @@ impl ShaderCache {
         device: &wgpu::Device,
         shader_source: &str,
     ) -> Arc<wgpu::ShaderModule> {
-        let mut cache = self.cache.lock().unwrap();
+        let mut cache = self
+            .cache
+            .lock()
+            .expect("Shader cache mutex poisoned (should never happen in normal operation)");
 
         if !cache.contains_key(key) {
             let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -63,7 +66,11 @@ impl ShaderCache {
         }
 
         // Clone the Arc (cheap), not the ShaderModule
-        Arc::clone(cache.get(key).unwrap())
+        Arc::clone(
+            cache
+                .get(key)
+                .expect("Shader must exist in cache after insertion"),
+        )
     }
 
     /// Get cache statistics
@@ -72,7 +79,10 @@ impl ShaderCache {
     /// Panics if the cache mutex is poisoned (should never happen in normal operation)
     #[must_use]
     pub fn stats(&self) -> (usize, usize) {
-        let cache = self.cache.lock().unwrap();
+        let cache = self
+            .cache
+            .lock()
+            .expect("Shader cache mutex poisoned (should never happen in normal operation)");
         (cache.len(), cache.capacity())
     }
 }

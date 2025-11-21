@@ -100,10 +100,12 @@ impl QueryEngine {
     /// ```
     /// use trueno_db::query::QueryEngine;
     ///
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
     /// let engine = QueryEngine::new();
-    /// let plan = engine.parse("SELECT id, name FROM users WHERE age > 18").unwrap();
+    /// let plan = engine.parse("SELECT id, name FROM users WHERE age > 18")?;
     /// assert_eq!(plan.table, "users");
-    /// ```
+    /// # Ok(())
+    /// # }
     pub fn parse(&self, sql: &str) -> crate::Result<QueryPlan> {
         // Handle empty query
         if sql.trim().is_empty() {
