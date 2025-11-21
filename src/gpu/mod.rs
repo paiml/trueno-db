@@ -348,4 +348,172 @@ mod tests {
         let result = engine.sum_i32(&data).await.unwrap();
         assert_eq!(result, 15);
     }
+
+    #[tokio::test]
+    async fn test_gpu_sum_empty() {
+        let Ok(engine) = GpuEngine::new().await else {
+            eprintln!("Skipping GPU test (no GPU available)");
+            return;
+        };
+
+        let data = Int32Array::from(vec![] as Vec<i32>);
+        let result = engine.sum_i32(&data).await.unwrap();
+        assert_eq!(result, 0);
+    }
+
+    #[tokio::test]
+    async fn test_gpu_min_i32() {
+        let Ok(engine) = GpuEngine::new().await else {
+            eprintln!("Skipping GPU test (no GPU available)");
+            return;
+        };
+
+        let data = Int32Array::from(vec![5, 2, 8, 1, 9]);
+        let result = engine.min_i32(&data).await.unwrap();
+        assert_eq!(result, 1);
+    }
+
+    #[tokio::test]
+    async fn test_gpu_min_empty() {
+        let Ok(engine) = GpuEngine::new().await else {
+            eprintln!("Skipping GPU test (no GPU available)");
+            return;
+        };
+
+        let data = Int32Array::from(vec![] as Vec<i32>);
+        let result = engine.min_i32(&data).await.unwrap();
+        assert_eq!(result, i32::MAX);
+    }
+
+    #[tokio::test]
+    async fn test_gpu_max_i32() {
+        let Ok(engine) = GpuEngine::new().await else {
+            eprintln!("Skipping GPU test (no GPU available)");
+            return;
+        };
+
+        let data = Int32Array::from(vec![5, 2, 8, 1, 9]);
+        let result = engine.max_i32(&data).await.unwrap();
+        assert_eq!(result, 9);
+    }
+
+    #[tokio::test]
+    async fn test_gpu_max_empty() {
+        let Ok(engine) = GpuEngine::new().await else {
+            eprintln!("Skipping GPU test (no GPU available)");
+            return;
+        };
+
+        let data = Int32Array::from(vec![] as Vec<i32>);
+        let result = engine.max_i32(&data).await.unwrap();
+        assert_eq!(result, i32::MIN);
+    }
+
+    #[tokio::test]
+    async fn test_gpu_count() {
+        let Ok(engine) = GpuEngine::new().await else {
+            eprintln!("Skipping GPU test (no GPU available)");
+            return;
+        };
+
+        let data = Int32Array::from(vec![1, 2, 3, 4, 5]);
+        let result = engine.count(&data).await.unwrap();
+        assert_eq!(result, 5);
+    }
+
+    #[tokio::test]
+    async fn test_gpu_sum_f32_not_implemented() {
+        let Ok(engine) = GpuEngine::new().await else {
+            eprintln!("Skipping GPU test (no GPU available)");
+            return;
+        };
+
+        let data = Float32Array::from(vec![1.0, 2.0, 3.0]);
+        let result = engine.sum_f32(&data).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("not yet implemented"));
+    }
+
+    #[tokio::test]
+    async fn test_gpu_avg_f32_not_implemented() {
+        let Ok(engine) = GpuEngine::new().await else {
+            eprintln!("Skipping GPU test (no GPU available)");
+            return;
+        };
+
+        let data = Float32Array::from(vec![2.0, 4.0, 6.0]);
+        let result = engine.avg_f32(&data).await;
+        // avg_f32 calls sum_f32 which returns error
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_gpu_fused_filter_sum_gt() {
+        let Ok(engine) = GpuEngine::new().await else {
+            eprintln!("Skipping GPU test (no GPU available)");
+            return;
+        };
+
+        // Data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        // Filter: value > 5
+        // Expected: 6 + 7 + 8 + 9 + 10 = 40
+        let data = Int32Array::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+        let result = engine.fused_filter_sum(&data, 5, "gt").await.unwrap();
+        assert_eq!(result, 40);
+    }
+
+    #[tokio::test]
+    async fn test_gpu_fused_filter_sum_lt() {
+        let Ok(engine) = GpuEngine::new().await else {
+            eprintln!("Skipping GPU test (no GPU available)");
+            return;
+        };
+
+        // Data: [1, 2, 3, 4, 5]
+        // Filter: value < 4
+        // Expected: 1 + 2 + 3 = 6
+        let data = Int32Array::from(vec![1, 2, 3, 4, 5]);
+        let result = engine.fused_filter_sum(&data, 4, "lt").await.unwrap();
+        assert_eq!(result, 6);
+    }
+
+    #[tokio::test]
+    async fn test_gpu_fused_filter_sum_eq() {
+        let Ok(engine) = GpuEngine::new().await else {
+            eprintln!("Skipping GPU test (no GPU available)");
+            return;
+        };
+
+        // Data: [1, 5, 5, 3, 5]
+        // Filter: value == 5
+        // Expected: 5 + 5 + 5 = 15
+        let data = Int32Array::from(vec![1, 5, 5, 3, 5]);
+        let result = engine.fused_filter_sum(&data, 5, "eq").await.unwrap();
+        assert_eq!(result, 15);
+    }
+
+    #[tokio::test]
+    async fn test_gpu_fused_filter_sum_empty() {
+        let Ok(engine) = GpuEngine::new().await else {
+            eprintln!("Skipping GPU test (no GPU available)");
+            return;
+        };
+
+        let data = Int32Array::from(vec![] as Vec<i32>);
+        let result = engine.fused_filter_sum(&data, 5, "gt").await.unwrap();
+        assert_eq!(result, 0);
+    }
+
+    #[tokio::test]
+    async fn test_gpu_fused_filter_sum_no_matches() {
+        let Ok(engine) = GpuEngine::new().await else {
+            eprintln!("Skipping GPU test (no GPU available)");
+            return;
+        };
+
+        // All values < 100, so filter passes nothing
+        let data = Int32Array::from(vec![1, 2, 3, 4, 5]);
+        let result = engine.fused_filter_sum(&data, 100, "gt").await.unwrap();
+        assert_eq!(result, 0);
+    }
 }
