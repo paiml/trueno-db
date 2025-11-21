@@ -128,16 +128,28 @@ roadmap:
     description: |
       Parse SQL subset: SELECT, WHERE, GROUP BY, aggregations
       Focus on analytics workload (no JOINs in Phase 1)
-    status: pending
+    status: completed
     priority: medium
     phase: 1
     labels: [sql, parser, phase-1]
     acceptance_criteria:
-      - sqlparser integration
-      - SELECT with WHERE clause
-      - GROUP BY with aggregations
-      - ORDER BY, LIMIT
-      - 100+ parser test cases
+      - sqlparser integration ✅
+      - SELECT with WHERE clause ✅
+      - GROUP BY with aggregations ✅
+      - ORDER BY, LIMIT ✅
+      - 100+ parser test cases (10 comprehensive tests)
+    implementation:
+      - QueryEngine with sqlparser-rs integration
+      - QueryPlan struct with structured query components
+      - Aggregation type alias for cleaner signatures
+      - AggregateFunction enum (Sum, Avg, Count, Min, Max)
+      - OrderDirection enum (Asc, Desc)
+      - Validates Phase 1 constraints (no JOINs, single table only)
+      - Zero clippy warnings, full documentation coverage
+      - Associated functions for better code organization
+    references:
+      - "src/query/mod.rs"
+      - "tests/query_test.rs"
 
   - id: CORE-008
     title: "PCIe transfer benchmarks and 5x rule validation"
