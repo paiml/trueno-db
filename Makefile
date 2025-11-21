@@ -50,7 +50,7 @@ coverage: ## Generate coverage report (≥90% required, GPU excluded due to LLVM
 	@echo "✅ Coverage report: target/coverage/html/index.html"
 	@echo ""
 	@echo "📊 Coverage by Component:"
-	@cargo llvm-cov report | python3 -c "import sys; lines = list(sys.stdin); src_lines = [l for l in lines if l.startswith('src/')]; total_line = [l for l in lines if l.startswith('TOTAL')]; total = sum(int(l.split()[7]) for l in src_lines if len(l.split()) > 8); uncov = sum(int(l.split()[8]) for l in src_lines if len(l.split()) > 8); cov = 100*(total-uncov)/total if total > 0 else 0; print(f'   Trueno-DB:      {cov:.2f}% ({total-uncov:,}/{total:,} lines)'); print(''); fails = []; [fails.append(f'Coverage ({cov:.2f}%)') if cov < 90 else None]; print('   ✅ PASS: Coverage ≥90%' if not fails else f'   ❌ FAIL: {\", \".join(fails)} below 90%')"
+	@cargo llvm-cov report | python3 -c "import sys; lines = [l.strip() for l in sys.stdin if l.strip()]; total_line = [l for l in lines if l.startswith('TOTAL')]; parts = total_line[0].split() if total_line else []; cov_str = parts[-4].rstrip('%') if len(parts) >= 10 else '0'; cov = float(cov_str); total_lines = int(parts[7]) if len(parts) >= 10 else 0; missed_lines = int(parts[8]) if len(parts) >= 10 else 0; covered_lines = total_lines - missed_lines; print(f'   Trueno-DB:      {cov:.2f}% ({covered_lines:,}/{total_lines:,} lines)'); print(''); print('   ✅ PASS: Coverage ≥90%' if cov >= 90 else f'   ❌ FAIL: Coverage ({cov:.2f}%) below 90%')"
 
 coverage-check: ## Enforce 90% coverage threshold (BLOCKS on failure, GPU excluded)
 	@echo "🔒 Enforcing 90% coverage threshold (GPU excluded)..."
