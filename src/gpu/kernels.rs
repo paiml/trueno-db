@@ -653,3 +653,67 @@ pub async fn max_i32(device: &wgpu::Device, queue: &wgpu::Queue, data: &Int32Arr
 
     Ok(result)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use arrow::array::Int32Array;
+
+    #[tokio::test]
+    async fn test_count_returns_array_length() {
+        // COUNT is trivial - doesn't need GPU
+        let data = Int32Array::from(vec![1, 2, 3, 4, 5]);
+
+        // Create mock device/queue (not used by count())
+        let instance = wgpu::Instance::default();
+        let adapter = instance
+            .request_adapter(&wgpu::RequestAdapterOptions::default())
+            .await
+            .expect("Failed to find adapter");
+        let (device, queue) = adapter
+            .request_device(&wgpu::DeviceDescriptor::default(), None)
+            .await
+            .expect("Failed to create device");
+
+        let result = count(&device, &queue, &data).await.unwrap();
+        assert_eq!(result, 5);
+    }
+
+    #[tokio::test]
+    async fn test_count_empty_array() {
+        let data = Int32Array::from(vec![] as Vec<i32>);
+
+        let instance = wgpu::Instance::default();
+        let adapter = instance
+            .request_adapter(&wgpu::RequestAdapterOptions::default())
+            .await
+            .expect("Failed to find adapter");
+        let (device, queue) = adapter
+            .request_device(&wgpu::DeviceDescriptor::default(), None)
+            .await
+            .expect("Failed to create device");
+
+        let result = count(&device, &queue, &data).await.unwrap();
+        assert_eq!(result, 0);
+    }
+
+    #[tokio::test]
+    async fn test_sum_f32_not_implemented() {
+        // sum_f32 is placeholder - should return error
+        let data = Float32Array::from(vec![1.0, 2.0, 3.0]);
+
+        let instance = wgpu::Instance::default();
+        let adapter = instance
+            .request_adapter(&wgpu::RequestAdapterOptions::default())
+            .await
+            .expect("Failed to find adapter");
+        let (device, queue) = adapter
+            .request_device(&wgpu::DeviceDescriptor::default(), None)
+            .await
+            .expect("Failed to create device");
+
+        let result = sum_f32(&device, &queue, &data).await;
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("not yet implemented"));
+    }
+}
