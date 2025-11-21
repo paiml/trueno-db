@@ -105,6 +105,7 @@
 - [Benchmarking Methodology](./performance/benchmarking.md)
 - [Competitive Benchmarks](./performance/competitive-benchmarks.md)
 - [GPU vs SIMD vs Scalar](./performance/backend-comparison.md)
+- [GPU Syscall Tracing](./performance/gpu-syscall-tracing.md)
 - [Scalability Analysis](./performance/scalability.md)
 - [Optimization Techniques](./performance/optimization.md)
 
