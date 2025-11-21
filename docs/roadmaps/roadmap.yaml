@@ -5,23 +5,7 @@ roadmap:
 - id: GENCHI-GENBUTSU
   github_issue: null
   item_type: task
-  title: "GPU syscall tracing with Renacer"
-  description: |
-    Document low-level syscall analysis of GPU operations using Renacer.
-    Toyota Way: Genchi Genbutsu (Go and See - direct observation at syscall level)
-
-    Implementation:
-    - Built release binary with --all-features --no-run
-    - Traced gpu::tests::test_gpu_sum_basic with renacer -c -T
-    - Analyzed 190 syscalls in 432ms
-    - Key findings: 98.46% futex (async), 14 ioctl (GPU), 18 mmap (zero-copy)
-    - Created comprehensive 326-line mdBook chapter
-    - Deployed to https://paiml.github.io/trueno-db/performance/gpu-syscall-tracing.html
-
-    References:
-    - Renacer v0.5.1: Modern syscall tracer with DWARF support
-    - book/src/performance/gpu-syscall-tracing.md
-    - Gregg (2011): PCIe bottleneck analysis
+  title: GPU syscall tracing with Renacer
   status: completed
   priority: medium
   assigned_to: null
@@ -32,4 +16,24 @@ roadmap:
   phases: []
   subtasks: []
   estimated_effort: null
-  labels: [documentation, genchi-genbutsu, gpu, performance, phase-1]
+  labels:
+  - documentation
+  - genchi-genbutsu
+  - gpu
+  - performance
+  - phase-1
+- id: 'PHASE2-001: Local multi-GPU data partitioning'
+  github_issue: null
+  item_type: task
+  title: 'New task: PHASE2-001: Local multi-GPU data partitioning'
+  status: completed
+  priority: medium
+  assigned_to: null
+  created: 2025-11-21T18:56:01.867219309+00:00
+  updated: 2025-11-21T19:15:25.410156114+00:00
+  spec: null
+  acceptance_criteria: []
+  phases: []
+  subtasks: []
+  estimated_effort: null
+  labels: []

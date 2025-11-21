@@ -21,6 +21,7 @@ use wgpu::util::DeviceExt;
 
 pub mod jit;
 pub mod kernels;
+pub mod multigpu;
 
 /// GPU compute engine for aggregations
 pub struct GpuEngine {
