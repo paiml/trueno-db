@@ -335,7 +335,7 @@ cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
 **Paper**: "DuckDB: an Embeddable Analytical Database"
 **Authors**: Raasveldt & Mühleisen (2019)
 **Key Insight**: Vectorized push-based execution model
-**DOI**: [10.1145/3299869.3320212](https://doi.org/10.1145/3299869.3320212)
+**DOI**: 10.1145/3299869.3320212
 
 ### SQLite Performance
 
@@ -349,7 +349,7 @@ cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
 **Paper**: "Vectorization vs. Compilation in Query Execution"
 **Authors**: Kersten et al. (2018)
 **Key Insight**: SIMD 2-4x faster than scalar for aggregations
-**DOI**: [10.1145/3183713.3196888](https://doi.org/10.1145/3183713.3196888)
+**DOI**: 10.1145/3183713.3196888
 
 ---
 
