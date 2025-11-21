@@ -254,3 +254,31 @@ roadmap:
     references:
       - "DuckDB (2019): Push-based execution model"
       - "benches/competitive_benchmarks.rs"
+
+  - id: GENCHI-GENBUTSU
+    title: "GPU syscall tracing with Renacer"
+    description: |
+      Document low-level syscall analysis of GPU operations using Renacer.
+      Toyota Way: Genchi Genbutsu (Go and See - direct observation at syscall level)
+    status: completed
+    priority: medium
+    phase: 1
+    labels: [documentation, genchi-genbutsu, gpu, performance, phase-1]
+    acceptance_criteria:
+      - Pre-build release binary tracing methodology documented ✅
+      - GPU test execution traced (not compilation) ✅
+      - Syscall analysis showing ioctl for GPU control ✅
+      - Futex analysis validating async design ✅
+      - Zero-copy design validation via mmap counts ✅
+      - mdBook chapter deployed to GitHub Pages ✅
+    implementation:
+      - Built release binary with --all-features --no-run
+      - Traced gpu::tests::test_gpu_sum_basic with renacer -c -T
+      - Analyzed 190 syscalls in 432ms
+      - Key findings: 98.46% futex (async), 14 ioctl (GPU), 18 mmap (zero-copy)
+      - Created comprehensive 326-line mdBook chapter
+      - Deployed to https://paiml.github.io/trueno-db/performance/gpu-syscall-tracing.html
+    references:
+      - "Renacer v0.5.1: Modern syscall tracer with DWARF support"
+      - "book/src/performance/gpu-syscall-tracing.md"
+      - "Gregg (2011): PCIe bottleneck analysis"
