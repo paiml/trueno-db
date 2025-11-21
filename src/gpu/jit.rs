@@ -262,4 +262,89 @@ mod tests {
         // Verify filter is inline (fused)
         assert!(shader.contains("if (data >= 100)"));
     }
+
+    #[test]
+    fn test_all_filter_operators() {
+        let compiler = JitCompiler::new();
+
+        // Test all supported operators
+        let gte_shader = compiler.generate_fused_filter_sum(10, "gte");
+        assert!(gte_shader.contains("if (data >= 10)"));
+
+        let lte_shader = compiler.generate_fused_filter_sum(20, "lte");
+        assert!(lte_shader.contains("if (data <= 20)"));
+
+        let ne_shader = compiler.generate_fused_filter_sum(30, "ne");
+        assert!(ne_shader.contains("if (data != 30)"));
+
+        // Test unknown operator defaults to >
+        let unknown_shader = compiler.generate_fused_filter_sum(40, "unknown");
+        assert!(unknown_shader.contains("if (data > 40)"));
+    }
+
+    #[test]
+    fn test_shader_cache_default() {
+        let cache = ShaderCache::default();
+        let (size, _capacity) = cache.stats();
+        assert_eq!(size, 0);
+    }
+
+    #[test]
+    fn test_jit_compiler_default() {
+        let compiler = JitCompiler::default();
+        let (size, _capacity) = compiler.cache_stats();
+        assert_eq!(size, 0);
+    }
+
+    #[test]
+    fn test_cache_key_generation() {
+        let compiler = JitCompiler::new();
+
+        // Different thresholds should generate different shaders
+        let shader1 = compiler.generate_fused_filter_sum(100, "gt");
+        let shader2 = compiler.generate_fused_filter_sum(200, "gt");
+        assert_ne!(shader1, shader2);
+
+        // Different operators should generate different shaders
+        let shader3 = compiler.generate_fused_filter_sum(100, "lt");
+        assert_ne!(shader1, shader3);
+    }
+
+    #[test]
+    fn test_wgsl_syntax_valid() {
+        let compiler = JitCompiler::new();
+        let shader = compiler.generate_fused_filter_sum(999, "eq");
+
+        // Verify critical WGSL syntax elements
+        assert!(shader.contains("@group(0) @binding(0)"));
+        assert!(shader.contains("@group(0) @binding(1)"));
+        assert!(shader.contains("@compute @workgroup_size(256)"));
+        assert!(shader.contains("@builtin(global_invocation_id)"));
+        assert!(shader.contains("@builtin(local_invocation_id)"));
+        assert!(shader.contains("var<workgroup>"));
+        assert!(shader.contains("var<storage, read>"));
+        assert!(shader.contains("var<storage, read_write>"));
+        assert!(shader.contains("array<atomic<i32>>"));
+    }
+
+    #[test]
+    fn test_parallel_reduction_logic() {
+        let compiler = JitCompiler::new();
+        let shader = compiler.generate_fused_filter_sum(500, "gt");
+
+        // Verify parallel reduction pattern (Harris 2007)
+        assert!(shader.contains("var stride = 128u;"));
+        assert!(shader.contains("while (stride > 0u)"));
+        assert!(shader.contains("stride = stride / 2u;"));
+        assert!(shader.contains("if (tid == 0u)"));
+    }
+
+    #[test]
+    fn test_muda_elimination_comment() {
+        let compiler = JitCompiler::new();
+        let shader = compiler.generate_fused_filter_sum(100, "gt");
+
+        // Verify Toyota Way: Muda elimination comment exists
+        assert!(shader.contains("Eliminates intermediate buffer write"));
+    }
 }
