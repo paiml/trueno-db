@@ -99,7 +99,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Doc tests: 8/8 (2 ignored for GPU-only examples)
   - OOM prevention: 6/6
   - Query tests: 10/10
-- **Code Coverage**: 95.58% (target: >90%)
+- **Code Coverage**: 81.76% (90% target, GPU excluded) (target: >90%)
 - **Documentation Links**: 103/103 valid (0 broken)
 - **Clippy**: 0 warnings (strict mode)
 - **Phase 1 MVP**: 9/9 tasks complete (100%)

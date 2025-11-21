@@ -26,7 +26,7 @@ GPU-first embedded analytics database with graceful degradation: **GPU → SIMD 
 
 ## Phase 1 MVP: Complete ✅
 
-**Status**: 9/9 Core Tasks Complete | 127/127 Tests Passing | 95.58% Coverage
+**Status**: 9/9 Core Tasks Complete | 127/127 Tests Passing | 81.76% Coverage (90% target)
 
 **Achievements**:
 - ✅ Arrow/Parquet storage with morsel-based paging (CORE-001)
@@ -61,7 +61,7 @@ GPU-first embedded analytics database with graceful degradation: **GPU → SIMD 
 | **Scalar** | Portable fallback | 125ms | 1x | Baseline |
 
 **Verified Claims** (Red Team Audit ✅):
-- 95.58% test coverage
+- 81.76% line coverage (90% target, GPU excluded)
 - 1,100 property test scenarios
 - O(n log k) complexity proven
 - SIMD speedups: 1.13x-4.6x (empirically validated)
