@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **SQL Query Interface for OLAP Analytics** - Complete query execution pipeline (2025-11-22)
+  - QueryExecutor API for executing parsed SQL queries against Arrow storage
+  - Full aggregation support: SUM, AVG, COUNT, MIN, MAX
+  - WHERE clause filtering with comparison operators (>, <, =, >=, <=, !=)
+  - ORDER BY + LIMIT using Top-K optimization (O(N log K) vs O(N log N))
+  - Column projection (SELECT specific columns or *)
+  - Integration with existing StorageEngine and TopKSelection trait
+  - 18 integration tests including property-based tests with proptest
+  - SQL query benchmarks validating performance targets:
+    - Aggregations: 2.78x faster than scalar baseline (SIMD)
+    - Top-K: 5-28x faster than heap-based approach
+  - Example usage:
+    ```rust
+    let storage = StorageEngine::load_parquet("data/events.parquet")?;
+    let engine = QueryEngine::new();
+    let executor = QueryExecutor::new();
+
+    let plan = engine.parse("SELECT SUM(value) FROM events WHERE value > 100")?;
+    let result = executor.execute(&plan, &storage)?;
+    ```
+  - Closes GitHub Issue #3
+  - Toyota Way: Jidoka (Built-in Quality) - Backend equivalence testing
+
 ### Documentation
 
 - **Comprehensive appendix documentation** - Completed all 5 critical user-facing docs (2025-11-22)

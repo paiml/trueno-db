@@ -10,7 +10,7 @@ roadmap:
   priority: medium
   assigned_to: null
   created: 2025-11-21T17:30:00.000000000+00:00
-  updated: 2025-11-21T17:52:00.000000000+00:00
+  updated: 2025-11-22T08:25:16.700685360+00:00
   spec: null
   acceptance_criteria: []
   phases: []
@@ -31,6 +31,21 @@ roadmap:
   assigned_to: null
   created: 2025-11-21T18:56:01.867219309+00:00
   updated: 2025-11-21T19:15:25.410156114+00:00
+  spec: null
+  acceptance_criteria: []
+  phases: []
+  subtasks: []
+  estimated_effort: null
+  labels: []
+- id: gpu-syscall-tracing
+  github_issue: null
+  item_type: task
+  title: 'New task: gpu-syscall-tracing'
+  status: inprogress
+  priority: medium
+  assigned_to: null
+  created: 2025-11-22T08:25:14.544493952+00:00
+  updated: 2025-11-22T08:25:14.544493952+00:00
   spec: null
   acceptance_criteria: []
   phases: []

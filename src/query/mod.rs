@@ -18,6 +18,10 @@
 //! - sqlparser-rs: <https://docs.rs/sqlparser>
 //! - TPC-H queries: Analytics benchmark patterns
 
+pub mod executor;
+
+pub use executor::QueryExecutor;
+
 use sqlparser::ast::{Expr, Query, Select, SelectItem, SetExpr, Statement};
 use sqlparser::dialect::GenericDialect;
 use sqlparser::parser::Parser;
