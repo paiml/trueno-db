@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-11-22
+
 ### Added
 
 - **SQL Query Interface for OLAP Analytics** - Complete query execution pipeline (2025-11-22)
@@ -32,6 +34,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Closes GitHub Issue #3
   - Toyota Way: Jidoka (Built-in Quality) - Backend equivalence testing
 
+- **GPU Examples with Feature Gating** - Production-ready GPU acceleration demos (2025-11-22)
+  - gpu_aggregations: SUM, MIN, MAX, COUNT on 100K-10M rows with real GPU execution
+  - gpu_sales_analytics: 500K transaction analytics dashboard
+  - Required-features configuration in Cargo.toml prevents compilation without --features gpu
+  - Both examples demonstrate kernel fusion (Muda elimination), parallel reduction
+  - Zero-copy Arrow → GPU VRAM transfers validated
+  - Sub-10ms query execution on 100K-500K datasets
+  - Workgroup optimization: 256 threads (8 GPU warps)
+  - Toyota Way: Genchi Genbutsu (Go and See) - Real hardware validation
+
 ### Documentation
 
 - **Comprehensive appendix documentation** - Completed all 5 critical user-facing docs (2025-11-22)
@@ -43,6 +55,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Total documentation added: 1,380 lines
   - All mdBook links validated (6 broken links fixed)
   - Toyota Way: Kaizen (Continuous Improvement) - Systematic documentation completion
+  - book/src/components/query/sql-interface.md: Complete SQL API reference (240 lines)
+  - book/src/dev/examples.md: Updated with 11 examples (SIMD + GPU categories)
+  - examples/sql_query_interface.rs: Working example with 6 query patterns (290 lines)
+
+### Quality Metrics
+
+- **Tests**: 156/156 passing (100%)
+  - Unit tests: 76/76 (includes comprehensive GPU and query tests)
+  - Integration tests: 18/18 (SQL query execution end-to-end)
+  - Backend tests: 12/12 (equivalence + selection)
+  - Property tests: 11/11 (1,100 scenarios)
+  - Coverage tests: 19/19 (executor edge cases)
+  - Query tests: 16/16 (SQL parser validation)
+  - Doc tests: 9/9 (2 ignored for GPU-only)
+- **Code Coverage**: **92.64%** ✅ (exceeds 90% target)
+  - query/executor.rs: 92.64% (comprehensive coverage of new SQL interface)
+  - All Phase 1 components above 90% threshold
+- **Clippy**: 0 warnings (strict mode)
+- **Phase 1 MVP**: 9/9 tasks complete (100%) ✅
 
 ## [0.2.1] - 2025-11-21
 

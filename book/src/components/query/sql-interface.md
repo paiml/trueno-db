@@ -228,7 +228,6 @@ Key benchmark groups:
 
 - [JIT WGSL Compiler](./jit-compiler.md)
 - [Kernel Fusion](./kernel-fusion.md)
-- [Top-K Selection](../../components/storage/topk.md)
 - [Examples](../../dev/examples.md)
 
 ## References

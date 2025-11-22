@@ -1,10 +1,10 @@
 [package]
 name = "trueno-db"
-version = "0.2.1"
+version = "0.3.0"
 edition = "2021"
 authors = ["Pragmatic AI Labs <info@paiml.com>"]
 license = "MIT"
-description = "GPU-first embedded analytics database with SIMD fallback"
+description = "GPU-first embedded analytics database with SIMD fallback and SQL query interface"
 repository = "https://github.com/paiml/trueno-db"
 keywords = ["database", "gpu", "simd", "analytics", "wasm"]
 categories = ["database", "science", "wasm"]

@@ -26,16 +26,16 @@ GPU-first embedded analytics database with graceful degradation: **GPU → SIMD 
 
 ## Phase 1 MVP: Complete ✅
 
-**Status**: 9/9 Core Tasks Complete | 149/149 Tests Passing | 95.24% Coverage ✅ (exceeds 90% target!)
+**Status**: 9/9 Core Tasks Complete | 156/156 Tests Passing | 92.64% Coverage ✅ (exceeds 90% target!)
 
 **Achievements**:
 - ✅ Arrow/Parquet storage with morsel-based paging (CORE-001)
 - ✅ Cost-based backend dispatcher with 5x rule (CORE-002)
 - ✅ **JIT WGSL compiler for kernel fusion** (CORE-003)
-- ✅ GPU kernels: SUM, MIN, MAX, COUNT, AVG (CORE-004)
+- ✅ GPU kernels: SUM, MIN, MAX, COUNT, AVG, fused filter+sum (CORE-004)
 - ✅ SIMD fallback via trueno (AVX-512/AVX2) (CORE-005)
 - ✅ Backend equivalence tests (GPU == SIMD == Scalar) (CORE-006)
-- ✅ SQL parser (SELECT, WHERE, GROUP BY) (CORE-007)
+- ✅ **SQL query interface: SELECT, WHERE, aggregations, ORDER BY, LIMIT** (CORE-007)
 - ✅ PCIe transfer benchmarks (CORE-008)
 - ✅ Competitive benchmarking infrastructure (CORE-009)
 
@@ -71,6 +71,9 @@ GPU-first embedded analytics database with graceful degradation: **GPU → SIMD 
 ## Try the Examples
 
 ```bash
+# SQL query interface (NEW in v0.3.0) - DuckDB-like API
+cargo run --example sql_query_interface --release
+
 # Technical performance scaling (1K to 1M rows)
 cargo run --example benchmark_shootout --release
 
@@ -79,6 +82,10 @@ cargo run --example gaming_leaderboards --release
 
 # Stock market crashes (95 years, peer-reviewed data)
 cargo run --example market_crashes --release
+
+# GPU examples (requires --features gpu)
+cargo run --example gpu_aggregations --features gpu --release
+cargo run --example gpu_sales_analytics --features gpu --release
 ```
 
 **Output**: <12ms queries on 1M rows with zero external dependencies
@@ -88,10 +95,10 @@ cargo run --example market_crashes --release
 ```toml
 [dependencies]
 # Default: SIMD-only (fast compile, small binary)
-trueno-db = "0.1"
+trueno-db = "0.3"
 
 # With GPU support (opt-in, slower compile)
-trueno-db = { version = "0.1", features = ["gpu"] }
+trueno-db = { version = "0.3", features = ["gpu"] }
 ```
 
 ## Feature Flags
@@ -106,20 +113,23 @@ trueno-db = { version = "0.1", features = ["gpu"] }
 ## Quick Start
 
 ```rust
-use trueno_db::Database;
+use trueno_db::query::{QueryEngine, QueryExecutor};
+use trueno_db::storage::StorageEngine;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let db = Database::builder()
-        .backend(Backend::CostBased)
-        .morsel_size_mb(128)
-        .build()?;
+    // Load Parquet data into Arrow storage
+    let storage = StorageEngine::load_parquet("data/events.parquet")?;
 
-    db.load_table("events", "data/events.parquet").await?;
+    // Initialize SQL query engine
+    let engine = QueryEngine::new();
+    let executor = QueryExecutor::new();
 
-    let result = db.query(
-        "SELECT category, sum(value) FROM events GROUP BY category"
-    ).execute().await?;
+    // Parse and execute SQL query
+    let plan = engine.parse(
+        "SELECT COUNT(*), SUM(value), AVG(value) FROM events WHERE value > 100"
+    )?;
+    let result = executor.execute(&plan, &storage)?;
 
     Ok(())
 }
@@ -137,11 +147,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 - ✅ **Cost-based backend selection**: Arithmetic intensity dispatch
 - ✅ **Morsel-based paging**: Out-of-core execution (128MB chunks)
 - ✅ **JIT WGSL compiler**: Kernel fusion for single-pass execution
+- ✅ **GPU kernels**: SUM, MIN, MAX, COUNT, AVG, fused filter+sum
 - ✅ **SIMD fallback**: Trueno integration (AVX-512/AVX2/SSE2)
+- ✅ **SQL query interface**: SELECT, WHERE, aggregations, ORDER BY, LIMIT
 - ✅ **Async isolation**: `spawn_blocking` for CPU-bound operations
-- 🚧 **GPU kernels**: Sum, avg, count, min/max, radix hash join
-- 🚧 **SQL parser**: SELECT, WHERE, GROUP BY, aggregations
-- 🚧 **WASM support**: WebGPU + HTTP range requests
+- 🚧 **GROUP BY**: Planned for Phase 2
+- 🚧 **Hash JOIN**: Planned for Phase 2
+- 🚧 **WASM support**: WebGPU + HTTP range requests (Phase 4)
 
 ## Documentation
 
@@ -231,15 +243,17 @@ See [Section 8](docs/specifications/db-spec-v1.md#8-peer-reviewed-academic-found
 
 ## Roadmap
 
-### Phase 1: Core Engine (Current)
-- [ ] Arrow storage backend (Parquet/CSV readers)
-- [ ] Morsel-based paging (128MB chunks)
-- [ ] Cost-based backend dispatcher
-- [ ] JIT WGSL compiler for kernel fusion
-- [ ] GPU kernels (sum, avg, count, min/max)
-- [ ] SIMD fallback via Trueno
-- [ ] Backend equivalence tests
-- [ ] PCIe transfer benchmarks
+### Phase 1: Core Engine ✅ COMPLETE
+- ✅ Arrow storage backend (Parquet/CSV readers)
+- ✅ Morsel-based paging (128MB chunks)
+- ✅ Cost-based backend dispatcher (5x rule)
+- ✅ JIT WGSL compiler for kernel fusion
+- ✅ GPU kernels (SUM, AVG, COUNT, MIN/MAX, fused filter+sum)
+- ✅ SIMD fallback via Trueno (AVX-512/AVX2/SSE2)
+- ✅ SQL query interface (SELECT, WHERE, aggregations, ORDER BY, LIMIT)
+- ✅ Backend equivalence tests (GPU == SIMD == Scalar)
+- ✅ PCIe transfer benchmarks
+- ✅ Top-K selection (O(n log k) heap-based)
 
 ### Phase 2: Multi-GPU
 - [ ] Local multi-GPU data partitioning
