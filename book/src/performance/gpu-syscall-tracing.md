@@ -305,7 +305,7 @@ cargo test --release --all-features --lib --no-run
 
 - [Benchmarking Methodology](./benchmarking.md) - General benchmark practices
 - [Backend Comparison](./backend-comparison.md) - GPU vs SIMD vs Scalar theory
-- [PCIe Transfer Analysis](./pcie-analysis.md) - Bandwidth measurements and 5x rule
+- [PCIe Transfer Analysis](../../../benchmarks/pcie_analysis.md) - Bandwidth measurements and 5x rule
 - [Competitive Benchmarks](./competitive-benchmarks.md) - vs DuckDB, SQLite
 
 ---

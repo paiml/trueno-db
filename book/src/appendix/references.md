@@ -20,7 +20,7 @@ Foundational research papers cited in Trueno-DB's architecture and implementatio
 - **Conference**: SIGMOD 2014
 - **Summary**: Morsel-based parallelism for NUMA-aware execution (foundation for out-of-core GPU processing)
 - **Relevance**: Trueno-DB's 128 MB morsel size prevents VRAM exhaustion
-- **URL**: [dl.acm.org/doi/10.1145/2588555.2610507](https://dl.acm.org/doi/10.1145/2588555.2610507)
+- **DOI**: 10.1145/2588555.2610507
 
 **Volcano Optimizer: Cost-Based Query Optimization**
 - **Authors**: Goetz Graefe
@@ -36,7 +36,7 @@ Foundational research papers cited in Trueno-DB's architecture and implementatio
 - **Conference**: SIGMOD 2017
 - **Summary**: GPU-accelerated database with kernel fusion and parallel aggregations
 - **Relevance**: Trueno-DB's JIT compiler and fused filter+sum kernels
-- **URL**: [dl.acm.org/doi/10.1145/3035918.3056100](https://dl.acm.org/doi/10.1145/3035918.3056100)
+- **DOI**: 10.1145/3035918.3056100
 
 **Kernel Fusion for GPU Databases**
 - **Authors**: Mark Harris (NVIDIA)
@@ -107,13 +107,13 @@ Foundational research papers cited in Trueno-DB's architecture and implementatio
 - **Description**: SIMD-accelerated aggregations for Rust (AVX-512/AVX2/SSE2)
 - **Language**: Rust
 - **Relevance**: Trueno-DB's CPU fallback backend
-- **Crates.io**: [crates.io/crates/trueno](https://crates.io/crates/trueno)
+- **Version**: 0.6.0 (dependency in Cargo.toml)
 - **GitHub**: [github.com/paiml/trueno](https://github.com/paiml/trueno)
 
 **Intel Intrinsics Guide**
 - **Description**: Complete reference for x86 SIMD instructions
 - **Relevance**: Understanding AVX-512/AVX2/SSE2 performance characteristics
-- **URL**: [software.intel.com/intrinsics-guide](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html)
+- **Search**: "Intel Intrinsics Guide" (official documentation)
 
 ## Rust Ecosystem
 
@@ -198,8 +198,8 @@ Foundational research papers cited in Trueno-DB's architecture and implementatio
 - **Content**: Architecture, API docs, examples, Toyota Way methodology
 
 **Crates.io Package**
-- **URL**: [crates.io/crates/trueno-db](https://crates.io/crates/trueno-db)
-- **Version**: 0.2.1 (latest)
+- **Status**: In development (v0.2.1)
+- **Planned**: Publication after Phase 3 completion
 
 ### Learning Resources
 
