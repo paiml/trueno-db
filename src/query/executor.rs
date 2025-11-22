@@ -225,7 +225,7 @@ impl QueryExecutor {
                         "<" => v < value,
                         "<=" => v <= value,
                         "=" => v == value,
-                        "!=" => v != value,
+                        "!=" | "<>" => v != value,
                         _ => false,
                     }
                 }
@@ -253,7 +253,7 @@ impl QueryExecutor {
                         "<" => v < value,
                         "<=" => v <= value,
                         "=" => v == value,
-                        "!=" => v != value,
+                        "!=" | "<>" => v != value,
                         _ => false,
                     }
                 }
@@ -281,7 +281,7 @@ impl QueryExecutor {
                         "<" => v < value,
                         "<=" => v <= value,
                         "=" => (v - value).abs() < f32::EPSILON,
-                        "!=" => (v - value).abs() >= f32::EPSILON,
+                        "!=" | "<>" => (v - value).abs() >= f32::EPSILON,
                         _ => false,
                     }
                 }
@@ -309,7 +309,7 @@ impl QueryExecutor {
                         "<" => v < value,
                         "<=" => v <= value,
                         "=" => (v - value).abs() < f64::EPSILON,
-                        "!=" => (v - value).abs() >= f64::EPSILON,
+                        "!=" | "<>" => (v - value).abs() >= f64::EPSILON,
                         _ => false,
                     }
                 }
