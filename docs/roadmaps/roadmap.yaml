@@ -41,11 +41,11 @@ roadmap:
   github_issue: null
   item_type: task
   title: 'New task: gpu-syscall-tracing'
-  status: inprogress
+  status: completed
   priority: medium
   assigned_to: null
   created: 2025-11-22T08:25:14.544493952+00:00
-  updated: 2025-11-22T08:25:14.544493952+00:00
+  updated: 2025-11-22T13:27:58.451762025+00:00
   spec: null
   acceptance_criteria: []
   phases: []
