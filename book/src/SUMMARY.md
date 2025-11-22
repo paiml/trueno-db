@@ -28,6 +28,7 @@
 
 ## Query Engine
 
+- [SQL Query Interface](./components/query/sql-interface.md)
 - [JIT WGSL Compiler](./components/query/jit-compiler.md)
 - [Kernel Fusion](./components/query/kernel-fusion.md)
 - [Operator Variants](./components/query/operator-variants.md)

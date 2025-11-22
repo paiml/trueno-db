@@ -5,6 +5,9 @@ Trueno-DB includes three production-ready example demos showcasing GPU/SIMD-acce
 ## Quick Start
 
 ```bash
+# SQL query interface (NEW in v0.3.0)
+cargo run --example sql_query_interface --release
+
 # Technical performance benchmark
 cargo run --example benchmark_shootout --release
 
@@ -17,7 +20,125 @@ cargo run --example market_crashes --release
 
 ---
 
-## Example 1: Backend Benchmark Shootout
+## Example 1: SQL Query Interface (NEW in v0.3.0)
+
+**Path**: `examples/sql_query_interface.rs`
+**Focus**: Complete SQL execution pipeline for OLAP analytics
+
+### What It Demonstrates
+
+- **SELECT** with column projection
+- **WHERE** clause filtering (6 comparison operators)
+- **Aggregations**: SUM, AVG, COUNT, MIN, MAX
+- **ORDER BY + LIMIT**: Top-K optimization (O(N log K))
+- DuckDB-like API for Arrow data
+- Zero-copy operations via Apache Arrow
+
+### Key Results
+
+```
+Operation                         Dataset    Performance
+───────────────────────────────── ──────────  ───────────────────
+Simple SELECT                     10K rows    Sub-millisecond
+WHERE filtering                   10K rows    Sub-millisecond
+Aggregations (SUM/AVG/COUNT)      10K rows    Sub-millisecond
+Top-K (ORDER BY + LIMIT)          10K rows    Sub-millisecond
+Combined filter + aggregation     10K rows    Sub-millisecond
+```
+
+**Performance**: 2.78x faster aggregations (SIMD), 5-28x faster Top-K
+
+### Use Cases
+
+- **E-commerce analytics**: Revenue reporting, order analysis
+- **Business intelligence**: Sales dashboards, KPI tracking
+- **Real-time analytics**: Live data exploration
+- **Data warehousing**: OLAP cube queries
+- **Financial reporting**: Transaction summaries
+
+### Sample Output
+
+```
+=== Example 3: Aggregations (SUM, AVG, COUNT, MIN, MAX) ===
+
+SQL: SELECT COUNT(*), SUM(amount), AVG(amount), MIN(amount), MAX(amount) FROM orders
+
+Results:
+  Total Orders:         10000
+  Total Revenue:   $2537500.00
+  Average Order:   $    253.75
+  Minimum Order:   $     10.00
+  Maximum Order:   $    497.50
+
+=== Example 4: ORDER BY + LIMIT (Top-K optimization) ===
+
+SQL: SELECT order_id, amount FROM orders ORDER BY amount DESC LIMIT 10
+Note: Uses O(N log K) Top-K algorithm instead of O(N log N) full sort
+
+Top 10 Highest Value Orders:
+  Rank | order_id | amount
+  -----|----------|--------
+     1 |       39 | $497.50
+     2 |      239 | $497.50
+     3 |      199 | $497.50
+```
+
+### Technical Details
+
+```rust
+use trueno_db::query::{QueryEngine, QueryExecutor};
+use trueno_db::storage::StorageEngine;
+
+// Load data from Arrow storage
+let mut storage = StorageEngine::new(vec![]);
+storage.append_batch(batch)?;
+
+// Initialize query engine
+let engine = QueryEngine::new();
+let executor = QueryExecutor::new();
+
+// Parse and execute SQL
+let plan = engine.parse("SELECT SUM(value) FROM orders WHERE amount > 300")?;
+let result = executor.execute(&plan, &storage)?;
+
+// Access results as Arrow RecordBatch
+let sum = result.column(0).as_any().downcast_ref::<Float64Array>()?.value(0);
+```
+
+### Supported SQL Features (Phase 1)
+
+✅ **SELECT** - Column projection or `*`
+✅ **FROM** - Single table
+✅ **WHERE** - Simple predicates (`>`, `>=`, `<`, `<=`, `=`, `!=`/`<>`)
+✅ **Aggregations** - SUM, AVG, COUNT, MIN, MAX
+✅ **ORDER BY** - ASC/DESC with Top-K optimization
+✅ **LIMIT** - Result set limiting
+
+❌ **GROUP BY** - Planned for Phase 2
+❌ **JOIN** - Planned for Phase 2
+❌ **Complex WHERE** - AND/OR/NOT planned
+❌ **Window Functions** - Planned for Phase 2
+
+### Educational Value
+
+- Shows complete query execution pipeline
+- Demonstrates zero-copy Arrow operations
+- Illustrates Top-K optimization benefits
+- Highlights SIMD acceleration for aggregations
+- Backend equivalence: GPU == SIMD == Scalar
+
+### Running the Example
+
+```bash
+# Release mode for accurate performance
+cargo run --example sql_query_interface --release
+```
+
+**Requirements**: No GPU needed - runs on SIMD path (Phase 1)
+
+---
+
+## Example 2: Backend Benchmark Shootout
 
 **Path**: `examples/benchmark_shootout.rs`
 **Focus**: Raw SIMD performance scaling across dataset sizes
