@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2025-11-22
+
+### Changed
+
+- **Upgraded trueno dependency to v0.7.0** - Performance and quality improvements
+  - 18% faster large matrix operations (1024×1024) via 3-level cache blocking
+  - 8.5% improvement for 512×512 matrices
+  - Zero-allocation hot path implementation in trueno
+  - Improved test coverage: 90.41% (from 90.00%)
+  - All 202 trueno-db tests pass with zero regressions
+  - Benchmark results with trueno v0.7.0 (1M rows):
+    - SUM: 2.54x faster than scalar baseline
+    - MIN: 4.24x faster than scalar baseline
+    - AVG: 2.59x faster than scalar baseline
+  - Quality gates: Zero clippy warnings, 93% trueno-db coverage
+
+### Performance
+
+- SIMD aggregations benefit from trueno's improved micro-kernel optimization
+- Better cache utilization for large datasets through upstream improvements
+
 ## [0.3.0] - 2025-11-22
 
 ### Added
