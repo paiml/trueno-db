@@ -4,6 +4,8 @@ Trueno-DB includes three production-ready example demos showcasing GPU/SIMD-acce
 
 ## Quick Start
 
+### SIMD Examples (No GPU Required)
+
 ```bash
 # SQL query interface (NEW in v0.3.0)
 cargo run --example sql_query_interface --release
@@ -16,7 +18,37 @@ cargo run --example gaming_leaderboards --release
 
 # Stock market crash analysis
 cargo run --example market_crashes --release
+
+# Basic usage and storage
+cargo run --example basic_usage --release
+
+# Backend selection logic
+cargo run --example backend_selection --release
+
+# SIMD acceleration demo
+cargo run --example simd_acceleration --release
+
+# Top-K selection
+cargo run --example topk_selection --release
+
+# Complete pipeline
+cargo run --example complete_pipeline --release
 ```
+
+### GPU Examples (Requires GPU Hardware)
+
+```bash
+# GPU-accelerated aggregations
+cargo run --example gpu_aggregations --features gpu --release
+
+# GPU sales analytics dashboard
+cargo run --example gpu_sales_analytics --features gpu --release
+```
+
+**Requirements for GPU examples**:
+- GPU hardware (Vulkan/Metal/DX12 compatible)
+- Build with `--features gpu` flag
+- Examples will gracefully fall back if GPU unavailable
 
 ---
 

@@ -113,6 +113,15 @@ strip = false  # Keep symbols for profiling
 [profile.bench]
 inherits = "release"
 
+# GPU examples require the gpu feature
+[[example]]
+name = "gpu_aggregations"
+required-features = ["gpu"]
+
+[[example]]
+name = "gpu_sales_analytics"
+required-features = ["gpu"]
+
 # Toyota Way: Enforce quality gates in development
 [package.metadata.pmat]
 quality_gates = true
