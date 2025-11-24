@@ -3436,9 +3436,9 @@ dependencies = [
 
 [[package]]
 name = "trueno"
-version = "0.7.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17f5dc2b1913e0ab2851c9139f3e2972a2bdcb7ad4579ae01ec248abe07a82f7"
+checksum = "efbf2b2bfdd9c960d5db037a1533995c92039312aeea386a67bdba0d0aa01602"
 dependencies = [
  "thiserror 2.0.17",
 ]

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2025-11-24
+
+### Changed
+
+- **Upgraded trueno dependency to v0.7.1** - Latest stable release with quality improvements
+  - Updated from trueno v0.7.0 to v0.7.1
+  - All 197 trueno-db tests pass with zero regressions
+  - Zero clippy warnings maintained
+  - Ensures compatibility with latest trueno improvements
+
 ## [0.3.1] - 2025-11-22
 
 ### Changed
