@@ -3,47 +3,37 @@ import { test, expect } from '@playwright/test';
 test.describe('trueno-db WASM Demo', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    // Wait for WASM to initialize (status shows version after init)
+    // Wait for WASM to initialize (compute badge updates after init)
     await page.waitForFunction(() => {
-      return document.getElementById('status')?.textContent?.includes('trueno-db-wasm');
+      const badge = document.getElementById('compute-badge');
+      return badge && !badge.textContent?.includes('Detecting');
     }, { timeout: 15000 });
   });
 
-  test('loads and displays status', async ({ page }) => {
-    const status = page.locator('#status');
-    await expect(status).toBeVisible();
-    const text = await status.textContent();
-    expect(text).toContain('trueno-db-wasm');
+  test('loads and displays compute tier', async ({ page }) => {
+    const badge = page.locator('#compute-badge');
+    await expect(badge).toBeVisible();
+    const text = await badge.textContent();
+    // Should show one of: WebGPU, SIMD128, or Scalar
+    expect(text).toMatch(/(WebGPU|SIMD128|Scalar)/i);
   });
 
-  test('detects compute tier', async ({ page }) => {
-    const capabilities = page.locator('#capabilities');
-    await expect(capabilities).toBeVisible();
+  test('detects compute tier correctly', async ({ page }) => {
+    const badge = page.locator('#compute-badge');
+    await expect(badge).toBeVisible();
 
-    // Wait for tier detection to complete
-    await page.waitForFunction(() => {
-      const el = document.getElementById('capabilities');
-      return el && !el.textContent?.includes('Detecting');
-    }, { timeout: 10000 });
-
-    const text = await capabilities.textContent();
-    // Should show one of: WEBGPU, SIMD128, or SCALAR
-    expect(text).toMatch(/(WEBGPU|SIMD128|SCALAR)/);
+    const text = await badge.textContent();
+    // Should show one of: WEBGPU, SIMD128, or SCALAR with "Compute"
+    expect(text).toMatch(/(WebGPU|SIMD128|Scalar) Compute/i);
   });
 
-  test('shows WebGPU or SIMD128 status indicators', async ({ page }) => {
-    const capabilities = page.locator('#capabilities');
+  test('shows compute badge with correct styling', async ({ page }) => {
+    const badge = page.locator('#compute-badge');
+    await expect(badge).toBeVisible();
 
-    // Wait for detection
-    await page.waitForFunction(() => {
-      const el = document.getElementById('capabilities');
-      return el && el.textContent?.includes('WebGPU:');
-    }, { timeout: 10000 });
-
-    const text = await capabilities.textContent();
-    // Should show checkmarks or X marks for capabilities
-    expect(text).toMatch(/WebGPU: [✅❌]/);
-    expect(text).toMatch(/SIMD128: [✅❌]/);
+    // Badge should have one of the tier classes
+    const className = await badge.getAttribute('class');
+    expect(className).toMatch(/(webgpu|simd128|scalar)/);
   });
 
   test('sql textarea is editable', async ({ page }) => {
@@ -51,55 +41,81 @@ test.describe('trueno-db WASM Demo', () => {
     await expect(sql).toBeVisible();
 
     // Clear and type new query
-    await sql.fill('SELECT id, name FROM users WHERE active = true LIMIT 5');
+    await sql.fill('SELECT playerID, yearID FROM batting WHERE HR > 50');
     const value = await sql.inputValue();
-    expect(value).toContain('SELECT id, name FROM users');
+    expect(value).toContain('SELECT playerID, yearID FROM batting');
   });
 
-  test('execute query button shows result', async ({ page }) => {
+  test('execute query button works after loading data', async ({ page }) => {
+    // First load data
+    const loadBtn = page.getByRole('button', { name: 'Load Data' });
+    await loadBtn.click();
+
+    // Wait for load to complete
+    await page.waitForFunction(() => {
+      const btn = document.getElementById('load-btn');
+      return btn?.textContent?.includes('Loaded');
+    }, { timeout: 10000 });
+
+    // Execute query
     const executeBtn = page.getByRole('button', { name: 'Execute Query' });
-    await expect(executeBtn).toBeVisible();
-
     await executeBtn.click();
-
-    // Wait for results to appear
     await page.waitForTimeout(500);
 
     const results = page.locator('#results');
     const text = await results.textContent();
-    // Should show some result (could be success or error)
+    // Should show results with row data
     expect(text).toBeTruthy();
     expect(text?.length).toBeGreaterThan(0);
+    expect(text).not.toContain('Please load data first');
   });
 
-  test('load demo button triggers load', async ({ page }) => {
-    const loadBtn = page.getByRole('button', { name: 'Load Demo Data' });
+  test('load data button triggers stats display', async ({ page }) => {
+    const loadBtn = page.getByRole('button', { name: 'Load Data' });
     await expect(loadBtn).toBeVisible();
 
     await loadBtn.click();
 
-    // Wait for loading message
-    await page.waitForTimeout(500);
+    // Wait for stats to populate
+    await page.waitForFunction(() => {
+      const count = document.getElementById('stat-count');
+      return count && count.textContent !== '-';
+    }, { timeout: 10000 });
 
-    const results = page.locator('#results');
-    const text = await results.textContent();
-    // Should show loading or result message
-    expect(text).toBeTruthy();
+    // Check stats are displayed
+    const count = await page.locator('#stat-count').textContent();
+    expect(count).not.toBe('-');
+    expect(parseInt(count || '0')).toBeGreaterThan(0);
+
+    const hrMean = await page.locator('#stat-hr-mean').textContent();
+    expect(hrMean).not.toBe('-');
   });
 
   test('page has correct title', async ({ page }) => {
-    await expect(page).toHaveTitle('Trueno-DB Browser Demo');
+    await expect(page).toHaveTitle('Trueno-DB Browser Analytics');
   });
 
-  test('architecture diagram is visible', async ({ page }) => {
-    const pre = page.locator('pre');
-    await expect(pre.first()).toBeVisible();
+  test('scatter plot canvas exists', async ({ page }) => {
+    const canvas = page.locator('#scatter-canvas');
+    await expect(canvas).toBeVisible();
+  });
 
-    // Check for architecture text
-    const text = await page.content();
-    expect(text).toContain('Browser → WASM → trueno-db');
-    expect(text).toContain('QueryEngine');
-    expect(text).toContain('Arrow Tables');
+  test('pre-built query buttons exist', async ({ page }) => {
+    await expect(page.getByRole('button', { name: 'Top Home Runs' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Top Batting Avg' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Total HR' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Avg BA' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'All Data' })).toBeVisible();
+  });
+
+  test('pre-built query button updates sql textarea', async ({ page }) => {
+    const sql = page.locator('#sql');
+
+    // Click "Total HR" button
+    await page.getByRole('button', { name: 'Total HR' }).click();
+
+    const value = await sql.inputValue();
+    expect(value).toContain('SUM(HR)');
   });
 
   test('screenshot: initial state', async ({ page }) => {
@@ -114,8 +130,15 @@ test.describe('trueno-db WASM Demo', () => {
   });
 
   test('screenshot: after query', async ({ page }) => {
-    const executeBtn = page.getByRole('button', { name: 'Execute Query' });
-    await executeBtn.click();
+    // Load data first
+    await page.getByRole('button', { name: 'Load Data' }).click();
+    await page.waitForFunction(() => {
+      const btn = document.getElementById('load-btn');
+      return btn?.textContent?.includes('Loaded');
+    }, { timeout: 10000 });
+
+    // Execute query
+    await page.getByRole('button', { name: 'Execute Query' }).click();
     await page.waitForTimeout(500);
 
     await expect(page).toHaveScreenshot('demo-after-query.png', {

@@ -17,11 +17,18 @@
 
 #![cfg(target_arch = "wasm32")]
 
-use js_sys::{Object, Reflect, Uint8Array};
+use arrow::array::{Array, Float64Array, Int32Array, RecordBatch, StringArray};
+use arrow::datatypes::{DataType, Field, Schema};
+use js_sys::{Object, Reflect};
+use std::collections::HashMap;
+use std::sync::Arc;
 use wasm_bindgen::prelude::*;
 use web_sys::{console, window};
 
 use wasm_bindgen_futures::JsFuture;
+
+use crate::query::{QueryEngine, QueryExecutor};
+use crate::storage::StorageEngine;
 
 pub mod http_range;
 pub mod late_materialization;
@@ -81,8 +88,11 @@ impl Default for DatabaseConfig {
 /// In-browser analytics database with GPU/SIMD acceleration
 #[wasm_bindgen]
 pub struct Database {
+    #[allow(dead_code)]
     config: DatabaseConfig,
-    // Will add: inner: Arc<crate::Database>
+    tables: HashMap<String, StorageEngine>,
+    query_engine: QueryEngine,
+    executor: QueryExecutor,
 }
 
 #[wasm_bindgen]
@@ -93,7 +103,12 @@ impl Database {
         let config = config.unwrap_or_default();
         console::log_1(&format!("Database created with backend: {}", config.backend).into());
 
-        Self { config }
+        Self {
+            config,
+            tables: HashMap::new(),
+            query_engine: QueryEngine::new(),
+            executor: QueryExecutor::new(),
+        }
     }
 
     /// Load table from URL (supports HTTP range requests for streaming)
@@ -105,24 +120,139 @@ impl Database {
         Err(JsValue::from_str("Not yet implemented"))
     }
 
-    /// Load table from JSON string (for embedded demo data)
+    /// Load table from JSON array string (for embedded demo data)
     #[wasm_bindgen]
     pub fn load_json(&mut self, name: String, json: String) -> Result<(), JsValue> {
-        console::log_1(&format!("Loading table '{}' from JSON ({} bytes)", name, json.len()).into());
+        console::log_1(
+            &format!("Loading table '{}' from JSON ({} bytes)", name, json.len()).into(),
+        );
 
-        // TODO: Parse JSON and create Arrow table
-        // For now, just log success
-        console::log_1(&format!("Table '{}' loaded successfully", name).into());
+        // Parse JSON array
+        let records: Vec<serde_json::Value> = serde_json::from_str(&json)
+            .map_err(|e| JsValue::from_str(&format!("JSON parse error: {e}")))?;
+
+        if records.is_empty() {
+            return Err(JsValue::from_str("Empty JSON array"));
+        }
+
+        // Infer schema from first record
+        let first = records
+            .first()
+            .and_then(|v| v.as_object())
+            .ok_or_else(|| JsValue::from_str("Expected array of objects"))?;
+
+        let mut fields: Vec<Field> = Vec::new();
+        let mut column_names: Vec<String> = Vec::new();
+
+        for (key, value) in first {
+            let data_type = match value {
+                serde_json::Value::Number(n) => {
+                    if n.is_f64() {
+                        DataType::Float64
+                    } else {
+                        DataType::Int32
+                    }
+                }
+                serde_json::Value::String(_) => DataType::Utf8,
+                serde_json::Value::Bool(_) => DataType::Boolean,
+                _ => DataType::Utf8, // Default to string
+            };
+            fields.push(Field::new(key, data_type, true));
+            column_names.push(key.clone());
+        }
+
+        let schema = Arc::new(Schema::new(fields.clone()));
+
+        // Build columnar arrays
+        let mut columns: Vec<Arc<dyn Array>> = Vec::new();
+
+        for (i, field) in fields.iter().enumerate() {
+            let col_name = &column_names[i];
+
+            match field.data_type() {
+                DataType::Int32 => {
+                    let values: Vec<Option<i32>> = records
+                        .iter()
+                        .map(|r| {
+                            r.get(col_name)
+                                .and_then(|v| v.as_i64())
+                                .map(|n| n as i32)
+                        })
+                        .collect();
+                    columns.push(Arc::new(Int32Array::from(values)));
+                }
+                DataType::Float64 => {
+                    let values: Vec<Option<f64>> = records
+                        .iter()
+                        .map(|r| r.get(col_name).and_then(|v| v.as_f64()))
+                        .collect();
+                    columns.push(Arc::new(Float64Array::from(values)));
+                }
+                DataType::Utf8 => {
+                    let values: Vec<Option<String>> = records
+                        .iter()
+                        .map(|r| r.get(col_name).and_then(|v| v.as_str()).map(String::from))
+                        .collect();
+                    columns.push(Arc::new(StringArray::from(values)));
+                }
+                _ => {
+                    // Default: convert to string
+                    let values: Vec<Option<String>> = records
+                        .iter()
+                        .map(|r| r.get(col_name).map(|v| v.to_string()))
+                        .collect();
+                    columns.push(Arc::new(StringArray::from(values)));
+                }
+            }
+        }
+
+        let batch = RecordBatch::try_new(schema, columns)
+            .map_err(|e| JsValue::from_str(&format!("Failed to create batch: {e}")))?;
+
+        let storage = StorageEngine::new(vec![batch]);
+        self.tables.insert(name.clone(), storage);
+
+        console::log_1(
+            &format!(
+                "Table '{}' loaded: {} rows, {} columns",
+                name,
+                records.len(),
+                fields.len()
+            )
+            .into(),
+        );
         Ok(())
     }
 
-    /// Execute SQL query and return Arrow IPC format
+    /// Execute SQL query and return JSON result
     #[wasm_bindgen]
-    pub async fn query(&self, sql: String) -> Result<Uint8Array, JsValue> {
+    pub fn query(&self, sql: String) -> Result<String, JsValue> {
         console::log_1(&format!("Executing query: {}", sql).into());
 
-        // TODO: Implement query execution
-        Err(JsValue::from_str("Not yet implemented"))
+        // Parse SQL
+        let plan = self
+            .query_engine
+            .parse(&sql)
+            .map_err(|e| JsValue::from_str(&format!("Parse error: {e}")))?;
+
+        // Get table
+        let storage = self
+            .tables
+            .get(&plan.table)
+            .ok_or_else(|| JsValue::from_str(&format!("Table not found: {}", plan.table)))?;
+
+        // Execute query
+        let result = self
+            .executor
+            .execute(&plan, storage)
+            .map_err(|e| JsValue::from_str(&format!("Execution error: {e}")))?;
+
+        // Convert to JSON
+        let json = record_batch_to_json(&result)
+            .map_err(|e| JsValue::from_str(&format!("JSON conversion error: {e}")))?;
+
+        console::log_1(&format!("Query returned {} rows", result.num_rows()).into());
+        Ok(json)
     }
 
     /// Get query execution plan (for debugging)
@@ -130,8 +260,83 @@ impl Database {
     pub fn explain(&self, sql: String) -> Result<String, JsValue> {
         console::log_1(&format!("EXPLAIN: {}", sql).into());
 
-        // TODO: Implement EXPLAIN
-        Err(JsValue::from_str("Not yet implemented"))
+        let plan = self
+            .query_engine
+            .parse(&sql)
+            .map_err(|e| JsValue::from_str(&format!("Parse error: {e}")))?;
+
+        Ok(format!("{plan:#?}"))
+    }
+}
+
+/// Convert Arrow RecordBatch to JSON string
+fn record_batch_to_json(batch: &RecordBatch) -> Result<String, String> {
+    let schema = batch.schema();
+    let mut rows: Vec<serde_json::Value> = Vec::new();
+
+    for row_idx in 0..batch.num_rows() {
+        let mut row = serde_json::Map::new();
+
+        for (col_idx, field) in schema.fields().iter().enumerate() {
+            let col = batch.column(col_idx);
+            let value = array_value_to_json(col.as_ref(), row_idx)?;
+            row.insert(field.name().clone(), value);
+        }
+
+        rows.push(serde_json::Value::Object(row));
+    }
+
+    serde_json::to_string_pretty(&rows).map_err(|e| e.to_string())
+}
+
+/// Extract single value from Arrow array as JSON
+fn array_value_to_json(array: &dyn Array, idx: usize) -> Result<serde_json::Value, String> {
+    if array.is_null(idx) {
+        return Ok(serde_json::Value::Null);
+    }
+
+    match array.data_type() {
+        DataType::Int32 => {
+            let arr = array
+                .as_any()
+                .downcast_ref::<Int32Array>()
+                .ok_or("downcast failed")?;
+            Ok(serde_json::Value::Number(arr.value(idx).into()))
+        }
+        DataType::Int64 => {
+            let arr = array
+                .as_any()
+                .downcast_ref::<arrow::array::Int64Array>()
+                .ok_or("downcast failed")?;
+            Ok(serde_json::Value::Number(arr.value(idx).into()))
+        }
+        DataType::Float32 => {
+            let arr = array
+                .as_any()
+                .downcast_ref::<arrow::array::Float32Array>()
+                .ok_or("downcast failed")?;
+            let v = arr.value(idx);
+            Ok(serde_json::json!(v))
+        }
+        DataType::Float64 => {
+            let arr = array
+                .as_any()
+                .downcast_ref::<Float64Array>()
+                .ok_or("downcast failed")?;
+            let v = arr.value(idx);
+            Ok(serde_json::json!(v))
+        }
+        DataType::Utf8 => {
+            let arr = array
+                .as_any()
+                .downcast_ref::<StringArray>()
+                .ok_or("downcast failed")?;
+            Ok(serde_json::Value::String(arr.value(idx).to_string()))
+        }
+        _ => Ok(serde_json::Value::String(format!(
+            "<unsupported type: {:?}>",
+            array.data_type()
+        ))),
     }
 }
 
