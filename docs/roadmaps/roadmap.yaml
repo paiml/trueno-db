@@ -78,7 +78,7 @@ roadmap:
   github_issue: null
   item_type: task
   title: 'Phase 4: Playwright E2E testing for WASM browser demo'
-  status: inprogress
+  status: completed
   priority: medium
   assigned_to: null
   created: 2025-11-25T15:00:00.000000000+00:00
