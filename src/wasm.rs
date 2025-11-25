@@ -25,6 +25,7 @@ use web_sys::{console, window};
 use wasm_bindgen_futures::JsFuture;
 
 pub mod http_range;
+pub mod streaming_parquet;
 
 /// Initialize WASM module with panic hook for better error messages
 #[wasm_bindgen(start)]
