@@ -59,11 +59,11 @@ roadmap:
   github_issue: null
   item_type: task
   title: 'Phase 4: HTTP Range Request Parquet Reader for WASM'
-  status: inprogress
+  status: completed
   priority: high
   assigned_to: null
   created: 2025-11-25T14:00:00.000000000+00:00
-  updated: 2025-11-25T10:08:27.803867756+00:00
+  updated: 2025-11-25T10:32:11.929200940+00:00
   spec: docs/specifications/PHASE4-WASM-TOC.md
   acceptance_criteria: []
   phases: []
@@ -73,4 +73,24 @@ roadmap:
   - phase-4
   - wasm
   - browser
+  notes: null
+- id: phase4-e2e-testing
+  github_issue: null
+  item_type: task
+  title: 'Phase 4: Playwright E2E testing for WASM browser demo'
+  status: inprogress
+  priority: medium
+  assigned_to: null
+  created: 2025-11-25T15:00:00.000000000+00:00
+  updated: 2025-11-25T15:00:00.000000000+00:00
+  spec: null
+  acceptance_criteria: []
+  phases: []
+  subtasks: []
+  estimated_effort: null
+  labels:
+  - phase-4
+  - wasm
+  - testing
+  - e2e
   notes: null

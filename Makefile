@@ -195,3 +195,21 @@ wasm-clean: ## Clean WASM build artifacts
 
 wasm-check: ## Check WASM compiles
 	cd $(WASM_PKG_DIR) && cargo check --target wasm32-unknown-unknown
+
+wasm-e2e: wasm-build-simd ## Run E2E tests with Playwright
+	@echo "Running E2E tests..."
+	@cd $(WASM_PKG_DIR) && npm install --silent 2>/dev/null || npm install
+	@cd $(WASM_PKG_DIR) && npx playwright install chromium --with-deps 2>/dev/null || true
+	cd $(WASM_PKG_DIR) && npx playwright test
+
+wasm-e2e-headed: wasm-build-simd ## Run E2E tests with visible browser
+	@cd $(WASM_PKG_DIR) && npm install --silent 2>/dev/null || npm install
+	cd $(WASM_PKG_DIR) && npx playwright test --headed
+
+wasm-e2e-debug: wasm-build-simd ## Run E2E tests in debug mode
+	@cd $(WASM_PKG_DIR) && npm install --silent 2>/dev/null || npm install
+	cd $(WASM_PKG_DIR) && npx playwright test --debug
+
+wasm-e2e-update: wasm-build-simd ## Update E2E test screenshots
+	@cd $(WASM_PKG_DIR) && npm install --silent 2>/dev/null || npm install
+	cd $(WASM_PKG_DIR) && npx playwright test --update-snapshots
