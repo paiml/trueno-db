@@ -198,7 +198,9 @@ fn run_leaderboard_query(
 
     // Execute query with timing
     let start = Instant::now();
-    let result = batch.top_k(value_column, k, order).expect("Example should work with valid test data");
+    let result = batch
+        .top_k(value_column, k, order)
+        .expect("Example should work with valid test data");
     let elapsed = start.elapsed();
 
     println!(

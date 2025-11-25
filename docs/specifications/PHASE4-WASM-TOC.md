@@ -30,9 +30,10 @@ Implement WebAssembly support for trueno-db to enable browser-based analytics wi
 - [ ] wasm-test target (playwright e2e)
 
 ### 4. HTTP Range Request Parquet Reader
+- [x] HTTP range request client (src/wasm/http_range.rs)
+- [x] Detailed specification (docs/specifications/http-range-parquet-spec.md)
 - [ ] Streaming Parquet reader for <2GB memory
-- [ ] HTTP range request implementation
-- [ ] Late materialization pattern
+- [ ] Late materialization pattern implementation
 
 ### 5. Browser Example
 - [ ] WebGPU capability detection

@@ -24,6 +24,8 @@ use web_sys::{console, window};
 #[cfg(feature = "gpu")]
 use wasm_bindgen_futures::JsFuture;
 
+pub mod http_range;
+
 /// Initialize WASM module with panic hook for better error messages
 #[wasm_bindgen(start)]
 pub fn init() {

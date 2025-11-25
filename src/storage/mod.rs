@@ -22,6 +22,7 @@ pub const MORSEL_SIZE_BYTES: usize = 128 * 1024 * 1024; // 128MB
 
 /// Maximum number of in-flight GPU transfers
 /// Bounded to prevent memory explosion while keeping `PCIe` bus busy
+#[cfg(feature = "tokio")]
 const MAX_IN_FLIGHT_TRANSFERS: usize = 2;
 
 /// Storage engine for Arrow/Parquet data

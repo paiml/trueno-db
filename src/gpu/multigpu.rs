@@ -66,13 +66,13 @@ impl MultiGpuManager {
     }
 
     /// Get number of available GPUs
-    #[must_use] 
+    #[must_use]
     pub fn device_count(&self) -> usize {
         self.devices.len()
     }
 
     /// Get information about all devices
-    #[must_use] 
+    #[must_use]
     pub fn devices(&self) -> &[GpuDeviceInfo] {
         &self.devices
     }
@@ -147,9 +147,7 @@ fn partition_range(data: &Int32Array, num_partitions: usize) -> Vec<DataPartitio
         };
 
         // Extract slice
-        let values: Vec<i32> = (offset..offset + size)
-            .map(|i| data.value(i))
-            .collect();
+        let values: Vec<i32> = (offset..offset + size).map(|i| data.value(i)).collect();
 
         partitions.push(DataPartition {
             device_id,
@@ -168,9 +166,7 @@ fn partition_hash(data: &Int32Array, num_partitions: usize) -> Vec<DataPartition
     use std::hash::{Hash, Hasher};
 
     // Initialize empty vectors for each partition
-    let mut buckets: Vec<Vec<i32>> = (0..num_partitions)
-        .map(|_| Vec::new())
-        .collect();
+    let mut buckets: Vec<Vec<i32>> = (0..num_partitions).map(|_| Vec::new()).collect();
 
     // Distribute elements by hash
     for i in 0..data.len() {
@@ -283,10 +279,8 @@ mod tests {
         // Verify partitions are contiguous
         assert_eq!(partitions[0].data.value(0), 1); // First partition starts at 1
         let last_partition = &partitions[2];
-        assert_eq!(
-            last_partition.data.value(last_partition.data.len() - 1),
-            10
-        ); // Last partition ends at 10
+        assert_eq!(last_partition.data.value(last_partition.data.len() - 1), 10);
+        // Last partition ends at 10
     }
 
     #[test]

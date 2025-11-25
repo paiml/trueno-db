@@ -192,7 +192,9 @@ fn bench_sql_full_pipeline(c: &mut Criterion) {
     group.bench_function("parse_and_execute", |b| {
         b.iter(|| {
             let plan = engine
-                .parse(black_box("SELECT SUM(value), AVG(value) FROM table1 WHERE value > 500.0"))
+                .parse(black_box(
+                    "SELECT SUM(value), AVG(value) FROM table1 WHERE value > 500.0",
+                ))
                 .unwrap();
             black_box(executor.execute(&plan, &storage).unwrap());
         });

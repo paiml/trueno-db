@@ -22,6 +22,7 @@ roadmap:
   - gpu
   - performance
   - phase-1
+  notes: null
 - id: 'PHASE2-001: Local multi-GPU data partitioning'
   github_issue: null
   item_type: task
@@ -37,6 +38,7 @@ roadmap:
   subtasks: []
   estimated_effort: null
   labels: []
+  notes: null
 - id: gpu-syscall-tracing
   github_issue: null
   item_type: task
@@ -52,3 +54,23 @@ roadmap:
   subtasks: []
   estimated_effort: null
   labels: []
+  notes: null
+- id: phase4-http-range
+  github_issue: null
+  item_type: task
+  title: 'Phase 4: HTTP Range Request Parquet Reader for WASM'
+  status: inprogress
+  priority: high
+  assigned_to: null
+  created: 2025-11-25T14:00:00.000000000+00:00
+  updated: 2025-11-25T10:08:27.803867756+00:00
+  spec: docs/specifications/PHASE4-WASM-TOC.md
+  acceptance_criteria: []
+  phases: []
+  subtasks: []
+  estimated_effort: null
+  labels:
+  - phase-4
+  - wasm
+  - browser
+  notes: null

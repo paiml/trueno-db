@@ -456,7 +456,9 @@ fn build_batch_from_indices(batch: &RecordBatch, indices: &[usize]) -> crate::Re
                     .as_any()
                     .downcast_ref::<Float32Array>()
                     .ok_or_else(|| {
-                        Error::Other("Failed to downcast Float32 column to Float32Array".to_string())
+                        Error::Other(
+                            "Failed to downcast Float32 column to Float32Array".to_string(),
+                        )
                     })?;
                 let values: Vec<f32> = indices.iter().map(|&idx| array.value(idx)).collect();
                 Arc::new(Float32Array::from(values))
@@ -466,7 +468,9 @@ fn build_batch_from_indices(batch: &RecordBatch, indices: &[usize]) -> crate::Re
                     .as_any()
                     .downcast_ref::<Float64Array>()
                     .ok_or_else(|| {
-                        Error::Other("Failed to downcast Float64 column to Float64Array".to_string())
+                        Error::Other(
+                            "Failed to downcast Float64 column to Float64Array".to_string(),
+                        )
                     })?;
                 let values: Vec<f64> = indices.iter().map(|&idx| array.value(idx)).collect();
                 Arc::new(Float64Array::from(values))

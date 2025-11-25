@@ -67,6 +67,12 @@ web-sys = { version = "0.3", features = [
     "Gpu",
     "GpuAdapter",
     "GpuDevice",
+    "Request",
+    "RequestInit",
+    "Response",
+    "Headers",
+    "RequestMode",
+    "RequestCredentials",
 ] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

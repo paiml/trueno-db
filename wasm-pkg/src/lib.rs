@@ -6,9 +6,9 @@
 //! - Tier 3: Scalar fallback
 
 use wasm_bindgen::prelude::*;
-use web_sys::console;
 
 // Re-export main types from parent crate
+#[cfg(target_arch = "wasm32")]
 pub use trueno_db::wasm::*;
 
 /// Get demo version

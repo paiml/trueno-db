@@ -318,7 +318,9 @@ pub async fn sum_i32(device: &wgpu::Device, queue: &wgpu::Queue, data: &Int32Arr
     let buffer_slice = staging_buffer.slice(..);
     let (sender, receiver) = futures_intrusive::channel::shared::oneshot_channel();
     buffer_slice.map_async(wgpu::MapMode::Read, move |result| {
-        sender.send(result).expect("Failed to send buffer mapping result through channel");
+        sender
+            .send(result)
+            .expect("Failed to send buffer mapping result through channel");
     });
     device.poll(wgpu::Maintain::Wait);
 
@@ -498,7 +500,9 @@ pub async fn min_i32(device: &wgpu::Device, queue: &wgpu::Queue, data: &Int32Arr
     let buffer_slice = staging_buffer.slice(..);
     let (sender, receiver) = futures_intrusive::channel::shared::oneshot_channel();
     buffer_slice.map_async(wgpu::MapMode::Read, move |result| {
-        sender.send(result).expect("Failed to send buffer mapping result through channel");
+        sender
+            .send(result)
+            .expect("Failed to send buffer mapping result through channel");
     });
     device.poll(wgpu::Maintain::Wait);
 
@@ -648,7 +652,9 @@ pub async fn max_i32(device: &wgpu::Device, queue: &wgpu::Queue, data: &Int32Arr
     let buffer_slice = staging_buffer.slice(..);
     let (sender, receiver) = futures_intrusive::channel::shared::oneshot_channel();
     buffer_slice.map_async(wgpu::MapMode::Read, move |result| {
-        sender.send(result).expect("Failed to send buffer mapping result through channel");
+        sender
+            .send(result)
+            .expect("Failed to send buffer mapping result through channel");
     });
     device.poll(wgpu::Maintain::Wait);
 

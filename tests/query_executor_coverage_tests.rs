@@ -63,7 +63,9 @@ fn test_filter_invalid_column() {
     let engine = QueryEngine::new();
     let executor = QueryExecutor::new();
 
-    let plan = engine.parse("SELECT * FROM table1 WHERE nonexistent > 10").unwrap();
+    let plan = engine
+        .parse("SELECT * FROM table1 WHERE nonexistent > 10")
+        .unwrap();
     let result = executor.execute(&plan, &storage);
 
     assert!(result.is_err());
@@ -80,7 +82,9 @@ fn test_filter_unsupported_datatype() {
     let executor = QueryExecutor::new();
 
     // Filtering on string column should fail
-    let plan = engine.parse("SELECT * FROM table1 WHERE name > 'test'").unwrap();
+    let plan = engine
+        .parse("SELECT * FROM table1 WHERE name > 'test'")
+        .unwrap();
     let result = executor.execute(&plan, &storage);
 
     assert!(result.is_err());
@@ -101,7 +105,9 @@ fn test_aggregation_on_string_column() {
 
     assert!(result.is_err());
     match result.unwrap_err() {
-        Error::InvalidInput(msg) => assert!(msg.contains("Aggregation not supported for data type")),
+        Error::InvalidInput(msg) => {
+            assert!(msg.contains("Aggregation not supported for data type"))
+        }
         _ => panic!("Expected InvalidInput error for aggregation on string"),
     }
 }
@@ -112,7 +118,9 @@ fn test_order_by_invalid_column() {
     let engine = QueryEngine::new();
     let executor = QueryExecutor::new();
 
-    let plan = engine.parse("SELECT * FROM table1 ORDER BY nonexistent DESC").unwrap();
+    let plan = engine
+        .parse("SELECT * FROM table1 ORDER BY nonexistent DESC")
+        .unwrap();
     let result = executor.execute(&plan, &storage);
 
     assert!(result.is_err());
@@ -219,23 +227,31 @@ fn test_min_max_all_numeric_types() {
     let executor = QueryExecutor::new();
 
     // Int32
-    let plan = engine.parse("SELECT MIN(id_i32), MAX(id_i32) FROM table1").unwrap();
+    let plan = engine
+        .parse("SELECT MIN(id_i32), MAX(id_i32) FROM table1")
+        .unwrap();
     let result = executor.execute(&plan, &storage).unwrap();
     assert_eq!(result.num_rows(), 1);
     assert_eq!(result.num_columns(), 2);
 
     // Int64
-    let plan = engine.parse("SELECT MIN(id_i64), MAX(id_i64) FROM table1").unwrap();
+    let plan = engine
+        .parse("SELECT MIN(id_i64), MAX(id_i64) FROM table1")
+        .unwrap();
     let result = executor.execute(&plan, &storage).unwrap();
     assert_eq!(result.num_rows(), 1);
 
     // Float32
-    let plan = engine.parse("SELECT MIN(value_f32), MAX(value_f32) FROM table1").unwrap();
+    let plan = engine
+        .parse("SELECT MIN(value_f32), MAX(value_f32) FROM table1")
+        .unwrap();
     let result = executor.execute(&plan, &storage).unwrap();
     assert_eq!(result.num_rows(), 1);
 
     // Float64
-    let plan = engine.parse("SELECT MIN(value_f64), MAX(value_f64) FROM table1").unwrap();
+    let plan = engine
+        .parse("SELECT MIN(value_f64), MAX(value_f64) FROM table1")
+        .unwrap();
     let result = executor.execute(&plan, &storage).unwrap();
     assert_eq!(result.num_rows(), 1);
 }
@@ -354,22 +370,30 @@ fn test_order_by_all_numeric_types() {
     let executor = QueryExecutor::new();
 
     // Int32
-    let plan = engine.parse("SELECT * FROM table1 ORDER BY id_i32 DESC LIMIT 2").unwrap();
+    let plan = engine
+        .parse("SELECT * FROM table1 ORDER BY id_i32 DESC LIMIT 2")
+        .unwrap();
     let result = executor.execute(&plan, &storage).unwrap();
     assert_eq!(result.num_rows(), 2);
 
     // Int64
-    let plan = engine.parse("SELECT * FROM table1 ORDER BY id_i64 ASC LIMIT 2").unwrap();
+    let plan = engine
+        .parse("SELECT * FROM table1 ORDER BY id_i64 ASC LIMIT 2")
+        .unwrap();
     let result = executor.execute(&plan, &storage).unwrap();
     assert_eq!(result.num_rows(), 2);
 
     // Float32
-    let plan = engine.parse("SELECT * FROM table1 ORDER BY value_f32 DESC LIMIT 3").unwrap();
+    let plan = engine
+        .parse("SELECT * FROM table1 ORDER BY value_f32 DESC LIMIT 3")
+        .unwrap();
     let result = executor.execute(&plan, &storage).unwrap();
     assert_eq!(result.num_rows(), 3);
 
     // Float64
-    let plan = engine.parse("SELECT * FROM table1 ORDER BY value_f64 ASC LIMIT 3").unwrap();
+    let plan = engine
+        .parse("SELECT * FROM table1 ORDER BY value_f64 ASC LIMIT 3")
+        .unwrap();
     let result = executor.execute(&plan, &storage).unwrap();
     assert_eq!(result.num_rows(), 3);
 }
@@ -398,7 +422,9 @@ fn test_filter_invalid_number_format() {
     let executor = QueryExecutor::new();
 
     // Invalid number in filter
-    let plan = engine.parse("SELECT * FROM table1 WHERE id_i32 > not_a_number").unwrap();
+    let plan = engine
+        .parse("SELECT * FROM table1 WHERE id_i32 > not_a_number")
+        .unwrap();
     let result = executor.execute(&plan, &storage);
 
     assert!(result.is_err());

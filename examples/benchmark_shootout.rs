@@ -107,11 +107,15 @@ fn benchmark_topk(batch: &RecordBatch, k: usize, order: SortOrder) {
     };
 
     // Warmup run
-    let _ = batch.top_k(1, k, order).expect("Example should work with valid test data");
+    let _ = batch
+        .top_k(1, k, order)
+        .expect("Example should work with valid test data");
 
     // Timed run
     let start = Instant::now();
-    let result = batch.top_k(1, k, order).expect("Example should work with valid test data");
+    let result = batch
+        .top_k(1, k, order)
+        .expect("Example should work with valid test data");
     let elapsed = start.elapsed();
 
     let values = result
