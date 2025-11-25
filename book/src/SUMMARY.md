@@ -114,6 +114,7 @@
 
 - [Common Issues](./troubleshooting/common-issues.md)
 - [GPU Setup](./troubleshooting/gpu-setup.md)
+- [WebGPU Browser Setup](./troubleshooting/webgpu-browser.md)
 - [Debugging Tips](./troubleshooting/debugging.md)
 - [Performance Debugging](./troubleshooting/performance-debugging.md)
 
