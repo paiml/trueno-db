@@ -186,9 +186,16 @@ wasm-build-simd: ## Build WASM with SIMD128 + WebGPU
 	@echo "SIMD128 + WebGPU WASM built"
 
 WASM_PORT ?= 8080
-wasm-serve: wasm-build-simd ## Build and serve WASM demo
+wasm-serve: wasm-build-simd ## Build and serve WASM demo (ruchy or python)
 	@echo "Starting demo at http://localhost:$(WASM_PORT)/"
-	@cd $(WASM_PKG_DIR) && python3 -m http.server $(WASM_PORT)
+	@echo "Press Ctrl+C to stop"
+	@if command -v ruchy >/dev/null 2>&1; then \
+		echo "Using ruchy (fast)"; \
+		cd $(WASM_PKG_DIR) && ruchy serve . --port $(WASM_PORT); \
+	else \
+		echo "Using Python (install ruchy for faster: cargo install ruchy)"; \
+		cd $(WASM_PKG_DIR) && python3 -m http.server $(WASM_PORT); \
+	fi
 
 wasm-clean: ## Clean WASM build artifacts
 	rm -rf $(WASM_OUT_DIR) $(WASM_PKG_DIR)/target
