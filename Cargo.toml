@@ -9,6 +9,7 @@ repository = "https://github.com/paiml/trueno-db"
 keywords = ["database", "gpu", "simd", "analytics", "wasm"]
 categories = ["database", "science", "wasm"]
 rust-version = "1.75"
+resolver = "2"
 
 [dependencies]
 # Core compute (SIMD - always included)
@@ -21,7 +22,7 @@ futures-intrusive = { version = "0.5", optional = true }  # Async primitives for
 
 # Storage (Arrow columnar format)
 arrow = "53"               # Columnar format
-parquet = "53"             # Parquet reader
+parquet = { version = "53", default-features = false, features = ["arrow"] }  # Parquet (no SIMD for wasm compat)
 
 # Query parsing
 sqlparser = "0.52"         # SQL parsing

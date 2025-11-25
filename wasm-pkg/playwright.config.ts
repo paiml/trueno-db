@@ -9,7 +9,7 @@ export default defineConfig({
   reporter: 'html',
 
   use: {
-    baseURL: 'http://localhost:8080',
+    baseURL: 'http://localhost:9876',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -22,8 +22,8 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npx serve . -p 8080',
-    url: 'http://localhost:8080',
+    command: 'npx serve . -p 9876',
+    url: 'http://localhost:9876',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
   },

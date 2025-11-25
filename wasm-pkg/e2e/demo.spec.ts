@@ -3,9 +3,9 @@ import { test, expect } from '@playwright/test';
 test.describe('trueno-db WASM Demo', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    // Wait for WASM to initialize
+    // Wait for WASM to initialize (status shows version after init)
     await page.waitForFunction(() => {
-      return document.getElementById('status')?.textContent?.includes('WASM initialized');
+      return document.getElementById('status')?.textContent?.includes('trueno-db-wasm');
     }, { timeout: 15000 });
   });
 
@@ -13,7 +13,7 @@ test.describe('trueno-db WASM Demo', () => {
     const status = page.locator('#status');
     await expect(status).toBeVisible();
     const text = await status.textContent();
-    expect(text).toContain('WASM initialized');
+    expect(text).toContain('trueno-db-wasm');
   });
 
   test('detects compute tier', async ({ page }) => {
