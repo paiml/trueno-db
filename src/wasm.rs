@@ -21,7 +21,6 @@ use js_sys::{Object, Reflect, Uint8Array};
 use wasm_bindgen::prelude::*;
 use web_sys::{console, window};
 
-#[cfg(feature = "gpu")]
 use wasm_bindgen_futures::JsFuture;
 
 pub mod http_range;
@@ -168,15 +167,12 @@ pub async fn detect_capabilities() -> Result<JsValue, JsValue> {
     Ok(caps.into())
 }
 
-async fn check_webgpu(_navigator: &web_sys::Navigator) -> bool {
-    #[cfg(feature = "gpu")]
-    {
-        if let Some(gpu) = _navigator.gpu() {
-            let adapter_promise = gpu.request_adapter();
-            if let Ok(adapter_val) = JsFuture::from(adapter_promise).await {
-                return !adapter_val.is_null() && !adapter_val.is_undefined();
-            }
-        }
+async fn check_webgpu(navigator: &web_sys::Navigator) -> bool {
+    // WebGPU detection via navigator.gpu
+    let gpu = navigator.gpu();
+    let adapter_promise = gpu.request_adapter();
+    if let Ok(adapter_val) = JsFuture::from(adapter_promise).await {
+        return !adapter_val.is_null() && !adapter_val.is_undefined();
     }
     false
 }

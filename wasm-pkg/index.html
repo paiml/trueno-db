@@ -54,7 +54,7 @@
 
     <h2>SQL Query</h2>
     <textarea id="sql" rows="4" style="width: 100%; padding: 10px; background: #1a1a2e; color: #cccccc; border: 1px solid #444;">
-SELECT * FROM demo LIMIT 10
+SELECT playerID, yearID, HR, BA FROM batting ORDER BY HR DESC LIMIT 5
     </textarea>
     <br>
     <button onclick="runQuery()">Execute Query</button>
