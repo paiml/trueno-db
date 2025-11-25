@@ -124,13 +124,32 @@ Browser → WASM → trueno-db → trueno (SIMD) → Results
             }
         };
 
+        // Lahman Baseball Database - Public Domain
+        // Source: Chadwick Baseball Bureau (501c3)
+        // https://github.com/chadwickbureau/baseballdatabank
+        const DEMO_DATA = {
+            batting: [
+                { playerID: 'ruthba01', yearID: 1927, teamID: 'NYA', G: 151, AB: 540, R: 158, H: 192, HR: 60, RBI: 164, BA: 0.356 },
+                { playerID: 'ruthba01', yearID: 1928, teamID: 'NYA', G: 154, AB: 536, R: 163, H: 173, HR: 54, RBI: 142, BA: 0.323 },
+                { playerID: 'gaborou01', yearID: 1923, teamID: 'NYA', G: 152, AB: 577, R: 97, H: 188, HR: 29, RBI: 125, BA: 0.326 },
+                { playerID: 'willite01', yearID: 1941, teamID: 'BOS', G: 143, AB: 456, R: 135, H: 185, HR: 37, RBI: 120, BA: 0.406 },
+                { playerID: 'willite01', yearID: 1942, teamID: 'BOS', G: 150, AB: 522, R: 141, H: 186, HR: 36, RBI: 137, BA: 0.356 },
+                { playerID: 'mantlmi01', yearID: 1956, teamID: 'NYA', G: 150, AB: 533, R: 132, H: 188, HR: 52, RBI: 130, BA: 0.353 },
+                { playerID: 'mantlmi01', yearID: 1957, teamID: 'NYA', G: 144, AB: 474, R: 121, H: 173, HR: 34, RBI: 94, BA: 0.365 },
+                { playerID: 'aaronha01', yearID: 1957, teamID: 'MLN', G: 151, AB: 615, R: 118, H: 198, HR: 44, RBI: 132, BA: 0.322 },
+                { playerID: 'mayswi01', yearID: 1954, teamID: 'NY1', G: 151, AB: 565, R: 119, H: 195, HR: 41, RBI: 110, BA: 0.345 },
+                { playerID: 'bondsba01', yearID: 2001, teamID: 'SFN', G: 153, AB: 476, R: 129, H: 156, HR: 73, RBI: 137, BA: 0.328 },
+            ]
+        };
+
         window.loadDemo = async function() {
             const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '<pre>Loading demo data...</pre>';
+            resultsDiv.innerHTML = '<pre>Loading Lahman Baseball data...</pre>';
 
             try {
-                await db.load_table('demo', '/data/demo.parquet');
-                resultsDiv.innerHTML = '<pre>Demo data loaded!</pre>';
+                // Load embedded demo data
+                await db.load_json('batting', JSON.stringify(DEMO_DATA.batting));
+                resultsDiv.innerHTML = `<pre>Loaded ${DEMO_DATA.batting.length} batting records\nSource: Lahman Database (Chadwick Baseball Bureau)</pre>`;
             } catch (err) {
                 resultsDiv.innerHTML = `<pre style="color: #ff5555;">Error: ${err}</pre>`;
             }

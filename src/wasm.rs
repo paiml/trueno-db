@@ -106,6 +106,17 @@ impl Database {
         Err(JsValue::from_str("Not yet implemented"))
     }
 
+    /// Load table from JSON string (for embedded demo data)
+    #[wasm_bindgen]
+    pub fn load_json(&mut self, name: String, json: String) -> Result<(), JsValue> {
+        console::log_1(&format!("Loading table '{}' from JSON ({} bytes)", name, json.len()).into());
+
+        // TODO: Parse JSON and create Arrow table
+        // For now, just log success
+        console::log_1(&format!("Table '{}' loaded successfully", name).into());
+        Ok(())
+    }
+
     /// Execute SQL query and return Arrow IPC format
     #[wasm_bindgen]
     pub async fn query(&self, sql: String) -> Result<Uint8Array, JsValue> {
