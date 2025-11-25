@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trueno-DB Browser Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0f0f23;
+            color: #cccccc;
+        }
+        h1 { color: #00d4aa; }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            background: #1a1a2e;
+            border-radius: 4px;
+        }
+        .tier { font-weight: bold; color: #00d4aa; }
+        pre {
+            background: #1a1a2e;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        button {
+            background: #00d4aa;
+            color: #0f0f23;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background: #00ffc8; }
+        #results { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Trueno-DB Browser Analytics</h1>
+
+    <div class="status" id="status">
+        <strong>Status:</strong> Initializing...
+    </div>
+
+    <div class="status" id="capabilities">
+        <strong>Compute Tier:</strong> Detecting...
+    </div>
+
+    <h2>SQL Query</h2>
+    <textarea id="sql" rows="4" style="width: 100%; padding: 10px; background: #1a1a2e; color: #cccccc; border: 1px solid #444;">
+SELECT * FROM demo LIMIT 10
+    </textarea>
+    <br>
+    <button onclick="runQuery()">Execute Query</button>
+    <button onclick="loadDemo()">Load Demo Data</button>
+
+    <div id="results"></div>
+
+    <h2>Architecture</h2>
+    <pre>
+Browser → WASM → trueno-db → trueno (SIMD) → Results
+                     ↓
+                QueryEngine
+                     ↓
+                Arrow Tables
+    </pre>
+
+    <script type="module">
+        import init, {
+            Database,
+            DatabaseConfig,
+            detect_capabilities,
+            demo_version
+        } from './pkg/trueno_db_wasm.js';
+
+        let db = null;
+
+        async function initWasm() {
+            try {
+                await init();
+
+                document.getElementById('status').innerHTML =
+                    `<strong>Status:</strong> ✅ ${demo_version()}`;
+
+                // Detect capabilities
+                const caps = await detect_capabilities();
+                const tier = caps.tier || 'unknown';
+                const tierEmoji = tier === 'webgpu' ? '🚀' :
+                                tier === 'simd128' ? '⚡' : '🐌';
+
+                document.getElementById('capabilities').innerHTML =
+                    `<strong>Compute Tier:</strong> ${tierEmoji} <span class="tier">${tier.toUpperCase()}</span>
+                    <br>WebGPU: ${caps.webgpu ? '✅' : '❌'} | SIMD128: ${caps.simd128 ? '✅' : '❌'}`;
+
+                // Create database
+                const config = new DatabaseConfig()
+                    .backend(tier)
+                    .cache_size_mb(256);
+                db = new Database(config);
+
+            } catch (err) {
+                document.getElementById('status').innerHTML =
+                    `<strong>Error:</strong> ${err}`;
+            }
+        }
+
+        window.runQuery = async function() {
+            const sql = document.getElementById('sql').value;
+            const resultsDiv = document.getElementById('results');
+
+            resultsDiv.innerHTML = '<pre>Executing query...</pre>';
+
+            try {
+                const result = await db.query(sql);
+                resultsDiv.innerHTML = `<pre>Query executed!\n(Full implementation pending)</pre>`;
+            } catch (err) {
+                resultsDiv.innerHTML = `<pre style="color: #ff5555;">Error: ${err}</pre>`;
+            }
+        };
+
+        window.loadDemo = async function() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<pre>Loading demo data...</pre>';
+
+            try {
+                await db.load_table('demo', '/data/demo.parquet');
+                resultsDiv.innerHTML = '<pre>Demo data loaded!</pre>';
+            } catch (err) {
+                resultsDiv.innerHTML = `<pre style="color: #ff5555;">Error: ${err}</pre>`;
+            }
+        };
+
+        // Initialize on page load
+        initWasm();
+    </script>
+</body>
+</html>

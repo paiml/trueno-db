@@ -168,3 +168,30 @@ ci: lint test coverage ## Run CI pipeline
 
 pre-commit: lint test ## Pre-commit hook
 	@echo "✅ Pre-commit checks passed"
+
+## WASM Build (Phase 4)
+
+WASM_PKG_DIR := wasm-pkg
+WASM_OUT_DIR := $(WASM_PKG_DIR)/pkg
+
+wasm-build: ## Build WASM package with wasm-pack
+	@echo "Building WASM package..."
+	@command -v wasm-pack >/dev/null 2>&1 || { echo "Installing wasm-pack..."; cargo install wasm-pack; }
+	cd $(WASM_PKG_DIR) && wasm-pack build --target web --release
+	@echo "WASM built: $(WASM_OUT_DIR)/"
+
+wasm-build-simd: ## Build WASM with SIMD128 + WebGPU
+	@echo "Building WASM with SIMD128 + WebGPU..."
+	cd $(WASM_PKG_DIR) && RUSTFLAGS="-C target-feature=+simd128 --cfg=web_sys_unstable_apis" wasm-pack build --target web --release --features webgpu
+	@echo "SIMD128 + WebGPU WASM built"
+
+WASM_PORT ?= 8080
+wasm-serve: wasm-build-simd ## Build and serve WASM demo
+	@echo "Starting demo at http://localhost:$(WASM_PORT)/"
+	@cd $(WASM_PKG_DIR) && python3 -m http.server $(WASM_PORT)
+
+wasm-clean: ## Clean WASM build artifacts
+	rm -rf $(WASM_OUT_DIR) $(WASM_PKG_DIR)/target
+
+wasm-check: ## Check WASM compiles
+	cd $(WASM_PKG_DIR) && cargo check --target wasm32-unknown-unknown

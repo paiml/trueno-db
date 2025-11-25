@@ -40,6 +40,8 @@ pub mod gpu;
 pub mod query;
 pub mod storage;
 pub mod topk;
+#[cfg(all(target_arch = "wasm32", feature = "wasm"))]
+pub mod wasm;
 
 pub use error::{Error, Result};
 

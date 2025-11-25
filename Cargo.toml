@@ -26,9 +26,9 @@ parquet = "53"             # Parquet reader
 # Query parsing
 sqlparser = "0.52"         # SQL parsing
 
-# Async runtime
-tokio = { version = "1", features = ["full"] }
-rayon = "1.8"              # CPU parallelism (for spawn_blocking isolation)
+# Async runtime (optional for WASM)
+tokio = { version = "1", features = ["full"], optional = true }
+rayon = { version = "1.8", optional = true }  # CPU parallelism (for spawn_blocking isolation)
 
 # Error handling
 thiserror = "2"
@@ -55,8 +55,19 @@ cargo-llvm-cov = "0.6"
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 # WASM support
 wasm-bindgen = "0.2"
-web-sys = { version = "0.3", features = ["Gpu", "GpuDevice"] }
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
 console_error_panic_hook = "0.1"
+serde-wasm-bindgen = "0.6"
+web-sys = { version = "0.3", features = [
+    "console",
+    "Window",
+    "Navigator",
+    "Performance",
+    "Gpu",
+    "GpuAdapter",
+    "GpuDevice",
+] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 # Native-only dependencies (Phase 3: gRPC distribution)
@@ -64,9 +75,8 @@ tonic = { version = "0.12", optional = true }
 prost = { version = "0.13", optional = true }
 
 [features]
-# Default: SIMD-only (fast compile, small binary)
-# See: ../paiml-mcp-agent-toolkit/docs/specifications/trueno-db-integration-review-response.md
-default = ["simd"]
+# Default: SIMD with tokio/rayon (native builds)
+default = ["simd", "tokio", "rayon"]
 
 # SIMD-only backend (12 dependencies, -0.4 MB vs SQLite, 18s compile)
 simd = []
@@ -77,7 +87,7 @@ gpu = ["dep:wgpu", "dep:bytemuck", "dep:futures-intrusive"]
 # Phase 3: Distributed multi-GPU
 distributed = ["tonic", "prost"]
 
-# Phase 4: WASM build
+# Phase 4: WASM build (no tokio/rayon - not WASM compatible)
 wasm = []
 
 [[bench]]

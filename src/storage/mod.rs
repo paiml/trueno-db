@@ -264,11 +264,13 @@ impl Iterator for MorselIterator<'_> {
 ///
 /// References:
 /// - Leis et al. (2014): Morsel-driven parallelism
+#[cfg(feature = "tokio")]
 pub struct GpuTransferQueue {
     sender: tokio::sync::mpsc::Sender<RecordBatch>,
     receiver: tokio::sync::mpsc::Receiver<RecordBatch>,
 }
 
+#[cfg(feature = "tokio")]
 impl GpuTransferQueue {
     /// Create new GPU transfer queue with bounded capacity
     ///
@@ -308,6 +310,7 @@ impl GpuTransferQueue {
     }
 }
 
+#[cfg(feature = "tokio")]
 impl Default for GpuTransferQueue {
     fn default() -> Self {
         Self::new()
