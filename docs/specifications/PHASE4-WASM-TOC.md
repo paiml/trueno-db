@@ -36,9 +36,12 @@ Implement WebAssembly support for trueno-db to enable browser-based analytics wi
 - [x] Footer-first reading strategy
 - [x] On-demand row group reading
 - [x] Column pruning for bandwidth optimization
-- [ ] Full Thrift deserialization (stub for now)
-- [ ] Late materialization pattern implementation
-- [ ] Memory budgeting (<2GB Poka-Yoke)
+- [x] Late materialization (src/wasm/late_materialization.rs)
+- [x] Memory budgeting with AtomicUsize (<2GB Poka-Yoke)
+- [x] RAII memory allocation guards (automatic cleanup)
+- [x] Filter selectivity tracking
+- [ ] Full Thrift deserialization (stub for now - future work)
+- [ ] E2E browser tests with Playwright
 
 ### 5. Browser Example
 - [ ] WebGPU capability detection
