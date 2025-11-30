@@ -94,3 +94,27 @@ roadmap:
   - testing
   - e2e
   notes: null
+- id: phase5-experiment-schema
+  github_issue: 4
+  item_type: task
+  title: 'Phase 5: Experiment Tracking Schema for entrenar'
+  status: completed
+  priority: high
+  assigned_to: null
+  created: 2025-11-30T12:00:00.000000000+00:00
+  updated: 2025-11-30T12:00:00.000000000+00:00
+  spec: null
+  acceptance_criteria:
+  - experiments table schema with metadata columns
+  - runs table schema with status and timing
+  - metrics time-series optimized for range queries
+  - artifacts table with CAS references
+  phases: []
+  subtasks: []
+  estimated_effort: medium
+  labels:
+  - phase-5
+  - entrenar
+  - experiment-tracking
+  - schema
+  notes: 'Cross-project: ENT-EPIC-001 (entrenar experiment tracking spec v1.8.0)'

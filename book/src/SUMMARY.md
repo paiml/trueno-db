@@ -46,6 +46,10 @@
 - [SIMD Primitives](./components/simd/simd-primitives.md)
 - [CPU Optimization](./components/simd/cpu-optimization.md)
 
+## Experiment Tracking
+
+- [Experiment Schema](./components/experiment/schema.md)
+
 # EXTREME TDD Methodology
 
 - [RED-GREEN-REFACTOR Cycle](./tdd/red-green-refactor.md)

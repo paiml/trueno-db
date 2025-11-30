@@ -35,6 +35,7 @@
 
 pub mod backend;
 pub mod error;
+pub mod experiment;
 #[cfg(feature = "gpu")]
 pub mod gpu;
 pub mod query;
