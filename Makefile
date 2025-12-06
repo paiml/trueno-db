@@ -248,8 +248,7 @@ release-check: release-prep ## Verify package can be published (dry-run)
 release: release-prep ## Publish to crates.io (requires cargo login, trueno must be published first)
 	@echo "🚀 Publishing trueno-db to crates.io..."
 	@echo "⚠️  Ensure trueno $(TRUENO_VERSION) is already published!"
-	@echo "⚠️  Ensure all changes are committed!"
-	cargo publish || ($(MAKE) release-dev && exit 1)
+	cargo publish --allow-dirty || ($(MAKE) release-dev && exit 1)
 	@$(MAKE) release-dev
 	@echo "✅ Published successfully"
 	@echo "📦 Create GitHub release: gh release create v$$(cargo pkgid | cut -d# -f2)"
