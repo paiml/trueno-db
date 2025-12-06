@@ -118,3 +118,33 @@ roadmap:
   - experiment-tracking
   - schema
   notes: 'Cross-project: ENT-EPIC-001 (entrenar experiment tracking spec v1.8.0)'
+- id: phase6-kv-store
+  github_issue: null
+  item_type: epic
+  title: 'Phase 6: Key-Value Store Module for PAIML Stack Integration'
+  status: inprogress
+  priority: high
+  assigned_to: null
+  created: 2025-12-05T20:00:00.000000000+00:00
+  updated: 2025-12-05T18:37:45.221552601+00:00
+  spec: null
+  acceptance_criteria:
+  - Simple KV trait with get/set/delete/exists operations
+  - SIMD-optimized key hashing (FxHash or xxHash via trueno)
+  - GPU batch operations for bulk KV ops (1000+ keys)
+  - WASM compatibility for browser localStorage/IndexedDB
+  - Parquet persistence backend for durability
+  - TTL support with background expiration
+  - Zero-copy value access where possible
+  phases: []
+  subtasks: []
+  estimated_effort: large
+  labels:
+  - phase-6
+  - kv-store
+  - pforge
+  - stack-integration
+  - simd
+  - gpu
+  - wasm
+  notes: 'Cross-project: pforge state management needs embedded KV store. Eliminates external deps (sled/redb) from PAIML stack. Design must respect GPU/SIMD/WASM story.'

@@ -1,6 +1,6 @@
 [package]
 name = "trueno-db"
-version = "0.3.4"
+version = "0.3.5"
 edition = "2021"
 authors = ["Pragmatic AI Labs <info@paiml.com>"]
 license = "MIT"
@@ -13,7 +13,7 @@ resolver = "2"
 
 [dependencies]
 # Core compute (SIMD - always included)
-trueno = "0.7.3"  # SIMD fallback (AVX-512/AVX2/SSE2)
+trueno = { path = "../trueno" }  # For local dev; change to "0.7.4" for release
 
 # Serialization (experiment tracking schema)
 serde = { version = "1.0", features = ["derive"] }
@@ -38,6 +38,10 @@ sqlparser = "0.52"         # SQL parsing
 # Async runtime (optional for WASM)
 tokio = { version = "1", features = ["full"], optional = true }
 rayon = { version = "1.8", optional = true }  # CPU parallelism (for spawn_blocking isolation)
+
+# Key-value store (Phase 6)
+dashmap = "6.0"  # Lock-free concurrent hashmap for MemoryKvStore
+rustc-hash = "2.0"  # Fast FxHash for SIMD-friendly key hashing
 
 # Error handling
 thiserror = "2"

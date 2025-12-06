@@ -50,6 +50,12 @@
 
 - [Experiment Schema](./components/experiment/schema.md)
 
+## Key-Value Store (Phase 6)
+
+- [KV Store Overview](./components/kv/overview.md)
+- [Hash Functions](./components/kv/hash-functions.md)
+- [pforge Integration](./components/kv/pforge-integration.md)
+
 # EXTREME TDD Methodology
 
 - [RED-GREEN-REFACTOR Cycle](./tdd/red-green-refactor.md)

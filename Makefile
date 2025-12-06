@@ -220,3 +220,43 @@ wasm-e2e-debug: wasm-build-simd ## Run E2E tests in debug mode
 wasm-e2e-update: wasm-build-simd ## Update E2E test screenshots
 	@cd $(WASM_PKG_DIR) && npm install --silent 2>/dev/null || npm install
 	cd $(WASM_PKG_DIR) && npx playwright test --update-snapshots
+
+# ============================================================================
+# RELEASE (crates.io publishing)
+# ============================================================================
+
+TRUENO_VERSION := 0.7.4
+
+release-prep: ## Prepare Cargo.toml for release (swap path → version)
+	@echo "🔄 Preparing Cargo.toml for release..."
+	@sed -i 's|trueno = { path = "../trueno" }.*|trueno = "$(TRUENO_VERSION)"  # SIMD fallback + hash module|' Cargo.toml
+	@echo "✅ Updated trueno dependency to version $(TRUENO_VERSION)"
+	@grep "^trueno = " Cargo.toml
+
+release-dev: ## Restore Cargo.toml for local development (swap version → path)
+	@echo "🔄 Restoring Cargo.toml for local development..."
+	@sed -i 's|trueno = "$(TRUENO_VERSION)".*|trueno = { path = "../trueno" }  # For local dev; change to "$(TRUENO_VERSION)" for release|' Cargo.toml
+	@echo "✅ Restored trueno to path dependency"
+	@grep "^trueno = " Cargo.toml
+
+release-check: release-prep ## Verify package can be published (dry-run)
+	@echo "🔍 Checking release readiness..."
+	cargo publish --dry-run --allow-dirty || ($(MAKE) release-dev && exit 1)
+	@$(MAKE) release-dev
+	@echo "✅ Package ready for release"
+
+release: release-prep ## Publish to crates.io (requires cargo login, trueno must be published first)
+	@echo "🚀 Publishing trueno-db to crates.io..."
+	@echo "⚠️  Ensure trueno $(TRUENO_VERSION) is already published!"
+	@echo "⚠️  Ensure all changes are committed!"
+	cargo publish || ($(MAKE) release-dev && exit 1)
+	@$(MAKE) release-dev
+	@echo "✅ Published successfully"
+	@echo "📦 Create GitHub release: gh release create v$$(cargo pkgid | cut -d# -f2)"
+
+release-tag: ## Create git tag for current version
+	@VERSION=$$(cargo pkgid | cut -d# -f2) && \
+	echo "🏷️  Creating tag v$$VERSION..." && \
+	git tag -a "v$$VERSION" -m "Release v$$VERSION" && \
+	git push origin "v$$VERSION" && \
+	echo "✅ Tag v$$VERSION pushed"

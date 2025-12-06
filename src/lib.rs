@@ -38,6 +38,7 @@ pub mod error;
 pub mod experiment;
 #[cfg(feature = "gpu")]
 pub mod gpu;
+pub mod kv;
 pub mod query;
 pub mod storage;
 pub mod topk;
