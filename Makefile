@@ -6,7 +6,7 @@
 .DELETE_ON_ERROR:
 .ONESHELL:
 
-.PHONY: help build test bench lint check coverage mutants tdg clean
+.PHONY: help build test test-fast bench lint check coverage mutants tdg clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -21,6 +21,9 @@ build-release: ## Build release version
 
 test: ## Run all tests
 	cargo test --all-features
+
+test-fast: ## Run fast unit tests only (tier 1)
+	cargo test --lib
 
 test-verbose: ## Run tests with verbose output
 	cargo test --all-features -- --nocapture
