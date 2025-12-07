@@ -1,11 +1,13 @@
-<h1 align="center">Trueno-DB</h1>
-<h5 align="center">GPU-First Embedded Analytics with SIMD Fallback</h5>
+<div align="center">
 
-<p align="center">
+<h1>Trueno-DB</h1>
+<h5>GPU-First Embedded Analytics with SIMD Fallback</h5>
+
+<p>
   <img src=".github/performance-hero.png" alt="Performance Comparison: GPU vs SIMD vs Scalar" width="1200">
 </p>
 
-<p align="center">
+<p>
   <a href="https://github.com/paiml/trueno-db/actions/workflows/ci.yml">
     <img src="https://github.com/paiml/trueno-db/actions/workflows/ci.yml/badge.svg" alt="CI Status">
   </a>
@@ -23,6 +25,38 @@
 </p>
 
 GPU-first embedded analytics database with graceful degradation: **GPU → SIMD → Scalar**
+
+</div>
+
+---
+
+## Table of Contents
+
+- [Features](#features)
+- [Performance](#performance)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Try the Examples](#try-the-examples)
+- [Documentation](#documentation)
+- [Development](#development)
+- [Architecture](#architecture)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+
+---
+
+## Features
+
+- ✅ **Cost-based backend selection**: Arithmetic intensity dispatch
+- ✅ **Morsel-based paging**: Out-of-core execution (128MB chunks)
+- ✅ **JIT WGSL compiler**: Kernel fusion for single-pass execution
+- ✅ **GPU kernels**: SUM, MIN, MAX, COUNT, AVG, fused filter+sum
+- ✅ **SIMD fallback**: Trueno integration (AVX-512/AVX2/SSE2)
+- ✅ **SQL query interface**: SELECT, WHERE, aggregations, ORDER BY, LIMIT
+- ✅ **Async isolation**: `spawn_blocking` for CPU-bound operations
+- 🚧 **GROUP BY**: Planned for Phase 2
+- 🚧 **Hash JOIN**: Planned for Phase 2
+- 🚧 **WASM support**: WebGPU + HTTP range requests (Phase 4)
 
 ## Phase 1 MVP: Complete ✅
 
@@ -141,19 +175,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 - **Poka-Yoke safety**: Out-of-core execution prevents VRAM OOM
 - **Genchi Genbutsu**: Physics-based cost model (5x rule for GPU dispatch)
 - **Jidoka**: Backend equivalence tests (GPU == SIMD == Scalar)
-
-## Features
-
-- ✅ **Cost-based backend selection**: Arithmetic intensity dispatch
-- ✅ **Morsel-based paging**: Out-of-core execution (128MB chunks)
-- ✅ **JIT WGSL compiler**: Kernel fusion for single-pass execution
-- ✅ **GPU kernels**: SUM, MIN, MAX, COUNT, AVG, fused filter+sum
-- ✅ **SIMD fallback**: Trueno integration (AVX-512/AVX2/SSE2)
-- ✅ **SQL query interface**: SELECT, WHERE, aggregations, ORDER BY, LIMIT
-- ✅ **Async isolation**: `spawn_blocking` for CPU-bound operations
-- 🚧 **GROUP BY**: Planned for Phase 2
-- 🚧 **Hash JOIN**: Planned for Phase 2
-- 🚧 **WASM support**: WebGPU + HTTP range requests (Phase 4)
 
 ## Documentation
 

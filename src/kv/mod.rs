@@ -281,7 +281,7 @@ mod tests {
 
     #[test]
     fn test_memory_kv_default() {
-        let store: MemoryKvStore = Default::default();
+        let store: MemoryKvStore = MemoryKvStore::default();
         assert!(store.is_empty());
     }
 }
