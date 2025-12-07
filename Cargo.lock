@@ -3251,14 +3251,16 @@ dependencies = [
 
 [[package]]
 name = "trueno"
-version = "0.7.4"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f127ae5346273b160eb01480022bd70a46207ed9ff54b534b78c27977390dc52"
 dependencies = [
  "thiserror 2.0.17",
 ]
 
 [[package]]
 name = "trueno-db"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "anyhow",
  "arrow",

@@ -264,6 +264,63 @@ Key papers informing the architecture:
 
 See docs/specifications/db-spec-v1.md section 8 for complete references.
 
+## Backend Story Policy (CRITICAL - NEVER VIOLATE)
+
+### Zero Tolerance Backend Requirements
+
+**ALL operations in trueno-db MUST work on ALL backends:**
+
+| Backend | Description | When Used |
+|---------|-------------|-----------|
+| **Scalar** | Reference implementation | Fallback, testing |
+| **SIMD** | trueno Vector ops (SSE2/AVX/AVX2/AVX512/NEON) | Default CPU path |
+| **GPU** | wgpu compute shaders (Vulkan/Metal/DX12/WebGPU) | Large datasets (>10MB) |
+| **WASM** | SIMD128 + WebGPU | Browser deployment |
+
+### Adding New Operations - Step by Step
+
+When adding ANY new operation to trueno-db:
+
+1. **Implement Scalar version first** (reference implementation)
+2. **Implement SIMD version** using `trueno::Vector` ops
+3. **Implement GPU version** in `src/gpu/` with WGSL shader
+4. **Add equivalence test** to `tests/backend_story.rs`
+5. **Update BackendDispatcher** FLOP estimation if needed
+6. **Verify** with `cargo test --test backend_story`
+
+### Enforcement Mechanisms
+
+1. **Pre-commit hook**: Runs `cargo test --test backend_story` before every commit
+2. **CI pipeline**: Blocks PRs that break backend story tests
+3. **CLAUDE.md**: This policy is read by Claude Code for enforcement
+4. **Code review**: Backend equivalence is mandatory review criteria
+
+### Common Violations to Avoid
+
+```rust
+// BAD: GPU-only implementation
+pub async fn new_aggregation(&self) -> Result<f32> {
+    self.gpu_engine.compute()  // NO! What about SIMD/Scalar?
+}
+
+// GOOD: All backends supported
+pub fn new_aggregation_scalar(data: &[f32]) -> f32 { ... }
+pub fn new_aggregation_simd(data: &[f32]) -> f32 { Vector::from_slice(data).operation()... }
+pub async fn new_aggregation_gpu(&self, data: &Arrow) -> Result<f32> { ... }
+```
+
+### Backend Story Tests
+
+Run these tests before ANY commit:
+
+```bash
+# CPU backends (always runs)
+cargo test --test backend_story
+
+# With GPU backends (requires hardware)
+cargo test --test backend_story --features gpu
+```
+
 ## Toyota Way Principles
 
 ### Jidoka (Built-in Quality)
