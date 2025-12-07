@@ -1,10 +1,13 @@
 <div align="center">
 
-<h1>Trueno-DB</h1>
-<h5>GPU-First Embedded Analytics with SIMD Fallback</h5>
+<p align="center">
+  <img src=".github/trueno-db-hero.svg" alt="trueno-db" width="800">
+</p>
 
-<p>
-  <img src=".github/performance-hero.png" alt="Performance Comparison: GPU vs SIMD vs Scalar" width="1200">
+<h1 align="center">trueno-db</h1>
+
+<p align="center">
+  <b>GPU-First Embedded Analytics with SIMD Fallback</b>
 </p>
 
 <p>
