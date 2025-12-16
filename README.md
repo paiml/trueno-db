@@ -5,9 +5,6 @@
 **GPU-First Embedded Analytics with SIMD Fallback**
 
 [![CI](https://github.com/paiml/trueno-db/actions/workflows/ci.yml/badge.svg)](https://github.com/paiml/trueno-db/actions)
-[![Crates.io](https://img.shields.io/crates/v/trueno-db.svg)](https://crates.io/crates/trueno-db)
-[![Coverage](https://codecov.io/gh/paiml/trueno-db/branch/main/graph/badge.svg)](https://codecov.io/gh/paiml/trueno-db)
-[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 </div>
 
