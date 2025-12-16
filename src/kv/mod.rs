@@ -60,7 +60,10 @@ pub trait KvStore: Send + Sync {
     /// Get multiple keys in a batch (SIMD-optimized).
     ///
     /// Returns values in the same order as keys. Missing keys return `None`.
-    fn batch_get(&self, keys: &[&str]) -> impl Future<Output = Result<Vec<Option<Vec<u8>>>>> + Send {
+    fn batch_get(
+        &self,
+        keys: &[&str],
+    ) -> impl Future<Output = Result<Vec<Option<Vec<u8>>>>> + Send {
         async move {
             let mut results = Vec::with_capacity(keys.len());
             for key in keys {
@@ -71,10 +74,7 @@ pub trait KvStore: Send + Sync {
     }
 
     /// Set multiple key-value pairs in a batch (SIMD-optimized).
-    fn batch_set(
-        &self,
-        pairs: Vec<(&str, Vec<u8>)>,
-    ) -> impl Future<Output = Result<()>> + Send {
+    fn batch_set(&self, pairs: Vec<(&str, Vec<u8>)>) -> impl Future<Output = Result<()>> + Send {
         async move {
             for (key, value) in pairs {
                 self.set(key, value).await?;
@@ -222,7 +222,10 @@ mod tests {
         let store = MemoryKvStore::new();
 
         store.set("", b"empty_key_value".to_vec()).await.unwrap();
-        assert_eq!(store.get("").await.unwrap(), Some(b"empty_key_value".to_vec()));
+        assert_eq!(
+            store.get("").await.unwrap(),
+            Some(b"empty_key_value".to_vec())
+        );
     }
 
     #[tokio::test]

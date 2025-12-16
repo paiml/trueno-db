@@ -135,26 +135,11 @@ fn test_run_record_serialization() {
 #[test]
 fn test_run_status_variants() {
     // Ensure all status variants are covered
-    assert_eq!(
-        format!("{:?}", RunStatus::Pending),
-        "Pending"
-    );
-    assert_eq!(
-        format!("{:?}", RunStatus::Running),
-        "Running"
-    );
-    assert_eq!(
-        format!("{:?}", RunStatus::Success),
-        "Success"
-    );
-    assert_eq!(
-        format!("{:?}", RunStatus::Failed),
-        "Failed"
-    );
-    assert_eq!(
-        format!("{:?}", RunStatus::Cancelled),
-        "Cancelled"
-    );
+    assert_eq!(format!("{:?}", RunStatus::Pending), "Pending");
+    assert_eq!(format!("{:?}", RunStatus::Running), "Running");
+    assert_eq!(format!("{:?}", RunStatus::Success), "Success");
+    assert_eq!(format!("{:?}", RunStatus::Failed), "Failed");
+    assert_eq!(format!("{:?}", RunStatus::Cancelled), "Cancelled");
 }
 
 // =============================================================================
@@ -297,7 +282,14 @@ fn test_full_experiment_lifecycle() {
 
     // 3. Log metrics during training
     let metrics: Vec<MetricRecord> = (0..10)
-        .map(|epoch| MetricRecord::new(run.run_id(), "epoch_loss", epoch, 1.0 / (epoch as f64 + 1.0)))
+        .map(|epoch| {
+            MetricRecord::new(
+                run.run_id(),
+                "epoch_loss",
+                epoch,
+                1.0 / (epoch as f64 + 1.0),
+            )
+        })
         .collect();
 
     // 4. Save artifact
@@ -338,9 +330,24 @@ fn test_experiment_store_add_multiple_metrics() {
 
     // Add metrics for multiple runs and keys
     for step in 0..10 {
-        store.add_metric(MetricRecord::new("run-001", "loss", step, 1.0 / (step as f64 + 1.0)));
-        store.add_metric(MetricRecord::new("run-001", "accuracy", step, step as f64 / 10.0));
-        store.add_metric(MetricRecord::new("run-002", "loss", step, 0.5 / (step as f64 + 1.0)));
+        store.add_metric(MetricRecord::new(
+            "run-001",
+            "loss",
+            step,
+            1.0 / (step as f64 + 1.0),
+        ));
+        store.add_metric(MetricRecord::new(
+            "run-001",
+            "accuracy",
+            step,
+            step as f64 / 10.0,
+        ));
+        store.add_metric(MetricRecord::new(
+            "run-002",
+            "loss",
+            step,
+            0.5 / (step as f64 + 1.0),
+        ));
     }
 
     assert_eq!(store.metric_count(), 30);
@@ -352,7 +359,12 @@ fn test_get_metrics_for_run_single_key() {
 
     // Add metrics for run-001
     for step in 0..5 {
-        store.add_metric(MetricRecord::new("run-001", "loss", step, 1.0 / (step as f64 + 1.0)));
+        store.add_metric(MetricRecord::new(
+            "run-001",
+            "loss",
+            step,
+            1.0 / (step as f64 + 1.0),
+        ));
     }
 
     // Add metrics for different run (should not be returned)

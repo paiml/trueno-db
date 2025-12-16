@@ -173,11 +173,7 @@ impl Database {
                 DataType::Int32 => {
                     let values: Vec<Option<i32>> = records
                         .iter()
-                        .map(|r| {
-                            r.get(col_name)
-                                .and_then(|v| v.as_i64())
-                                .map(|n| n as i32)
-                        })
+                        .map(|r| r.get(col_name).and_then(|v| v.as_i64()).map(|n| n as i32))
                         .collect();
                     columns.push(Arc::new(Int32Array::from(values)));
                 }

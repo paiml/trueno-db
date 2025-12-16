@@ -90,15 +90,15 @@ impl StreamingParquetReader {
         }
 
         // Read footer metadata (last 8 bytes)
-        let footer_range = ByteRange::new(
-            self.file_size - FOOTER_METADATA_SIZE,
-            self.file_size - 1,
-        );
+        let footer_range =
+            ByteRange::new(self.file_size - FOOTER_METADATA_SIZE, self.file_size - 1);
         let footer_bytes = self.client.fetch_range(footer_range).await?;
 
         // Verify magic number
         if &footer_bytes[4..8] != PARQUET_MAGIC {
-            return Err(JsValue::from_str("Invalid Parquet file: missing magic number"));
+            return Err(JsValue::from_str(
+                "Invalid Parquet file: missing magic number",
+            ));
         }
 
         // Parse footer length (little-endian i32)
@@ -153,7 +153,9 @@ impl StreamingParquetReader {
     /// # Returns
     /// Row group data as raw bytes (to be decoded into Arrow RecordBatch)
     pub async fn read_row_group(&self, index: usize) -> Result<Vec<u8>, JsValue> {
-        let metadata = self.metadata.as_ref()
+        let metadata = self
+            .metadata
+            .as_ref()
             .ok_or_else(|| JsValue::from_str("Metadata not loaded. Call read_metadata() first"))?;
 
         if index >= metadata.row_groups.len() {
@@ -165,12 +167,18 @@ impl StreamingParquetReader {
         }
 
         let row_group = &metadata.row_groups[index];
-        let range = ByteRange::new(row_group.file_offset, row_group.file_offset + row_group.total_byte_size - 1);
+        let range = ByteRange::new(
+            row_group.file_offset,
+            row_group.file_offset + row_group.total_byte_size - 1,
+        );
 
-        console::log_1(&format!(
-            "Reading row group {}: {} bytes at offset {}",
-            index, row_group.total_byte_size, row_group.file_offset
-        ).into());
+        console::log_1(
+            &format!(
+                "Reading row group {}: {} bytes at offset {}",
+                index, row_group.total_byte_size, row_group.file_offset
+            )
+            .into(),
+        );
 
         self.client.fetch_range(range).await
     }
@@ -183,7 +191,9 @@ impl StreamingParquetReader {
         row_group_index: usize,
         column_indices: &[usize],
     ) -> Result<Vec<Vec<u8>>, JsValue> {
-        let metadata = self.metadata.as_ref()
+        let metadata = self
+            .metadata
+            .as_ref()
             .ok_or_else(|| JsValue::from_str("Metadata not loaded"))?;
 
         let row_group = &metadata.row_groups[row_group_index];
@@ -198,7 +208,10 @@ impl StreamingParquetReader {
             }
 
             let column = &row_group.columns[col_idx];
-            let range = ByteRange::new(column.file_offset, column.file_offset + column.total_compressed_size - 1);
+            let range = ByteRange::new(
+                column.file_offset,
+                column.file_offset + column.total_compressed_size - 1,
+            );
             let bytes = self.client.fetch_range(range).await?;
             column_data.push(bytes);
         }

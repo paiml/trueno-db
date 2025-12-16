@@ -21,11 +21,11 @@
 
 #![cfg(target_arch = "wasm32")]
 
+use js_sys::Uint8Array;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{Request, RequestInit, Response, Headers};
-use js_sys::Uint8Array;
+use web_sys::{Headers, Request, RequestInit, Response};
 
 /// Byte range for HTTP range requests
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -51,7 +51,7 @@ impl ByteRange {
     /// Create range for last N bytes of file
     pub fn last_n_bytes(n: u64) -> Self {
         Self {
-            start: u64::MAX - n + 1,  // Will be converted to suffix-range
+            start: u64::MAX - n + 1, // Will be converted to suffix-range
             end: u64::MAX,
         }
     }
@@ -116,8 +116,7 @@ impl RangeClient {
 
     /// Try to fetch once (no retry)
     async fn try_fetch(&self, request: &Request) -> Result<Vec<u8>, JsValue> {
-        let window = web_sys::window()
-            .ok_or_else(|| JsValue::from_str("No window object"))?;
+        let window = web_sys::window().ok_or_else(|| JsValue::from_str("No window object"))?;
 
         // Execute fetch
         let response_promise = window.fetch_with_request(request);
@@ -140,8 +139,7 @@ impl RangeClient {
 
     /// Get file size using HEAD request
     pub async fn get_file_size(&self) -> Result<u64, JsValue> {
-        let window = web_sys::window()
-            .ok_or_else(|| JsValue::from_str("No window object"))?;
+        let window = web_sys::window().ok_or_else(|| JsValue::from_str("No window object"))?;
 
         let mut opts = RequestInit::new();
         opts.method("HEAD");
@@ -156,10 +154,9 @@ impl RangeClient {
         let content_length_js = headers.get("content-length")?;
 
         match content_length_js {
-            Some(length_str) => {
-                length_str.parse::<u64>()
-                    .map_err(|e| JsValue::from_str(&format!("Invalid content-length: {}", e)))
-            }
+            Some(length_str) => length_str
+                .parse::<u64>()
+                .map_err(|e| JsValue::from_str(&format!("Invalid content-length: {}", e))),
             None => Err(JsValue::from_str("No content-length header")),
         }
     }

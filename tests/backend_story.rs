@@ -290,10 +290,7 @@ mod gpu_tests {
             .await
             .expect("GPU sum should work");
 
-        assert_eq!(
-            scalar_sum, gpu_sum,
-            "GPU sum should equal Scalar sum"
-        );
+        assert_eq!(scalar_sum, gpu_sum, "GPU sum should equal Scalar sum");
     }
 
     /// Test GPU min matches Scalar min
@@ -353,7 +350,10 @@ mod gpu_tests {
             .await
             .expect("GPU count should work");
 
-        assert_eq!(scalar_count, gpu_count, "GPU count should equal Scalar count");
+        assert_eq!(
+            scalar_count, gpu_count,
+            "GPU count should equal Scalar count"
+        );
     }
 
     /// Test GPU fused filter+sum works correctly
@@ -402,8 +402,8 @@ mod gpu_tests {
 mod backend_completeness {
     //! Compile-time verification that critical traits/types exist
 
-    use trueno_db::Backend;
     use trueno_db::backend::BackendDispatcher;
+    use trueno_db::Backend;
 
     /// Verify Backend enum has required variants
     #[test]
