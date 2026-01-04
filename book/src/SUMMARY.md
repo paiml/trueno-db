@@ -54,6 +54,7 @@
 
 - [KV Store Overview](./components/kv/overview.md)
 - [Hash Functions](./components/kv/hash-functions.md)
+- [Compression (GH-5)](./components/kv/compression.md)
 - [pforge Integration](./components/kv/pforge-integration.md)
 
 # EXTREME TDD Methodology
