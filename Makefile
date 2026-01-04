@@ -45,11 +45,9 @@ coverage: ## Generate coverage report (≥90% required, GPU excluded due to LLVM
 	@echo "📊 Generating coverage report (target: ≥90%, GPU excluded)..."
 	@echo "    Note: GPU backend excluded (LLVM coverage cannot instrument GPU shaders)"
 	@# Temporarily disable mold linker (breaks LLVM coverage)
-	@test -f ~/.cargo/config.toml && mv ~/.cargo/config.toml ~/.cargo/config.toml.cov-backup || true
 	@cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
 	@cargo llvm-cov report --html --output-dir target/coverage/html
 	@# Restore mold linker
-	@test -f ~/.cargo/config.toml.cov-backup && mv ~/.cargo/config.toml.cov-backup ~/.cargo/config.toml || true
 	@echo "✅ Coverage report: target/coverage/html/index.html"
 	@echo ""
 	@echo "📊 Coverage by Component:"
@@ -58,10 +56,8 @@ coverage: ## Generate coverage report (≥90% required, GPU excluded due to LLVM
 coverage-check: ## Enforce 90% coverage threshold (BLOCKS on failure, GPU excluded)
 	@echo "🔒 Enforcing 90% coverage threshold (GPU excluded)..."
 	@# Temporarily disable mold linker (breaks LLVM coverage)
-	@test -f ~/.cargo/config.toml && mv ~/.cargo/config.toml ~/.cargo/config.toml.cov-backup || true
 	@cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info > /dev/null 2>&1
 	@# Restore mold linker
-	@test -f ~/.cargo/config.toml.cov-backup && mv ~/.cargo/config.toml.cov-backup ~/.cargo/config.toml || true
 	@cargo llvm-cov report | python3 -c "import sys; lines = [l.strip() for l in sys.stdin if l.strip()]; total_line = [l for l in lines if l.startswith('TOTAL')]; parts = total_line[0].split() if total_line else []; cov_str = parts[-4].rstrip('%') if len(parts) >= 4 else '0'; cov = float(cov_str); print(f'Overall coverage: {cov:.2f}%'); exit_code = 1 if cov < 90 else 0; print(f'✅ Coverage threshold met (≥90%)' if exit_code == 0 else f'❌ FAIL: Coverage {cov:.2f}% below 90% threshold'); sys.exit(exit_code)"
 
 mutants: ## Run mutation testing (target: ≥85% kill rate, certeza formula)

@@ -43,6 +43,10 @@ rayon = { version = "1.8", optional = true }  # CPU parallelism (for spawn_block
 dashmap = "6.0"  # Lock-free concurrent hashmap for MemoryKvStore
 rustc-hash = "2.0"  # Fast FxHash for SIMD-friendly key hashing
 
+# Compression for KV cache (GH-5)
+lz4_flex = { version = "0.11", optional = true }
+zstd = { version = "0.13", optional = true }
+
 # Error handling
 thiserror = "2"
 anyhow = "1"
@@ -104,6 +108,9 @@ simd = []
 
 # GPU backend (95 dependencies, +3.8 MB, 63s compile) - opt-in only
 gpu = ["dep:wgpu", "dep:bytemuck", "dep:futures-intrusive"]
+
+# KV cache compression (GH-5) - LZ4 for speed, ZSTD for ratio
+compression = ["dep:lz4_flex", "dep:zstd"]
 
 # Phase 3: Distributed multi-GPU
 distributed = ["tonic", "prost"]

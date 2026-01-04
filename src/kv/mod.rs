@@ -26,7 +26,13 @@
 
 mod memory;
 
+#[cfg(feature = "compression")]
+mod compressed;
+
 pub use memory::MemoryKvStore;
+
+#[cfg(feature = "compression")]
+pub use compressed::{CompressedKvStore, Compression};
 
 // Re-export trueno hash functions for KV consumers
 pub use trueno::{hash_bytes, hash_key, hash_keys_batch};
@@ -286,5 +292,124 @@ mod tests {
     fn test_memory_kv_default() {
         let store: MemoryKvStore = MemoryKvStore::default();
         assert!(store.is_empty());
+    }
+
+    // ============================================================
+    // Compression Tests (GH-5) - RED PHASE
+    // ============================================================
+
+    #[cfg(feature = "compression")]
+    mod compression_tests {
+        use super::*;
+        use crate::kv::{CompressedKvStore, Compression};
+
+        #[tokio::test]
+        async fn test_compressed_kv_lz4_roundtrip() {
+            let inner = MemoryKvStore::new();
+            let store = CompressedKvStore::new(inner, Compression::Lz4);
+
+            let data = b"hello world compressed with lz4".to_vec();
+            store.set("key", data.clone()).await.unwrap();
+            let retrieved = store.get("key").await.unwrap();
+
+            assert_eq!(retrieved, Some(data));
+        }
+
+        #[tokio::test]
+        async fn test_compressed_kv_zstd_roundtrip() {
+            let inner = MemoryKvStore::new();
+            let store = CompressedKvStore::new(inner, Compression::Zstd);
+
+            let data = b"hello world compressed with zstd".to_vec();
+            store.set("key", data.clone()).await.unwrap();
+            let retrieved = store.get("key").await.unwrap();
+
+            assert_eq!(retrieved, Some(data));
+        }
+
+        #[tokio::test]
+        async fn test_compressed_kv_reduces_size() {
+            let inner = MemoryKvStore::new();
+            let store = CompressedKvStore::new(inner, Compression::Lz4);
+
+            // Highly compressible data (repeated zeros)
+            let data = vec![0u8; 10000];
+            store.set("key", data.clone()).await.unwrap();
+
+            // Get raw compressed size from inner store
+            let compressed = store.inner().get("key").await.unwrap().unwrap();
+
+            // LZ4 should compress zeros significantly
+            assert!(
+                compressed.len() < data.len() / 5,
+                "Compressed {} -> {} bytes (expected >5x reduction)",
+                data.len(),
+                compressed.len()
+            );
+        }
+
+        #[tokio::test]
+        async fn test_compressed_kv_empty_value() {
+            let inner = MemoryKvStore::new();
+            let store = CompressedKvStore::new(inner, Compression::Lz4);
+
+            store.set("empty", vec![]).await.unwrap();
+            assert_eq!(store.get("empty").await.unwrap(), Some(vec![]));
+        }
+
+        #[tokio::test]
+        async fn test_compressed_kv_delete() {
+            let inner = MemoryKvStore::new();
+            let store = CompressedKvStore::new(inner, Compression::Lz4);
+
+            store.set("key", b"value".to_vec()).await.unwrap();
+            store.delete("key").await.unwrap();
+            assert_eq!(store.get("key").await.unwrap(), None);
+        }
+
+        #[tokio::test]
+        async fn test_compressed_kv_exists() {
+            let inner = MemoryKvStore::new();
+            let store = CompressedKvStore::new(inner, Compression::Lz4);
+
+            assert!(!store.exists("key").await.unwrap());
+            store.set("key", b"value".to_vec()).await.unwrap();
+            assert!(store.exists("key").await.unwrap());
+        }
+
+        #[tokio::test]
+        async fn test_compressed_kv_batch_operations() {
+            let inner = MemoryKvStore::new();
+            let store = CompressedKvStore::new(inner, Compression::Lz4);
+
+            store
+                .batch_set(vec![("a", b"alpha".to_vec()), ("b", b"beta".to_vec())])
+                .await
+                .unwrap();
+
+            let results = store.batch_get(&["a", "b", "c"]).await.unwrap();
+            assert_eq!(results[0], Some(b"alpha".to_vec()));
+            assert_eq!(results[1], Some(b"beta".to_vec()));
+            assert_eq!(results[2], None);
+        }
+
+        #[tokio::test]
+        async fn test_compression_enum_variants() {
+            assert_eq!(Compression::Lz4.as_str(), "lz4");
+            assert_eq!(Compression::Zstd.as_str(), "zstd");
+        }
+
+        #[tokio::test]
+        async fn test_compressed_kv_large_value() {
+            let inner = MemoryKvStore::new();
+            let store = CompressedKvStore::new(inner, Compression::Zstd);
+
+            // 1MB of random-ish data
+            let data: Vec<u8> = (0..1024 * 1024).map(|i| (i % 256) as u8).collect();
+            store.set("large", data.clone()).await.unwrap();
+
+            let retrieved = store.get("large").await.unwrap();
+            assert_eq!(retrieved, Some(data));
+        }
     }
 }

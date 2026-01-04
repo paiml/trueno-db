@@ -148,3 +148,19 @@ roadmap:
   - gpu
   - wasm
   notes: 'Cross-project: pforge state management needs embedded KV store. Eliminates external deps (sled/redb) from PAIML stack. Design must respect GPU/SIMD/WASM story.'
+- id: GH-5
+  github_issue: null
+  item_type: task
+  title: 'New task: GH-5'
+  status: inprogress
+  priority: medium
+  assigned_to: null
+  created: 2026-01-04T14:41:58.548870233+00:00
+  updated: 2026-01-04T14:41:58.548870233+00:00
+  spec: null
+  acceptance_criteria: []
+  phases: []
+  subtasks: []
+  estimated_effort: null
+  labels: []
+  notes: null
