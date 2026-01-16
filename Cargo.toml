@@ -1,6 +1,6 @@
 [package]
 name = "trueno-db"
-version = "0.3.10"
+version = "0.3.11"
 edition = "2021"
 authors = ["Pragmatic AI Labs <info@paiml.com>"]
 license = "MIT"
@@ -13,7 +13,7 @@ resolver = "2"
 
 [dependencies]
 # Core compute (SIMD - always included)
-trueno = "0.11"  # SIMD-accelerated compute
+trueno = "0.13"  # SIMD-accelerated compute
 
 # Serialization (experiment tracking schema)
 serde = { version = "1.0", features = ["derive"] }
