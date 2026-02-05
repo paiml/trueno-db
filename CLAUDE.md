@@ -12,6 +12,37 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - WASM-portable for browser analytics
 - Multi-GPU scaling capability
 
+## Code Search (pmat query)
+
+**NEVER use grep or rg for code discovery.** Use `pmat query` instead -- it returns quality-annotated, ranked results with TDG scores and fault annotations.
+
+```bash
+# Find functions by intent
+pmat query "query execution" --limit 10
+
+# Find high-quality code
+pmat query "sql parser" --min-grade A --exclude-tests
+
+# Find with fault annotations (unwrap, panic, unsafe, etc.)
+pmat query "index scan" --faults
+
+# Filter by complexity
+pmat query "join algorithm" --max-complexity 10
+
+# Cross-project search
+pmat query "gpu kernel" --include-project ../trueno
+
+# Git history search (find code by commit intent via RRF fusion)
+pmat query "fix query planner" -G
+pmat query "fix query planner" --git-history
+
+# Enrichment flags (combine freely)
+pmat query "executor" --churn              # git volatility (commit count, churn score)
+pmat query "scan operator" --duplicates          # code clone detection (MinHash+LSH)
+pmat query "aggregate" --entropy             # pattern diversity (repetitive vs unique)
+pmat query "query engine" --churn --duplicates --entropy --faults -G  # full audit
+```
+
 ## Architecture
 
 ### Core Components

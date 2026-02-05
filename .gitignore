@@ -42,3 +42,10 @@ lcov.info
 
 # pmat generated files (temporary)
 *.pmat
+
+# PMAT
+.pmat/backup/
+.pmat-qa/
+.pmat/context.idx/
+.pmat/workspace.idx/
+.pmat/deps-cache.json
