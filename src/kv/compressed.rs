@@ -2,61 +2,13 @@
 //!
 //! Provides transparent LZ4/ZSTD compression for any `KvStore` backend.
 //! Ideal for reducing memory footprint of LLM KV caches.
+//!
+//! Compression algorithm is shared via `batuta_common::compression`.
 
 use crate::kv::KvStore;
 use crate::Result;
 
-/// Compression algorithm for KV values
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum Compression {
-    /// LZ4 - Fast compression, good for real-time (default)
-    #[default]
-    Lz4,
-    /// ZSTD - Better ratio, slower
-    Zstd,
-}
-
-impl Compression {
-    /// Get algorithm name as string
-    #[must_use]
-    pub const fn as_str(&self) -> &'static str {
-        match self {
-            Self::Lz4 => "lz4",
-            Self::Zstd => "zstd",
-        }
-    }
-
-    /// Compress data using this algorithm
-    ///
-    /// # Errors
-    /// Returns error if compression fails (e.g., ZSTD internal error)
-    pub fn compress(&self, data: &[u8]) -> Result<Vec<u8>> {
-        if data.is_empty() {
-            return Ok(Vec::new());
-        }
-        match self {
-            Self::Lz4 => Ok(lz4_flex::compress_prepend_size(data)),
-            Self::Zstd => zstd::encode_all(data, 3)
-                .map_err(|e| crate::Error::StorageError(format!("ZSTD compression failed: {e}"))),
-        }
-    }
-
-    /// Decompress data using this algorithm
-    ///
-    /// # Errors
-    /// Returns error if decompression fails (e.g., corrupted data)
-    pub fn decompress(&self, data: &[u8]) -> Result<Vec<u8>> {
-        if data.is_empty() {
-            return Ok(Vec::new());
-        }
-        match self {
-            Self::Lz4 => lz4_flex::decompress_size_prepended(data)
-                .map_err(|e| crate::Error::StorageError(format!("LZ4 decompression failed: {e}"))),
-            Self::Zstd => zstd::decode_all(data)
-                .map_err(|e| crate::Error::StorageError(format!("ZSTD decompression failed: {e}"))),
-        }
-    }
-}
+pub use batuta_common::compression::Compression;
 
 /// Compressed KV store wrapper
 ///

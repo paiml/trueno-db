@@ -43,7 +43,8 @@ rayon = { version = "1.8", optional = true }  # CPU parallelism (for spawn_block
 dashmap = "6.0"  # Lock-free concurrent hashmap for MemoryKvStore
 rustc-hash = "2.0"  # Fast FxHash for SIMD-friendly key hashing
 
-# Compression for KV cache (GH-5)
+# Compression for KV cache (GH-5) - via batuta-common shared module
+batuta-common = { path = "../batuta-common" }
 lz4_flex = { version = "0.11", optional = true }
 zstd = { version = "0.13", optional = true }
 
