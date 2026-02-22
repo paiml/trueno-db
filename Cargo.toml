@@ -1,6 +1,6 @@
 [package]
 name = "trueno-db"
-version = "0.3.14"
+version = "0.3.15"
 edition = "2021"
 authors = ["Pragmatic AI Labs <info@paiml.com>"]
 license = "MIT"
@@ -31,7 +31,7 @@ futures-intrusive = { version = "0.5", optional = true }  # Async primitives for
 # NOTE: arrow 54+ fixes chrono 0.4.42 conflict (quarter() method ambiguity)
 # Minimal features: drops arrow-csv, arrow-json, arrow-ipc, flatbuffers (~50 fewer transitive deps)
 arrow = { version = "54", default-features = false }
-parquet = { version = "54", default-features = false, features = ["arrow"] }  # Parquet (no SIMD for wasm compat)
+parquet = { version = "54", default-features = false, features = ["arrow"], optional = true }  # Parquet I/O (opt-in)
 
 # Query parsing
 sqlparser = "0.52"         # SQL parsing
@@ -102,8 +102,11 @@ tonic = { version = "0.12", optional = true }
 prost = { version = "0.13", optional = true }
 
 [features]
-# Default: SIMD with tokio/rayon (native builds)
-default = ["simd", "tokio", "rayon"]
+# Default: SIMD with tokio/rayon and parquet I/O (native builds)
+default = ["simd", "tokio", "rayon", "parquet-io"]
+
+# Parquet file I/O (adds ~18 transitive crates)
+parquet-io = ["dep:parquet"]
 
 # SIMD-only backend (12 dependencies, -0.4 MB vs SQLite, 18s compile)
 simd = []

@@ -14,6 +14,7 @@
 
 use crate::{Error, Result};
 use arrow::record_batch::RecordBatch;
+#[cfg(feature = "parquet-io")]
 use std::path::Path;
 
 /// Morsel size for out-of-core execution (128MB chunks)
@@ -43,6 +44,7 @@ impl StorageEngine {
     ///
     /// # Errors
     /// Returns error if file cannot be read or parsed
+    #[cfg(feature = "parquet-io")]
     pub fn load_parquet<P: AsRef<Path>>(path: P) -> Result<Self> {
         use parquet::arrow::arrow_reader::ParquetRecordBatchReaderBuilder;
         use std::fs::File;
