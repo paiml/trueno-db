@@ -58,8 +58,7 @@ impl ExperimentStore {
 
     /// Add an experiment to the store.
     pub fn add_experiment(&mut self, experiment: ExperimentRecord) {
-        self.experiments
-            .insert(experiment.experiment_id().to_string(), experiment);
+        self.experiments.insert(experiment.experiment_id().to_string(), experiment);
     }
 
     /// Get an experiment by ID.
@@ -82,10 +81,7 @@ impl ExperimentStore {
     /// Get all runs for an experiment.
     #[must_use]
     pub fn get_runs_for_experiment(&self, experiment_id: &str) -> Vec<&RunRecord> {
-        self.runs
-            .values()
-            .filter(|run| run.experiment_id() == experiment_id)
-            .collect()
+        self.runs.values().filter(|run| run.experiment_id() == experiment_id).collect()
     }
 
     /// Add a metric to the store.

@@ -6,7 +6,7 @@
 //! Simulates a Battle Royale game with player stats, match results,
 //! and global leaderboards computed in milliseconds.
 //!
-//! Run with: cargo run --example gaming_leaderboards --release
+//! Run with: cargo run --example `gaming_leaderboards` --release
 
 use arrow::array::{Float64Array, Int32Array, RecordBatch, StringArray};
 use arrow::datatypes::{DataType, Field, Schema};
@@ -98,7 +98,7 @@ fn print_banner() {
 }
 
 fn generate_match_data(num_matches: usize) -> RecordBatch {
-    println!("⏳ Generating {} match records...", num_matches);
+    println!("⏳ Generating {num_matches} match records...");
 
     let schema = Arc::new(Schema::new(vec![
         Field::new("player_id", DataType::Int32, false),
@@ -113,9 +113,8 @@ fn generate_match_data(num_matches: usize) -> RecordBatch {
         .map(|i| (i % 500_000) as i32) // ~500K unique players
         .collect();
 
-    let usernames: Vec<String> = (0..num_matches)
-        .map(|i| format!("Player_{:06}", i % 500_000))
-        .collect();
+    let usernames: Vec<String> =
+        (0..num_matches).map(|i| format!("Player_{:06}", i % 500_000)).collect();
 
     // Kills: 0-30 range, most players get 2-8 kills
     let kills: Vec<i32> = (0..num_matches)
@@ -133,7 +132,7 @@ fn generate_match_data(num_matches: usize) -> RecordBatch {
     // Score: 0-5000 range, skill-based distribution
     let scores: Vec<f64> = (0..num_matches)
         .map(|i| {
-            let kill_score = kills[i] as f64 * 100.0;
+            let kill_score = f64::from(kills[i]) * 100.0;
             let placement_bonus = ((i * 997) % 2000) as f64;
             let time_bonus = ((i * 449) % 500) as f64;
             kill_score + placement_bonus + time_bonus
@@ -161,7 +160,7 @@ fn generate_match_data(num_matches: usize) -> RecordBatch {
     )
     .expect("Example should work with valid test data");
 
-    println!("✅ Generated {} matches with 5 columns", num_matches);
+    println!("✅ Generated {num_matches} matches with 5 columns");
     println!();
 
     batch
@@ -198,15 +197,11 @@ fn run_leaderboard_query(
 
     // Execute query with timing
     let start = Instant::now();
-    let result = batch
-        .top_k(value_column, k, order)
-        .expect("Example should work with valid test data");
+    let result =
+        batch.top_k(value_column, k, order).expect("Example should work with valid test data");
     let elapsed = start.elapsed();
 
-    println!(
-        "⚡ Query Execution Time: {:.3}ms",
-        elapsed.as_secs_f64() * 1000.0
-    );
+    println!("⚡ Query Execution Time: {:.3}ms", elapsed.as_secs_f64() * 1000.0);
     println!();
 
     // Display results
@@ -262,10 +257,7 @@ fn run_leaderboard_query(
             _ => "  ",
         };
 
-        println!(
-            "  {medal} {:2}  {:10}  {:14}  {}",
-            rank, player_id, username, value_str
-        );
+        println!("  {medal} {rank:2}  {player_id:10}  {username:14}  {value_str}");
     }
 
     if result.num_rows() > display_count {

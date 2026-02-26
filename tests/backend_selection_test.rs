@@ -1,17 +1,17 @@
 //! Backend selection tests for CORE-002
 //!
 //! Tests the cost-based backend dispatcher with the 5x rule:
-//! - GPU only if estimated_gpu_compute_ms > pcie_transfer_ms * 5.0
+//! - GPU only if `estimated_gpu_compute_ms` > `pcie_transfer_ms` * 5.0
 //!
 //! References:
-//! - Gregg & Hazelwood (2011): PCIe bus bottleneck analysis
+//! - Gregg & Hazelwood (2011): `PCIe` bus bottleneck analysis
 //! - Breß et al. (2014): Operator variant selection on heterogeneous hardware
 //!
 //! Toyota Way: Genchi Genbutsu (Go and See - physics-based cost model)
 
 use trueno_db::backend::BackendDispatcher;
 
-/// PCIe Gen4 x16 bandwidth: 32 GB/s
+/// `PCIe` Gen4 x16 bandwidth: 32 GB/s
 const PCIE_BANDWIDTH_GBPS: f64 = 32.0;
 
 #[test]
@@ -73,10 +73,7 @@ fn test_very_large_compute_selects_gpu() {
     let backend = BackendDispatcher::select(total_bytes, estimated_flops);
 
     // Should select GPU (compute is 5x+ transfer time)
-    assert!(
-        matches!(backend, trueno_db::Backend::Gpu),
-        "Large compute should use GPU backend"
-    );
+    assert!(matches!(backend, trueno_db::Backend::Gpu), "Large compute should use GPU backend");
 }
 
 #[test]
@@ -110,10 +107,7 @@ fn test_arithmetic_intensity_calculation() {
     // 10 ms < 15.625 ms, so should use CPU
 
     let backend = BackendDispatcher::select(total_bytes, estimated_flops);
-    assert!(
-        !matches!(backend, trueno_db::Backend::Gpu),
-        "Moderate intensity should use CPU"
-    );
+    assert!(!matches!(backend, trueno_db::Backend::Gpu), "Moderate intensity should use CPU");
 }
 
 // ============================================================================
@@ -203,10 +197,7 @@ fn test_realistic_sql_operations_backend_selection() {
     let flops = BackendDispatcher::estimate_simple_aggregation_flops(num_elements);
 
     let backend = BackendDispatcher::select(total_bytes, flops);
-    assert!(
-        matches!(backend, trueno_db::Backend::Simd),
-        "Simple SUM should use SIMD"
-    );
+    assert!(matches!(backend, trueno_db::Backend::Simd), "Simple SUM should use SIMD");
 
     // Scenario 2: GROUP BY over 1B rows
     // 1B elements * 4 bytes = 4GB, 6B FLOPs
@@ -247,8 +238,5 @@ fn test_realistic_sql_operations_backend_selection() {
     // 100M * 4 = 400MB, 500M FLOPs
     // Transfer: 12.5ms, Compute at 100 GFLOP/s: 5ms
     // 5ms < 62.5ms, so CPU
-    assert!(
-        matches!(join_backend, trueno_db::Backend::Simd),
-        "Moderate JOIN should use SIMD"
-    );
+    assert!(matches!(join_backend, trueno_db::Backend::Simd), "Moderate JOIN should use SIMD");
 }

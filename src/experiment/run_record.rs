@@ -130,11 +130,7 @@ impl RunRecordBuilder {
     /// Create a new builder with required fields.
     #[must_use]
     pub fn new(run_id: impl Into<String>, experiment_id: impl Into<String>) -> Self {
-        Self {
-            run_id: run_id.into(),
-            experiment_id: experiment_id.into(),
-            renacer_span_id: None,
-        }
+        Self { run_id: run_id.into(), experiment_id: experiment_id.into(), renacer_span_id: None }
     }
 
     /// Set the renacer span ID for distributed tracing.

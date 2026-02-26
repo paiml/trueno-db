@@ -181,11 +181,7 @@ mod tests {
         let store = MemoryKvStore::new();
 
         store
-            .batch_set(vec![
-                ("a", b"1".to_vec()),
-                ("b", b"2".to_vec()),
-                ("c", b"3".to_vec()),
-            ])
+            .batch_set(vec![("a", b"1".to_vec()), ("b", b"2".to_vec()), ("c", b"3".to_vec())])
             .await
             .unwrap();
 
@@ -228,10 +224,7 @@ mod tests {
         let store = MemoryKvStore::new();
 
         store.set("", b"empty_key_value".to_vec()).await.unwrap();
-        assert_eq!(
-            store.get("").await.unwrap(),
-            Some(b"empty_key_value".to_vec())
-        );
+        assert_eq!(store.get("").await.unwrap(), Some(b"empty_key_value".to_vec()));
     }
 
     #[tokio::test]
@@ -382,10 +375,7 @@ mod tests {
             let inner = MemoryKvStore::new();
             let store = CompressedKvStore::new(inner, Compression::Lz4);
 
-            store
-                .batch_set(vec![("a", b"alpha".to_vec()), ("b", b"beta".to_vec())])
-                .await
-                .unwrap();
+            store.batch_set(vec![("a", b"alpha".to_vec()), ("b", b"beta".to_vec())]).await.unwrap();
 
             let results = store.batch_get(&["a", "b", "c"]).await.unwrap();
             assert_eq!(results[0], Some(b"alpha".to_vec()));

@@ -131,9 +131,8 @@ mod tests {
     #[test]
     fn test_experiment_record_builder() {
         let config = serde_json::json!({"key": "value"});
-        let record = ExperimentRecord::builder("test-id", "test-name")
-            .config(config.clone())
-            .build();
+        let record =
+            ExperimentRecord::builder("test-id", "test-name").config(config.clone()).build();
 
         assert_eq!(record.config(), Some(&config));
     }

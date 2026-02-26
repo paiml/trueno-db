@@ -20,10 +20,8 @@ fn test_vram_exhausted_error() {
 
 #[test]
 fn test_backend_mismatch_error() {
-    let error = Error::BackendMismatch {
-        gpu_result: "42.5".to_string(),
-        simd_result: "42.6".to_string(),
-    };
+    let error =
+        Error::BackendMismatch { gpu_result: "42.5".to_string(), simd_result: "42.6".to_string() };
     let error_str = format!("{error}");
     assert!(error_str.contains("Backend equivalence failed"));
     assert!(error_str.contains("42.5"));

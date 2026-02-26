@@ -1,9 +1,9 @@
 //! Experiment Tracking Example
 //!
 //! Demonstrates the experiment schema for ML experiment tracking,
-//! designed to integrate with entrenar's ExperimentStorage.
+//! designed to integrate with entrenar's `ExperimentStorage`.
 //!
-//! Run with: cargo run --example experiment_tracking
+//! Run with: cargo run --example `experiment_tracking`
 
 use trueno_db::experiment::{
     ArtifactRecord, ExperimentRecord, ExperimentStore, MetricRecord, RunRecord, RunStatus,
@@ -35,10 +35,7 @@ fn main() {
     println!("   Experiment ID: {}", experiment.experiment_id());
     println!("   Name: {}", experiment.name());
     println!("   Created: {}", experiment.created_at());
-    println!(
-        "   Config: {}",
-        serde_json::to_string_pretty(experiment.config().unwrap()).unwrap()
-    );
+    println!("   Config: {}", serde_json::to_string_pretty(experiment.config().unwrap()).unwrap());
 
     store.add_experiment(experiment.clone());
 
@@ -74,16 +71,10 @@ fn main() {
         // Log metrics
         store.add_metric(MetricRecord::new(run.run_id(), "loss", epoch, loss));
         store.add_metric(MetricRecord::new(run.run_id(), "accuracy", epoch, accuracy));
-        store.add_metric(MetricRecord::new(
-            run.run_id(),
-            "learning_rate",
-            epoch,
-            learning_rate,
-        ));
+        store.add_metric(MetricRecord::new(run.run_id(), "learning_rate", epoch, learning_rate));
 
         println!(
-            "   Epoch {}: loss={:.4}, accuracy={:.4}, lr={:.6}",
-            epoch, loss, accuracy, learning_rate
+            "   Epoch {epoch}: loss={loss:.4}, accuracy={accuracy:.4}, lr={learning_rate:.6}"
         );
     }
 
@@ -132,8 +123,8 @@ fn main() {
     println!("\n   Accuracy curve ({} points):", accuracy_metrics.len());
     println!(
         "     Start: {:.4} → End: {:.4}",
-        accuracy_metrics.first().map(|m| m.value()).unwrap_or(0.0),
-        accuracy_metrics.last().map(|m| m.value()).unwrap_or(0.0)
+        accuracy_metrics.first().map_or(0.0, trueno_db::experiment::MetricRecord::value),
+        accuracy_metrics.last().map_or(0.0, trueno_db::experiment::MetricRecord::value)
     );
 
     // -------------------------------------------------------------------------
@@ -151,7 +142,7 @@ fn main() {
 
     let metric = &loss_metrics[0];
     let json = serde_json::to_string_pretty(metric).unwrap();
-    println!("   MetricRecord JSON:\n{}", json);
+    println!("   MetricRecord JSON:\n{json}");
 
     println!("\n=== Experiment Tracking Complete ===");
 }

@@ -34,9 +34,7 @@ impl QueryExecutor {
     /// Create a new query executor with cost-based backend selection
     #[must_use]
     pub const fn new() -> Self {
-        Self {
-            backend: Backend::CostBased,
-        }
+        Self { backend: Backend::CostBased }
     }
 
     /// Create executor with forced backend
@@ -133,9 +131,7 @@ impl QueryExecutor {
         // Parse filter expression: "column op value"
         let parts: Vec<&str> = filter_expr.split_whitespace().collect();
         if parts.len() < 3 {
-            return Err(Error::ParseError(format!(
-                "Invalid filter expression: {filter_expr}"
-            )));
+            return Err(Error::ParseError(format!("Invalid filter expression: {filter_expr}")));
         }
 
         let column_name = parts[0];
@@ -175,24 +171,18 @@ impl QueryExecutor {
                 Self::build_comparison_mask_i64(array, op, value)?
             }
             DataType::Float32 => {
-                let array = column
-                    .as_any()
-                    .downcast_ref::<Float32Array>()
-                    .ok_or_else(|| {
-                        Error::Other("Failed to downcast to Float32Array".to_string())
-                    })?;
+                let array = column.as_any().downcast_ref::<Float32Array>().ok_or_else(|| {
+                    Error::Other("Failed to downcast to Float32Array".to_string())
+                })?;
                 let value: f32 = value_str.parse().map_err(|_| {
                     Error::ParseError(format!("Invalid Float32 value: {value_str}"))
                 })?;
                 Self::build_comparison_mask_f32(array, op, value)?
             }
             DataType::Float64 => {
-                let array = column
-                    .as_any()
-                    .downcast_ref::<Float64Array>()
-                    .ok_or_else(|| {
-                        Error::Other("Failed to downcast to Float64Array".to_string())
-                    })?;
+                let array = column.as_any().downcast_ref::<Float64Array>().ok_or_else(|| {
+                    Error::Other("Failed to downcast to Float64Array".to_string())
+                })?;
                 let value: f64 = value_str.parse().map_err(|_| {
                     Error::ParseError(format!("Invalid Float64 value: {value_str}"))
                 })?;
@@ -408,34 +398,24 @@ impl QueryExecutor {
                 Self::aggregate_i64(func, array, num_rows)
             }
             DataType::Float32 => {
-                let array = column
-                    .as_any()
-                    .downcast_ref::<Float32Array>()
-                    .ok_or_else(|| {
-                        Error::Other("Failed to downcast to Float32Array".to_string())
-                    })?;
+                let array = column.as_any().downcast_ref::<Float32Array>().ok_or_else(|| {
+                    Error::Other("Failed to downcast to Float32Array".to_string())
+                })?;
                 Self::aggregate_f32(func, array, num_rows)
             }
             DataType::Float64 => {
-                let array = column
-                    .as_any()
-                    .downcast_ref::<Float64Array>()
-                    .ok_or_else(|| {
-                        Error::Other("Failed to downcast to Float64Array".to_string())
-                    })?;
+                let array = column.as_any().downcast_ref::<Float64Array>().ok_or_else(|| {
+                    Error::Other("Failed to downcast to Float64Array".to_string())
+                })?;
                 Self::aggregate_f64(func, array, num_rows)
             }
-            dt => Err(Error::InvalidInput(format!(
-                "Aggregation not supported for data type: {dt:?}"
-            ))),
+            dt => {
+                Err(Error::InvalidInput(format!("Aggregation not supported for data type: {dt:?}")))
+            }
         }
     }
 
-    #[allow(
-        clippy::cast_precision_loss,
-        clippy::cast_possible_wrap,
-        clippy::unnecessary_wraps
-    )]
+    #[allow(clippy::cast_precision_loss, clippy::cast_possible_wrap, clippy::unnecessary_wraps)]
     fn aggregate_i32(
         func: AggregateFunction,
         array: &Int32Array,
@@ -458,10 +438,9 @@ impl QueryExecutor {
                 let avg = if count > 0 { sum / count as f64 } else { 0.0 };
                 Ok((Arc::new(Float64Array::from(vec![avg])), DataType::Float64))
             }
-            AggregateFunction::Count => Ok((
-                Arc::new(Int64Array::from(vec![num_rows as i64])),
-                DataType::Int64,
-            )),
+            AggregateFunction::Count => {
+                Ok((Arc::new(Int64Array::from(vec![num_rows as i64])), DataType::Int64))
+            }
             AggregateFunction::Min => {
                 let min = (0..array.len())
                     .filter(|&i| !array.is_null(i))
@@ -481,11 +460,7 @@ impl QueryExecutor {
         }
     }
 
-    #[allow(
-        clippy::cast_precision_loss,
-        clippy::cast_possible_wrap,
-        clippy::unnecessary_wraps
-    )]
+    #[allow(clippy::cast_precision_loss, clippy::cast_possible_wrap, clippy::unnecessary_wraps)]
     fn aggregate_i64(
         func: AggregateFunction,
         array: &Int64Array,
@@ -493,10 +468,8 @@ impl QueryExecutor {
     ) -> Result<(ArrayRef, DataType)> {
         match func {
             AggregateFunction::Sum => {
-                let sum: i64 = (0..array.len())
-                    .filter(|&i| !array.is_null(i))
-                    .map(|i| array.value(i))
-                    .sum();
+                let sum: i64 =
+                    (0..array.len()).filter(|&i| !array.is_null(i)).map(|i| array.value(i)).sum();
                 Ok((Arc::new(Int64Array::from(vec![sum])), DataType::Int64))
             }
             AggregateFunction::Avg => {
@@ -508,10 +481,9 @@ impl QueryExecutor {
                 let avg = if count > 0 { sum / count as f64 } else { 0.0 };
                 Ok((Arc::new(Float64Array::from(vec![avg])), DataType::Float64))
             }
-            AggregateFunction::Count => Ok((
-                Arc::new(Int64Array::from(vec![num_rows as i64])),
-                DataType::Int64,
-            )),
+            AggregateFunction::Count => {
+                Ok((Arc::new(Int64Array::from(vec![num_rows as i64])), DataType::Int64))
+            }
             AggregateFunction::Min => {
                 let min = (0..array.len())
                     .filter(|&i| !array.is_null(i))
@@ -531,11 +503,7 @@ impl QueryExecutor {
         }
     }
 
-    #[allow(
-        clippy::cast_precision_loss,
-        clippy::cast_possible_wrap,
-        clippy::unnecessary_wraps
-    )]
+    #[allow(clippy::cast_precision_loss, clippy::cast_possible_wrap, clippy::unnecessary_wraps)]
     fn aggregate_f32(
         func: AggregateFunction,
         array: &Float32Array,
@@ -543,10 +511,8 @@ impl QueryExecutor {
     ) -> Result<(ArrayRef, DataType)> {
         match func {
             AggregateFunction::Sum => {
-                let sum: f32 = (0..array.len())
-                    .filter(|&i| !array.is_null(i))
-                    .map(|i| array.value(i))
-                    .sum();
+                let sum: f32 =
+                    (0..array.len()).filter(|&i| !array.is_null(i)).map(|i| array.value(i)).sum();
                 Ok((Arc::new(Float32Array::from(vec![sum])), DataType::Float32))
             }
             AggregateFunction::Avg => {
@@ -558,10 +524,9 @@ impl QueryExecutor {
                 let avg = if count > 0 { sum / count as f64 } else { 0.0 };
                 Ok((Arc::new(Float64Array::from(vec![avg])), DataType::Float64))
             }
-            AggregateFunction::Count => Ok((
-                Arc::new(Int64Array::from(vec![num_rows as i64])),
-                DataType::Int64,
-            )),
+            AggregateFunction::Count => {
+                Ok((Arc::new(Int64Array::from(vec![num_rows as i64])), DataType::Int64))
+            }
             AggregateFunction::Min => {
                 let min = (0..array.len())
                     .filter(|&i| !array.is_null(i))
@@ -581,11 +546,7 @@ impl QueryExecutor {
         }
     }
 
-    #[allow(
-        clippy::cast_precision_loss,
-        clippy::cast_possible_wrap,
-        clippy::unnecessary_wraps
-    )]
+    #[allow(clippy::cast_precision_loss, clippy::cast_possible_wrap, clippy::unnecessary_wraps)]
     fn aggregate_f64(
         func: AggregateFunction,
         array: &Float64Array,
@@ -593,25 +554,20 @@ impl QueryExecutor {
     ) -> Result<(ArrayRef, DataType)> {
         match func {
             AggregateFunction::Sum => {
-                let sum: f64 = (0..array.len())
-                    .filter(|&i| !array.is_null(i))
-                    .map(|i| array.value(i))
-                    .sum();
+                let sum: f64 =
+                    (0..array.len()).filter(|&i| !array.is_null(i)).map(|i| array.value(i)).sum();
                 Ok((Arc::new(Float64Array::from(vec![sum])), DataType::Float64))
             }
             AggregateFunction::Avg => {
-                let sum: f64 = (0..array.len())
-                    .filter(|&i| !array.is_null(i))
-                    .map(|i| array.value(i))
-                    .sum();
+                let sum: f64 =
+                    (0..array.len()).filter(|&i| !array.is_null(i)).map(|i| array.value(i)).sum();
                 let count = (0..array.len()).filter(|&i| !array.is_null(i)).count();
                 let avg = if count > 0 { sum / count as f64 } else { 0.0 };
                 Ok((Arc::new(Float64Array::from(vec![avg])), DataType::Float64))
             }
-            AggregateFunction::Count => Ok((
-                Arc::new(Int64Array::from(vec![num_rows as i64])),
-                DataType::Int64,
-            )),
+            AggregateFunction::Count => {
+                Ok((Arc::new(Int64Array::from(vec![num_rows as i64])), DataType::Int64))
+            }
             AggregateFunction::Min => {
                 let min = (0..array.len())
                     .filter(|&i| !array.is_null(i))

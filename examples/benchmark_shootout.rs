@@ -4,7 +4,7 @@
 //! Compares performance across different data sizes showing when GPU/SIMD
 //! outperforms scalar execution.
 //!
-//! Run with: cargo run --example benchmark_shootout --release
+//! Run with: cargo run --example `benchmark_shootout` --release
 
 use arrow::array::{Float64Array, Int32Array, RecordBatch};
 use arrow::datatypes::{DataType, Field, Schema};
@@ -55,7 +55,7 @@ fn run_benchmark(rows: usize, label: &str) {
     println!("─────────────────────────────────────────────");
 
     let batch = generate_data(rows);
-    println!("  Generated {} rows: id (Int32), value (Float64)", rows);
+    println!("  Generated {rows} rows: id (Int32), value (Float64)");
     println!();
 
     // Test 1: Top-K Descending (find largest K values)
@@ -92,10 +92,7 @@ fn generate_data(rows: usize) -> RecordBatch {
 
     RecordBatch::try_new(
         schema,
-        vec![
-            Arc::new(Int32Array::from(ids)),
-            Arc::new(Float64Array::from(values)),
-        ],
+        vec![Arc::new(Int32Array::from(ids)), Arc::new(Float64Array::from(values))],
     )
     .expect("Example should work with valid test data")
 }
@@ -107,15 +104,11 @@ fn benchmark_topk(batch: &RecordBatch, k: usize, order: SortOrder) {
     };
 
     // Warmup run
-    let _ = batch
-        .top_k(1, k, order)
-        .expect("Example should work with valid test data");
+    let _ = batch.top_k(1, k, order).expect("Example should work with valid test data");
 
     // Timed run
     let start = Instant::now();
-    let result = batch
-        .top_k(1, k, order)
-        .expect("Example should work with valid test data");
+    let result = batch.top_k(1, k, order).expect("Example should work with valid test data");
     let elapsed = start.elapsed();
 
     let values = result

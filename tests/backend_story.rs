@@ -16,7 +16,7 @@ use trueno_db::Backend;
 // BACKEND SELECTION TESTS
 // ============================================================================
 
-/// Test that BackendDispatcher correctly selects backends based on data size
+/// Test that `BackendDispatcher` correctly selects backends based on data size
 #[test]
 fn test_backend_dispatcher_small_data() {
     // Small data (<10MB) should use SIMD, not GPU
@@ -24,10 +24,7 @@ fn test_backend_dispatcher_small_data() {
     let estimated_flops = 1_000_000.0;
 
     let backend = BackendDispatcher::select(total_bytes, estimated_flops);
-    assert!(
-        matches!(backend, Backend::Simd),
-        "Small data should use SIMD backend"
-    );
+    assert!(matches!(backend, Backend::Simd), "Small data should use SIMD backend");
 }
 
 #[test]
@@ -37,10 +34,7 @@ fn test_backend_dispatcher_large_data() {
     let estimated_flops = 100_000_000_000.0; // 100 GFLOP
 
     let backend = BackendDispatcher::select(total_bytes, estimated_flops);
-    assert!(
-        matches!(backend, Backend::Gpu),
-        "Large compute-intensive data should use GPU backend"
-    );
+    assert!(matches!(backend, Backend::Gpu), "Large compute-intensive data should use GPU backend");
 }
 
 #[test]
@@ -64,10 +58,7 @@ fn test_backend_dispatcher_large_data_low_compute() {
 fn test_arithmetic_intensity() {
     // Matrix multiply: N^3 FLOPs for N^2 elements = N FLOPs/element
     let intensity = BackendDispatcher::arithmetic_intensity(1_000_000_000.0, 100_000_000);
-    assert!(
-        (intensity - 10.0).abs() < 0.001,
-        "Arithmetic intensity should be 10.0 FLOPs/byte"
-    );
+    assert!((intensity - 10.0).abs() < 0.001, "Arithmetic intensity should be 10.0 FLOPs/byte");
 }
 
 // ============================================================================
@@ -109,10 +100,7 @@ fn test_trueno_vector_sum() {
     let vector = Vector::from_slice(&data);
 
     let sum = vector.sum().expect("SIMD sum should work");
-    assert!(
-        (sum - 36.0).abs() < 1e-5,
-        "SIMD sum should be 36.0, got {sum}"
-    );
+    assert!((sum - 36.0).abs() < 1e-5, "SIMD sum should be 36.0, got {sum}");
 }
 
 #[test]
@@ -168,16 +156,12 @@ fn scalar_sum(data: &[f32]) -> f32 {
 
 /// Scalar min implementation
 fn scalar_min(data: &[f32]) -> Option<f32> {
-    data.iter()
-        .cloned()
-        .min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+    data.iter().copied().min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
 }
 
 /// Scalar max implementation
 fn scalar_max(data: &[f32]) -> Option<f32> {
-    data.iter()
-        .cloned()
-        .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+    data.iter().copied().max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
 }
 
 // ============================================================================
@@ -191,10 +175,7 @@ fn test_backend_equivalence_sum() {
     let scalar_result = scalar_sum(&data);
     let simd_result = Vector::from_slice(&data).sum().expect("SIMD sum");
 
-    assert!(
-        (scalar_result - simd_result).abs() < 1e-5,
-        "SIMD sum should equal Scalar sum"
-    );
+    assert!((scalar_result - simd_result).abs() < 1e-5, "SIMD sum should equal Scalar sum");
 }
 
 #[test]
@@ -204,10 +185,7 @@ fn test_backend_equivalence_min() {
     let scalar_result = scalar_min(&data).expect("scalar min");
     let simd_result = Vector::from_slice(&data).min().expect("SIMD min");
 
-    assert!(
-        (scalar_result - simd_result).abs() < 1e-5,
-        "SIMD min should equal Scalar min"
-    );
+    assert!((scalar_result - simd_result).abs() < 1e-5, "SIMD min should equal Scalar min");
 }
 
 #[test]
@@ -217,10 +195,7 @@ fn test_backend_equivalence_max() {
     let scalar_result = scalar_max(&data).expect("scalar max");
     let simd_result = Vector::from_slice(&data).max().expect("SIMD max");
 
-    assert!(
-        (scalar_result - simd_result).abs() < 1e-5,
-        "SIMD max should equal Scalar max"
-    );
+    assert!((scalar_result - simd_result).abs() < 1e-5, "SIMD max should equal Scalar max");
 }
 
 #[test]
@@ -285,10 +260,7 @@ mod gpu_tests {
         let scalar_sum: i32 = data.iter().sum();
 
         let arrow_array = Int32Array::from(data);
-        let gpu_sum = engine
-            .sum_i32(&arrow_array)
-            .await
-            .expect("GPU sum should work");
+        let gpu_sum = engine.sum_i32(&arrow_array).await.expect("GPU sum should work");
 
         assert_eq!(scalar_sum, gpu_sum, "GPU sum should equal Scalar sum");
     }
@@ -305,10 +277,7 @@ mod gpu_tests {
         let scalar_min = *data.iter().min().unwrap();
 
         let arrow_array = Int32Array::from(data);
-        let gpu_min = engine
-            .min_i32(&arrow_array)
-            .await
-            .expect("GPU min should work");
+        let gpu_min = engine.min_i32(&arrow_array).await.expect("GPU min should work");
 
         assert_eq!(scalar_min, gpu_min, "GPU min should equal Scalar min");
     }
@@ -325,10 +294,7 @@ mod gpu_tests {
         let scalar_max = *data.iter().max().unwrap();
 
         let arrow_array = Int32Array::from(data);
-        let gpu_max = engine
-            .max_i32(&arrow_array)
-            .await
-            .expect("GPU max should work");
+        let gpu_max = engine.max_i32(&arrow_array).await.expect("GPU max should work");
 
         assert_eq!(scalar_max, gpu_max, "GPU max should equal Scalar max");
     }
@@ -345,15 +311,9 @@ mod gpu_tests {
         let scalar_count = data.len();
 
         let arrow_array = Int32Array::from(data);
-        let gpu_count = engine
-            .count(&arrow_array)
-            .await
-            .expect("GPU count should work");
+        let gpu_count = engine.count(&arrow_array).await.expect("GPU count should work");
 
-        assert_eq!(
-            scalar_count, gpu_count,
-            "GPU count should equal Scalar count"
-        );
+        assert_eq!(scalar_count, gpu_count, "GPU count should equal Scalar count");
     }
 
     /// Test GPU fused filter+sum works correctly
@@ -421,7 +381,7 @@ mod backend_completeness {
         check_variant(Backend::Simd);
     }
 
-    /// Verify BackendDispatcher methods exist
+    /// Verify `BackendDispatcher` methods exist
     #[test]
     fn test_backend_dispatcher_methods_exist() {
         // These function pointer assignments verify the methods exist at compile time

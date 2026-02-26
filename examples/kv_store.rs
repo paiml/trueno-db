@@ -41,10 +41,7 @@ async fn demo_basic_crud() -> trueno_db::Result<()> {
 
     // Read
     let alice = store.get("user:1001").await?;
-    println!(
-        "   GET user:1001 = {:?}",
-        alice.map(|v| String::from_utf8_lossy(&v).to_string())
-    );
+    println!("   GET user:1001 = {:?}", alice.map(|v| String::from_utf8_lossy(&v).to_string()));
 
     // Update
     store.set("user:1001", b"Alice Smith".to_vec()).await?;
@@ -87,10 +84,8 @@ async fn demo_batch_operations() -> trueno_db::Result<()> {
     let values = store.batch_get(&keys).await?;
     println!("   BATCH GET results:");
     for (key, value) in keys.iter().zip(values.iter()) {
-        let display = value
-            .as_ref()
-            .map(|v| String::from_utf8_lossy(v).to_string());
-        println!("     {} = {:?}", key, display);
+        let display = value.as_ref().map(|v| String::from_utf8_lossy(v).to_string());
+        println!("     {key} = {display:?}");
     }
 
     println!();
@@ -104,7 +99,7 @@ fn demo_hash_functions() {
     // Single key hash
     let key = "session:abc123";
     let hash = hash_key(key);
-    println!("   hash_key({:?}) = 0x{:016x}", key, hash);
+    println!("   hash_key({key:?}) = 0x{hash:016x}");
 
     // Batch hash for partitioning
     let keys = ["shard:0", "shard:1", "shard:2", "shard:3"];
@@ -112,7 +107,7 @@ fn demo_hash_functions() {
     println!("   Batch hashes for sharding:");
     for (key, hash) in keys.iter().zip(hashes.iter()) {
         let partition = hash % 4;
-        println!("     {} -> partition {}", key, partition);
+        println!("     {key} -> partition {partition}");
     }
 
     println!();
@@ -131,7 +126,7 @@ async fn demo_concurrent_access() -> trueno_db::Result<()> {
     for i in 0..10 {
         let store = Arc::clone(&store);
         handles.push(tokio::spawn(async move {
-            let key = format!("counter:{}", i);
+            let key = format!("counter:{i}");
             let value = format!("{}", i * 100).into_bytes();
             store.set(&key, value).await.unwrap();
         }));
@@ -145,10 +140,10 @@ async fn demo_concurrent_access() -> trueno_db::Result<()> {
     // Verify all writes
     println!("   Concurrent writes completed:");
     for i in 0..10 {
-        let key = format!("counter:{}", i);
+        let key = format!("counter:{i}");
         let value = store.get(&key).await?;
         let display = value.map(|v| String::from_utf8_lossy(&v).to_string());
-        println!("     {} = {:?}", key, display);
+        println!("     {key} = {display:?}");
     }
 
     println!("\n   Store stats: {} entries", store.len());

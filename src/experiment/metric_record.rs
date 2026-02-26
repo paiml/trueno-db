@@ -38,13 +38,7 @@ impl MetricRecord {
     /// A new `MetricRecord` with the current timestamp.
     #[must_use]
     pub fn new(run_id: impl Into<String>, key: impl Into<String>, step: u64, value: f64) -> Self {
-        Self {
-            run_id: run_id.into(),
-            key: key.into(),
-            step,
-            value,
-            timestamp: Utc::now(),
-        }
+        Self { run_id: run_id.into(), key: key.into(), step, value, timestamp: Utc::now() }
     }
 
     /// Create a builder for constructing a metric record with optional fields.
@@ -103,13 +97,7 @@ impl MetricRecordBuilder {
     /// Create a new builder with required fields.
     #[must_use]
     pub fn new(run_id: impl Into<String>, key: impl Into<String>, step: u64, value: f64) -> Self {
-        Self {
-            run_id: run_id.into(),
-            key: key.into(),
-            step,
-            value,
-            timestamp: Utc::now(),
-        }
+        Self { run_id: run_id.into(), key: key.into(), step, value, timestamp: Utc::now() }
     }
 
     /// Set a custom timestamp.

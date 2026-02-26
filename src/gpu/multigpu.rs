@@ -116,9 +116,7 @@ pub fn partition_data(
     strategy: PartitionStrategy,
 ) -> Result<Vec<DataPartition>> {
     if num_partitions == 0 {
-        return Err(Error::InvalidInput(
-            "num_partitions must be > 0".to_string(),
-        ));
+        return Err(Error::InvalidInput("num_partitions must be > 0".to_string()));
     }
 
     let partitions = match strategy {
@@ -140,19 +138,12 @@ fn partition_range(data: &Int32Array, num_partitions: usize) -> Vec<DataPartitio
     let mut offset = 0;
     for device_id in 0..num_partitions {
         // First 'remainder' partitions get an extra element
-        let size = if device_id < remainder {
-            base_size + 1
-        } else {
-            base_size
-        };
+        let size = if device_id < remainder { base_size + 1 } else { base_size };
 
         // Extract slice
         let values: Vec<i32> = (offset..offset + size).map(|i| data.value(i)).collect();
 
-        partitions.push(DataPartition {
-            device_id,
-            data: Int32Array::from(values),
-        });
+        partitions.push(DataPartition { device_id, data: Int32Array::from(values) });
 
         offset += size;
     }
@@ -186,10 +177,7 @@ fn partition_hash(data: &Int32Array, num_partitions: usize) -> Vec<DataPartition
     let partitions: Vec<DataPartition> = buckets
         .into_iter()
         .enumerate()
-        .map(|(device_id, values)| DataPartition {
-            device_id,
-            data: Int32Array::from(values),
-        })
+        .map(|(device_id, values)| DataPartition { device_id, data: Int32Array::from(values) })
         .collect();
 
     partitions
@@ -333,9 +321,6 @@ mod tests {
         let result = partition_data(&data, 0, PartitionStrategy::Range);
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("num_partitions must be > 0"));
+        assert!(result.unwrap_err().to_string().contains("num_partitions must be > 0"));
     }
 }

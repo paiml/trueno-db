@@ -20,11 +20,7 @@ use trueno_db::storage::{StorageEngine, MORSEL_SIZE_BYTES};
 fn test_morsel_size_bounded() {
     // Create a large batch (simulating 1GB of data)
     let _num_rows = 250_000_000; // 250M rows * 4 bytes = 1GB (for documentation)
-    let schema = Arc::new(Schema::new(vec![Field::new(
-        "value",
-        DataType::Int32,
-        false,
-    )]));
+    let schema = Arc::new(Schema::new(vec![Field::new("value", DataType::Int32, false)]));
 
     // Note: We don't actually allocate 1GB here (would OOM in tests)
     // Instead we create small batches and verify morsel logic
@@ -57,15 +53,8 @@ fn test_morsel_size_bounded() {
         );
     }
 
-    assert!(
-        morsel_count > 0,
-        "Should have processed at least one morsel"
-    );
-    assert_eq!(
-        total_rows,
-        10 * batch_size,
-        "Should process all rows across morsels"
-    );
+    assert!(morsel_count > 0, "Should have processed at least one morsel");
+    assert_eq!(total_rows, 10 * batch_size, "Should process all rows across morsels");
 }
 
 /// Test that morsel iteration handles large datasets without OOM
@@ -101,8 +90,7 @@ fn test_large_dataset_no_oom() {
     let max_gpu_memory_bytes = max_gpu_memory_gb * 1024 * 1024 * 1024;
     assert!(
         morsel_size_bytes <= max_gpu_memory_bytes,
-        "Morsel size {} should fit in {max_gpu_memory_gb}GB VRAM",
-        morsel_size_bytes
+        "Morsel size {morsel_size_bytes} should fit in {max_gpu_memory_gb}GB VRAM"
     );
 
     // Key insight: We process 80 morsels sequentially for 10GB dataset
@@ -130,21 +118,15 @@ fn test_morsel_iteration_preserves_data() {
     for batch_idx in 0..20 {
         // 20 batches
         let batch_size = 500_000; // 500K rows/batch
-        let ids: Vec<i32> = (0..batch_size)
-            .map(|i| i + (batch_idx * batch_size))
-            .collect();
-        let values: Vec<f32> = (0..batch_size)
-            .map(|i| (i + batch_idx * batch_size) as f32)
-            .collect();
+        let ids: Vec<i32> = (0..batch_size).map(|i| i + (batch_idx * batch_size)).collect();
+        let values: Vec<f32> =
+            (0..batch_size).map(|i| (i + batch_idx * batch_size) as f32).collect();
 
         expected_sum += values.iter().map(|v| *v as i64).sum::<i64>();
 
         let batch = RecordBatch::try_new(
             schema.clone(),
-            vec![
-                Arc::new(Int32Array::from(ids)),
-                Arc::new(Float32Array::from(values)),
-            ],
+            vec![Arc::new(Int32Array::from(ids)), Arc::new(Float32Array::from(values))],
         )
         .unwrap();
         batches.push(batch);
@@ -158,11 +140,7 @@ fn test_morsel_iteration_preserves_data() {
 
     for morsel in storage.morsels() {
         total_rows += morsel.num_rows();
-        let value_column = morsel
-            .column(1)
-            .as_any()
-            .downcast_ref::<Float32Array>()
-            .unwrap();
+        let value_column = morsel.column(1).as_any().downcast_ref::<Float32Array>().unwrap();
 
         for i in 0..value_column.len() {
             actual_sum += value_column.value(i) as i64;
@@ -189,11 +167,7 @@ fn test_morsel_empty_dataset() {
 /// Test morsel iterator with single small batch
 #[test]
 fn test_morsel_small_batch() {
-    let schema = Arc::new(Schema::new(vec![Field::new(
-        "value",
-        DataType::Int32,
-        false,
-    )]));
+    let schema = Arc::new(Schema::new(vec![Field::new("value", DataType::Int32, false)]));
 
     let data = vec![1i32, 2, 3, 4, 5];
     let batch = RecordBatch::try_new(schema, vec![Arc::new(Int32Array::from(data))]).unwrap();
@@ -231,10 +205,7 @@ fn test_memory_efficiency_calculation() {
     println!("Memory amplification: {memory_amplification:.4}");
 
     // Verify morsel-based processing prevents OOM
-    assert!(
-        MORSEL_SIZE_BYTES < gpu_bytes,
-        "Morsel must fit in available VRAM"
-    );
+    assert!(MORSEL_SIZE_BYTES < gpu_bytes, "Morsel must fit in available VRAM");
 
     // With 2 in-flight transfers (MAX_IN_FLIGHT_TRANSFERS = 2),
     // peak memory is 2 * 128MB = 256MB << 16GB VRAM
@@ -243,10 +214,7 @@ fn test_memory_efficiency_calculation() {
 
     println!("Peak memory usage: {peak_memory_mb} MB");
     println!("Available VRAM: {vram_mb} MB");
-    println!(
-        "VRAM utilization: {:.2}%",
-        (peak_memory_mb as f64 / vram_mb as f64) * 100.0
-    );
+    println!("VRAM utilization: {:.2}%", (peak_memory_mb as f64 / vram_mb as f64) * 100.0);
 
     assert!(
         peak_memory_mb < vram_mb,
@@ -255,8 +223,5 @@ fn test_memory_efficiency_calculation() {
 
     // Toyota Way: Poka-Yoke (mistake-proofing)
     // Even with 100GB dataset, we never exceed VRAM
-    assert!(
-        peak_memory_mb < 512,
-        "Peak memory should be < 512MB even for massive datasets"
-    );
+    assert!(peak_memory_mb < 512, "Peak memory should be < 512MB even for massive datasets");
 }

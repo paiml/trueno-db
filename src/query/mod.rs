@@ -87,9 +87,7 @@ impl QueryEngine {
     /// Create a new query engine
     #[must_use]
     pub const fn new() -> Self {
-        Self {
-            dialect: GenericDialect {},
-        }
+        Self { dialect: GenericDialect {} }
     }
 
     /// Parse SQL query into query plan
@@ -130,17 +128,13 @@ impl QueryEngine {
 
         // Validate single statement
         if statements.len() != 1 {
-            return Err(crate::Error::ParseError(
-                "Only single statements supported".to_string(),
-            ));
+            return Err(crate::Error::ParseError("Only single statements supported".to_string()));
         }
 
         // Extract SELECT statement
         let stmt = &statements[0];
         let Statement::Query(query) = stmt else {
-            return Err(crate::Error::ParseError(
-                "Only SELECT queries supported".to_string(),
-            ));
+            return Err(crate::Error::ParseError("Only SELECT queries supported".to_string()));
         };
 
         Self::parse_select_query(query)
@@ -149,9 +143,7 @@ impl QueryEngine {
     fn parse_select_query(query: &Query) -> crate::Result<QueryPlan> {
         // Extract SELECT body
         let SetExpr::Select(select) = query.body.as_ref() else {
-            return Err(crate::Error::ParseError(
-                "Only SELECT queries supported".to_string(),
-            ));
+            return Err(crate::Error::ParseError("Only SELECT queries supported".to_string()));
         };
 
         // Extract table name (FROM clause)
@@ -172,15 +164,7 @@ impl QueryEngine {
         // Extract LIMIT
         let limit = Self::extract_limit(query.limit.as_ref());
 
-        Ok(QueryPlan {
-            columns,
-            table,
-            filter,
-            group_by,
-            aggregations,
-            order_by,
-            limit,
-        })
+        Ok(QueryPlan { columns, table, filter, group_by, aggregations, order_by, limit })
     }
 
     fn extract_table_name(select: &Select) -> crate::Result<String> {
@@ -196,9 +180,7 @@ impl QueryEngine {
 
         let table_with_joins = &select.from[0];
         if !table_with_joins.joins.is_empty() {
-            return Err(crate::Error::ParseError(
-                "JOINs not supported in Phase 1".to_string(),
-            ));
+            return Err(crate::Error::ParseError("JOINs not supported in Phase 1".to_string()));
         }
 
         Ok(table_with_joins.relation.to_string())
@@ -254,10 +236,9 @@ impl QueryEngine {
 
             // Extract column name from arguments
             let col = match &func.args {
-                sqlparser::ast::FunctionArguments::List(func_arg_list) => func_arg_list
-                    .args
-                    .first()
-                    .map_or_else(|| "*".to_string(), ToString::to_string),
+                sqlparser::ast::FunctionArguments::List(func_arg_list) => {
+                    func_arg_list.args.first().map_or_else(|| "*".to_string(), ToString::to_string)
+                }
                 _ => "*".to_string(),
             };
             return Some((agg_func, col));

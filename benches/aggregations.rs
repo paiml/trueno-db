@@ -21,16 +21,12 @@ fn bench_sum(c: &mut Criterion) {
 
     // Small dataset
     let small_data: Vec<f32> = (0..SMALL_SIZE).map(|i| i as f32).collect();
-    group.bench_with_input(
-        BenchmarkId::new("trueno_simd", SMALL_SIZE),
-        &small_data,
-        |b, data| {
-            b.iter(|| {
-                let vec = Vector::from_slice(black_box(data));
-                vec.sum()
-            });
-        },
-    );
+    group.bench_with_input(BenchmarkId::new("trueno_simd", SMALL_SIZE), &small_data, |b, data| {
+        b.iter(|| {
+            let vec = Vector::from_slice(black_box(data));
+            vec.sum()
+        });
+    });
 
     // Medium dataset
     let medium_data: Vec<f32> = (0..MEDIUM_SIZE).map(|i| i as f32).collect();
@@ -62,16 +58,12 @@ fn bench_min(c: &mut Criterion) {
     let mut group = c.benchmark_group("min_aggregation_f32");
 
     let small_data: Vec<f32> = (0..SMALL_SIZE).map(|i| i as f32).collect();
-    group.bench_with_input(
-        BenchmarkId::new("trueno_simd", SMALL_SIZE),
-        &small_data,
-        |b, data| {
-            b.iter(|| {
-                let vec = Vector::from_slice(black_box(data));
-                vec.min()
-            });
-        },
-    );
+    group.bench_with_input(BenchmarkId::new("trueno_simd", SMALL_SIZE), &small_data, |b, data| {
+        b.iter(|| {
+            let vec = Vector::from_slice(black_box(data));
+            vec.min()
+        });
+    });
 
     let medium_data: Vec<f32> = (0..MEDIUM_SIZE).map(|i| i as f32).collect();
     group.bench_with_input(
@@ -90,12 +82,7 @@ fn bench_min(c: &mut Criterion) {
         BenchmarkId::new("scalar_baseline", MEDIUM_SIZE),
         &medium_data,
         |b, data| {
-            b.iter(|| {
-                black_box(data)
-                    .iter()
-                    .copied()
-                    .min_by(|a, b| a.partial_cmp(b).unwrap())
-            });
+            b.iter(|| black_box(data).iter().copied().min_by(|a, b| a.partial_cmp(b).unwrap()));
         },
     );
 
@@ -107,16 +94,12 @@ fn bench_max(c: &mut Criterion) {
     let mut group = c.benchmark_group("max_aggregation_f32");
 
     let small_data: Vec<f32> = (0..SMALL_SIZE).map(|i| i as f32).collect();
-    group.bench_with_input(
-        BenchmarkId::new("trueno_simd", SMALL_SIZE),
-        &small_data,
-        |b, data| {
-            b.iter(|| {
-                let vec = Vector::from_slice(black_box(data));
-                vec.max()
-            });
-        },
-    );
+    group.bench_with_input(BenchmarkId::new("trueno_simd", SMALL_SIZE), &small_data, |b, data| {
+        b.iter(|| {
+            let vec = Vector::from_slice(black_box(data));
+            vec.max()
+        });
+    });
 
     let medium_data: Vec<f32> = (0..MEDIUM_SIZE).map(|i| i as f32).collect();
     group.bench_with_input(
@@ -135,12 +118,7 @@ fn bench_max(c: &mut Criterion) {
         BenchmarkId::new("scalar_baseline", MEDIUM_SIZE),
         &medium_data,
         |b, data| {
-            b.iter(|| {
-                black_box(data)
-                    .iter()
-                    .copied()
-                    .max_by(|a, b| a.partial_cmp(b).unwrap())
-            });
+            b.iter(|| black_box(data).iter().copied().max_by(|a, b| a.partial_cmp(b).unwrap()));
         },
     );
 
@@ -152,16 +130,12 @@ fn bench_avg(c: &mut Criterion) {
     let mut group = c.benchmark_group("avg_aggregation_f32");
 
     let small_data: Vec<f32> = (0..SMALL_SIZE).map(|i| i as f32).collect();
-    group.bench_with_input(
-        BenchmarkId::new("trueno_simd", SMALL_SIZE),
-        &small_data,
-        |b, data| {
-            b.iter(|| {
-                let vec = Vector::from_slice(black_box(data));
-                vec.mean()
-            });
-        },
-    );
+    group.bench_with_input(BenchmarkId::new("trueno_simd", SMALL_SIZE), &small_data, |b, data| {
+        b.iter(|| {
+            let vec = Vector::from_slice(black_box(data));
+            vec.mean()
+        });
+    });
 
     let medium_data: Vec<f32> = (0..MEDIUM_SIZE).map(|i| i as f32).collect();
     group.bench_with_input(

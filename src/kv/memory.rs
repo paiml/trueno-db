@@ -32,17 +32,13 @@ impl MemoryKvStore {
     /// Create a new in-memory KV store.
     #[must_use]
     pub fn new() -> Self {
-        Self {
-            store: DashMap::new(),
-        }
+        Self { store: DashMap::new() }
     }
 
     /// Create with pre-allocated capacity.
     #[must_use]
     pub fn with_capacity(capacity: usize) -> Self {
-        Self {
-            store: DashMap::with_capacity(capacity),
-        }
+        Self { store: DashMap::with_capacity(capacity) }
     }
 
     /// Get the number of entries in the store.

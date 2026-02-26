@@ -67,10 +67,7 @@ impl MemoryBudget {
     pub fn with_limit(limit: usize) -> Self {
         console::log_1(&format!("Memory budget: {} MB", limit / 1_000_000).into());
 
-        Self {
-            limit,
-            current: Arc::new(AtomicUsize::new(0)),
-        }
+        Self { limit, current: Arc::new(AtomicUsize::new(0)) }
     }
 
     /// Try to allocate memory
@@ -108,10 +105,7 @@ impl MemoryBudget {
             .into(),
         );
 
-        Ok(MemoryAllocation {
-            size,
-            budget: self.clone(),
-        })
+        Ok(MemoryAllocation { size, budget: self.clone() })
     }
 
     /// Get current memory usage in bytes

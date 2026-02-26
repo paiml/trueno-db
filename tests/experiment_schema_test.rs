@@ -29,9 +29,8 @@ fn test_experiment_record_with_config() {
         "model": "resnet50"
     });
 
-    let record = ExperimentRecord::builder("exp-002", "Training Run")
-        .config(config.clone())
-        .build();
+    let record =
+        ExperimentRecord::builder("exp-002", "Training Run").config(config.clone()).build();
 
     assert_eq!(record.experiment_id(), "exp-002");
     assert_eq!(record.config(), Some(&config));
@@ -112,9 +111,7 @@ fn test_run_record_complete_failed() {
 
 #[test]
 fn test_run_record_with_renacer_span() {
-    let run = RunRecord::builder("run-005", "exp-001")
-        .renacer_span_id("span-abc-123")
-        .build();
+    let run = RunRecord::builder("run-005", "exp-001").renacer_span_id("span-abc-123").build();
 
     assert_eq!(run.renacer_span_id(), Some("span-abc-123"));
 }
@@ -162,9 +159,7 @@ fn test_metric_record_with_explicit_timestamp() {
     use chrono::{TimeZone, Utc};
     let ts = Utc.with_ymd_and_hms(2025, 1, 15, 12, 0, 0).unwrap();
 
-    let metric = MetricRecord::builder("run-001", "accuracy", 100, 0.95)
-        .timestamp(ts)
-        .build();
+    let metric = MetricRecord::builder("run-001", "accuracy", 100, 0.95).timestamp(ts).build();
 
     assert_eq!(metric.timestamp(), ts);
 }
@@ -270,9 +265,7 @@ fn test_experiment_run_metric_relationship() {
 fn test_full_experiment_lifecycle() {
     // 1. Create experiment
     let config = serde_json::json!({"epochs": 10});
-    let experiment = ExperimentRecord::builder("exp-lifecycle", "Full Test")
-        .config(config)
-        .build();
+    let experiment = ExperimentRecord::builder("exp-lifecycle", "Full Test").config(config).build();
 
     // 2. Start a run
     let mut run = RunRecord::builder("run-lifecycle", experiment.experiment_id())
@@ -283,12 +276,7 @@ fn test_full_experiment_lifecycle() {
     // 3. Log metrics during training
     let metrics: Vec<MetricRecord> = (0..10)
         .map(|epoch| {
-            MetricRecord::new(
-                run.run_id(),
-                "epoch_loss",
-                epoch,
-                1.0 / (epoch as f64 + 1.0),
-            )
+            MetricRecord::new(run.run_id(), "epoch_loss", epoch, 1.0 / (epoch as f64 + 1.0))
         })
         .collect();
 
@@ -330,24 +318,9 @@ fn test_experiment_store_add_multiple_metrics() {
 
     // Add metrics for multiple runs and keys
     for step in 0..10 {
-        store.add_metric(MetricRecord::new(
-            "run-001",
-            "loss",
-            step,
-            1.0 / (step as f64 + 1.0),
-        ));
-        store.add_metric(MetricRecord::new(
-            "run-001",
-            "accuracy",
-            step,
-            step as f64 / 10.0,
-        ));
-        store.add_metric(MetricRecord::new(
-            "run-002",
-            "loss",
-            step,
-            0.5 / (step as f64 + 1.0),
-        ));
+        store.add_metric(MetricRecord::new("run-001", "loss", step, 1.0 / (step as f64 + 1.0)));
+        store.add_metric(MetricRecord::new("run-001", "accuracy", step, step as f64 / 10.0));
+        store.add_metric(MetricRecord::new("run-002", "loss", step, 0.5 / (step as f64 + 1.0)));
     }
 
     assert_eq!(store.metric_count(), 30);
@@ -359,12 +332,7 @@ fn test_get_metrics_for_run_single_key() {
 
     // Add metrics for run-001
     for step in 0..5 {
-        store.add_metric(MetricRecord::new(
-            "run-001",
-            "loss",
-            step,
-            1.0 / (step as f64 + 1.0),
-        ));
+        store.add_metric(MetricRecord::new("run-001", "loss", step, 1.0 / (step as f64 + 1.0)));
     }
 
     // Add metrics for different run (should not be returned)

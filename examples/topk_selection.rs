@@ -5,7 +5,7 @@
 //!
 //! Algorithm: O(N log K) heap-based selection vs O(N log N) full sort
 //!
-//! Run with: cargo run --example topk_selection --release
+//! Run with: cargo run --example `topk_selection` --release
 
 use arrow::array::{Float64Array, Int32Array};
 use arrow::datatypes::{DataType, Field, Schema};
@@ -20,11 +20,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create large dataset (1M rows) for performance demonstration
     println!("Creating sample dataset (1M rows)...");
     let batch = create_sample_batch(1_000_000)?;
-    println!(
-        "  ✓ Created batch: {} rows, {} columns\n",
-        batch.num_rows(),
-        batch.num_columns()
-    );
+    println!("  ✓ Created batch: {} rows, {} columns\n", batch.num_rows(), batch.num_columns());
 
     // Demonstrate Top-K selection (descending - largest values)
     println!("=== Top-10 Highest Scores ===");
@@ -33,7 +29,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let duration = start.elapsed();
 
     println!("  Algorithm: O(N log K) heap-based selection");
-    println!("  Time: {:?}", duration);
+    println!("  Time: {duration:?}");
     println!("  Results:");
 
     let score_col = top10_high
@@ -48,12 +44,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Example should work with valid test data");
 
     for i in 0..top10_high.num_rows() {
-        println!(
-            "    #{}: user_id={}, score={:.2}",
-            i + 1,
-            id_col.value(i),
-            score_col.value(i)
-        );
+        println!("    #{}: user_id={}, score={:.2}", i + 1, id_col.value(i), score_col.value(i));
     }
     println!();
 
@@ -64,7 +55,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let duration = start.elapsed();
 
     println!("  Algorithm: O(N log K) heap-based selection");
-    println!("  Time: {:?}", duration);
+    println!("  Time: {duration:?}");
     println!("  Results:");
 
     let score_col = top10_low
@@ -79,12 +70,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Example should work with valid test data");
 
     for i in 0..top10_low.num_rows() {
-        println!(
-            "    #{}: user_id={}, score={:.2}",
-            i + 1,
-            id_col.value(i),
-            score_col.value(i)
-        );
+        println!("    #{}: user_id={}, score={:.2}", i + 1, id_col.value(i), score_col.value(i));
     }
     println!();
 
@@ -96,7 +82,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("  Dataset: 1M rows");
     println!("  K: 100");
-    println!("  Time: {:?}", duration);
+    println!("  Time: {duration:?}");
     println!("  Complexity: O(N log K) = O(1M * log(100)) ≈ O(6.6M operations)");
     println!("  vs Full Sort: O(N log N) = O(1M * log(1M)) ≈ O(20M operations)");
     println!("  Speedup: ~{}x\n", (20_000_000 / 6_600_000));
@@ -115,12 +101,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Example should work with valid test data");
 
     for i in 0..5.min(top100.num_rows()) {
-        println!(
-            "    #{}: user_id={}, score={:.2}",
-            i + 1,
-            id_col.value(i),
-            score_col.value(i)
-        );
+        println!("    #{}: user_id={}, score={:.2}", i + 1, id_col.value(i), score_col.value(i));
     }
     println!("    ... ({} more results)", top100.num_rows() - 5);
     println!();
@@ -164,10 +145,7 @@ fn create_sample_batch(num_rows: usize) -> Result<RecordBatch, Box<dyn std::erro
 
     let batch = RecordBatch::try_new(
         Arc::new(schema),
-        vec![
-            Arc::new(Int32Array::from(user_ids)),
-            Arc::new(Float64Array::from(scores)),
-        ],
+        vec![Arc::new(Int32Array::from(user_ids)), Arc::new(Float64Array::from(scores))],
     )?;
 
     Ok(batch)

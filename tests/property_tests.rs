@@ -3,7 +3,7 @@
 //! Following ruchy/trueno/aprender pattern:
 //! - Test mathematical invariants
 //! - Test data integrity properties
-//! - Run with ProptestConfig::with_cases(100)
+//! - Run with `ProptestConfig::with_cases(100)`
 //! - Must complete in <30 seconds for pre-commit hook
 
 use arrow::array::{Float64Array, Int32Array, RecordBatch};
@@ -17,24 +17,18 @@ use trueno_db::topk::{SortOrder, TopKSelection};
 // Property Test Generators (Strategies)
 // ============================================================================
 
-/// Generate RecordBatch with random data
+/// Generate `RecordBatch` with random data
 fn arb_record_batch(rows: usize) -> impl Strategy<Value = RecordBatch> {
     let schema = Arc::new(Schema::new(vec![
         Field::new("id", DataType::Int32, false),
         Field::new("value", DataType::Float64, false),
     ]));
 
-    (
-        proptest::collection::vec(0i32..10000, rows),
-        proptest::collection::vec(0.0f64..1000.0, rows),
-    )
+    (proptest::collection::vec(0i32..10000, rows), proptest::collection::vec(0.0f64..1000.0, rows))
         .prop_map(move |(ids, values)| {
             RecordBatch::try_new(
                 schema.clone(),
-                vec![
-                    Arc::new(Int32Array::from(ids)),
-                    Arc::new(Float64Array::from(values)),
-                ],
+                vec![Arc::new(Int32Array::from(ids)), Arc::new(Float64Array::from(values))],
             )
             .unwrap()
         })
@@ -175,7 +169,7 @@ proptest! {
         let mut storage = StorageEngine::new(vec![]);
         storage.append_batch(batch).unwrap();
 
-        let total_rows: usize = storage.batches().iter().map(|b| b.num_rows()).sum();
+        let total_rows: usize = storage.batches().iter().map(arrow::array::RecordBatch::num_rows).sum();
         prop_assert_eq!(total_rows, original_rows);
     }
 
@@ -206,7 +200,7 @@ proptest! {
         storage.append_batch(batch1).unwrap();
         storage.append_batch(batch2).unwrap();
 
-        let stored_rows: usize = storage.batches().iter().map(|b| b.num_rows()).sum();
+        let stored_rows: usize = storage.batches().iter().map(arrow::array::RecordBatch::num_rows).sum();
         prop_assert_eq!(stored_rows, total_rows);
     }
 

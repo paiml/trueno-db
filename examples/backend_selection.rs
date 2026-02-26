@@ -4,10 +4,10 @@
 //! selecting between GPU and SIMD backends based on arithmetic intensity.
 //!
 //! Algorithm: 5x Rule (Toyota Way: Genchi Genbutsu - Go and See)
-//! - GPU compute must be > 5x PCIe transfer time to be worthwhile
+//! - GPU compute must be > 5x `PCIe` transfer time to be worthwhile
 //! - Based on real-world measurements of GPU transfer overhead
 //!
-//! Run with: cargo run --example backend_selection
+//! Run with: cargo run --example `backend_selection`
 
 use trueno_db::backend::BackendDispatcher;
 
@@ -26,9 +26,9 @@ fn main() {
     let flops = 1_000_000.0; // 1M FLOPs (simple aggregation)
 
     let backend = BackendDispatcher::select(data_bytes, flops);
-    println!("  Data size: {:.1} MB", data_size_mb);
-    println!("  Estimated FLOPs: {:.0}", flops);
-    println!("  Selected backend: {:?}", backend);
+    println!("  Data size: {data_size_mb:.1} MB");
+    println!("  Estimated FLOPs: {flops:.0}");
+    println!("  Selected backend: {backend:?}");
     println!("  Rationale: Below 10 MB threshold → SIMD\n");
 
     println!("=== Test Case 2: Medium Dataset (50 MB, Low Compute) ===");
@@ -40,15 +40,12 @@ fn main() {
     let gpu_compute_ms = (flops / (100.0 * 1_000_000_000.0)) * 1000.0;
     let backend = BackendDispatcher::select(data_bytes, flops);
 
-    println!("  Data size: {:.1} MB", data_size_mb);
-    println!("  Estimated FLOPs: {:.0}", flops);
-    println!("  PCIe transfer time: {:.3} ms", pcie_transfer_ms);
-    println!("  GPU compute time: {:.3} ms", gpu_compute_ms);
-    println!(
-        "  Ratio: {:.2}x (compute / transfer)",
-        gpu_compute_ms / pcie_transfer_ms
-    );
-    println!("  Selected backend: {:?}", backend);
+    println!("  Data size: {data_size_mb:.1} MB");
+    println!("  Estimated FLOPs: {flops:.0}");
+    println!("  PCIe transfer time: {pcie_transfer_ms:.3} ms");
+    println!("  GPU compute time: {gpu_compute_ms:.3} ms");
+    println!("  Ratio: {:.2}x (compute / transfer)", gpu_compute_ms / pcie_transfer_ms);
+    println!("  Selected backend: {backend:?}");
     println!("  Rationale: Compute < 5x transfer → SIMD (transfer overhead too high)\n");
 
     println!("=== Test Case 3: Large Dataset (100 MB, High Compute) ===");
@@ -60,15 +57,12 @@ fn main() {
     let gpu_compute_ms = (flops / (100.0 * 1_000_000_000.0)) * 1000.0;
     let backend = BackendDispatcher::select(data_bytes, flops);
 
-    println!("  Data size: {:.1} MB", data_size_mb);
-    println!("  Estimated FLOPs: {:.0}", flops);
-    println!("  PCIe transfer time: {:.3} ms", pcie_transfer_ms);
-    println!("  GPU compute time: {:.3} ms", gpu_compute_ms);
-    println!(
-        "  Ratio: {:.2}x (compute / transfer)",
-        gpu_compute_ms / pcie_transfer_ms
-    );
-    println!("  Selected backend: {:?}", backend);
+    println!("  Data size: {data_size_mb:.1} MB");
+    println!("  Estimated FLOPs: {flops:.0}");
+    println!("  PCIe transfer time: {pcie_transfer_ms:.3} ms");
+    println!("  GPU compute time: {gpu_compute_ms:.3} ms");
+    println!("  Ratio: {:.2}x (compute / transfer)", gpu_compute_ms / pcie_transfer_ms);
+    println!("  Selected backend: {backend:?}");
     println!("  Rationale: Compute > 5x transfer → GPU (transfer overhead amortized)\n");
 
     println!("=== Test Case 4: Very Large Dataset (1 GB, Complex Query) ===");
@@ -80,15 +74,12 @@ fn main() {
     let gpu_compute_ms = (flops / (100.0 * 1_000_000_000.0)) * 1000.0;
     let backend = BackendDispatcher::select(data_bytes, flops);
 
-    println!("  Data size: {:.1} MB", data_size_mb);
-    println!("  Estimated FLOPs: {:.0}", flops);
-    println!("  PCIe transfer time: {:.1} ms", pcie_transfer_ms);
-    println!("  GPU compute time: {:.1} ms", gpu_compute_ms);
-    println!(
-        "  Ratio: {:.2}x (compute / transfer)",
-        gpu_compute_ms / pcie_transfer_ms
-    );
-    println!("  Selected backend: {:?}", backend);
+    println!("  Data size: {data_size_mb:.1} MB");
+    println!("  Estimated FLOPs: {flops:.0}");
+    println!("  PCIe transfer time: {pcie_transfer_ms:.1} ms");
+    println!("  GPU compute time: {gpu_compute_ms:.1} ms");
+    println!("  Ratio: {:.2}x (compute / transfer)", gpu_compute_ms / pcie_transfer_ms);
+    println!("  Selected backend: {backend:?}");
     println!("  Rationale: Large dataset + high compute intensity → GPU sweet spot\n");
 
     println!("=== Algorithm Summary ===");

@@ -202,12 +202,7 @@ impl<'a> MorselIterator<'a> {
         // Calculate morsel size based on first batch
         let morsel_rows = batches.first().map_or(0, Self::calculate_morsel_rows);
 
-        Self {
-            batches,
-            current_batch_idx: 0,
-            current_offset: 0,
-            morsel_rows,
-        }
+        Self { batches, current_batch_idx: 0, current_offset: 0, morsel_rows }
     }
 
     /// Calculate how many rows fit in a 128MB morsel
@@ -292,10 +287,7 @@ impl GpuTransferQueue {
     /// # Errors
     /// Returns error if queue is closed
     pub async fn enqueue(&self, batch: RecordBatch) -> Result<()> {
-        self.sender
-            .send(batch)
-            .await
-            .map_err(|_| Error::QueueClosed)
+        self.sender.send(batch).await.map_err(|_| Error::QueueClosed)
     }
 
     /// Dequeue a record batch from GPU transfer queue
@@ -343,11 +335,7 @@ mod tests {
 
         RecordBatch::try_new(
             Arc::new(schema),
-            vec![
-                Arc::new(id_array),
-                Arc::new(value_array),
-                Arc::new(name_array),
-            ],
+            vec![Arc::new(id_array), Arc::new(value_array), Arc::new(name_array)],
         )
         .unwrap()
     }
@@ -424,10 +412,7 @@ mod tests {
 
         let result = storage.update_row(0, batch);
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Single-row updates not supported"));
+        assert!(result.unwrap_err().to_string().contains("Single-row updates not supported"));
     }
 
     #[test]

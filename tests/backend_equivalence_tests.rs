@@ -5,7 +5,7 @@
 //!
 //! References:
 //! - Section 7.3 of Sovereign AI spec: Backend equivalence tests
-//! - Property-based testing: Claessen & Hughes (2000) QuickCheck
+//! - Property-based testing: Claessen & Hughes (2000) `QuickCheck`
 //!
 //! ## Test Strategy
 //!
@@ -58,7 +58,7 @@ impl Aggregation<i32> for ScalarBackend {
             None
         } else {
             let sum = data.iter().fold(0i32, |acc, &x| acc.wrapping_add(x));
-            Some(sum as f64 / data.len() as f64)
+            Some(f64::from(sum) / data.len() as f64)
         }
     }
 
@@ -104,7 +104,7 @@ impl Aggregation<f32> for ScalarBackend {
         if data.is_empty() {
             None
         } else {
-            Some(self.sum(data) as f64 / data.len() as f64)
+            Some(f64::from(self.sum(data)) / data.len() as f64)
         }
     }
 
@@ -113,15 +113,11 @@ impl Aggregation<f32> for ScalarBackend {
     }
 
     fn min(&self, data: &[f32]) -> Option<f32> {
-        data.iter()
-            .min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-            .copied()
+        data.iter().min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal)).copied()
     }
 
     fn max(&self, data: &[f32]) -> Option<f32> {
-        data.iter()
-            .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-            .copied()
+        data.iter().max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal)).copied()
     }
 }
 
@@ -177,7 +173,7 @@ impl Aggregation<f32> for SimdBackend {
             None
         } else {
             let sum = self.sum(data); // Use sum() which handles special values
-            Some(sum as f64 / data.len() as f64)
+            Some(f64::from(sum) / data.len() as f64)
         }
     }
 
@@ -445,14 +441,8 @@ mod edge_cases {
         let scalar_sum = ScalarBackend.sum(&data_overflow);
 
         // All backends should overflow consistently (wrapping)
-        assert_eq!(
-            gpu_sum, simd_sum,
-            "GPU and SIMD disagree on overflow behavior"
-        );
-        assert_eq!(
-            simd_sum, scalar_sum,
-            "SIMD and Scalar disagree on overflow behavior"
-        );
+        assert_eq!(gpu_sum, simd_sum, "GPU and SIMD disagree on overflow behavior");
+        assert_eq!(simd_sum, scalar_sum, "SIMD and Scalar disagree on overflow behavior");
     }
 
     #[test]

@@ -38,7 +38,7 @@
 //!   DOI: 10.1093/rapstu/raaa008
 //!   [2020 COVID Crash: documented -34% peak-to-trough decline]
 //!
-//! Run with: cargo run --example market_crashes --release
+//! Run with: cargo run --example `market_crashes` --release
 
 use arrow::array::{Float64Array, Int32Array, RecordBatch, StringArray};
 use arrow::datatypes::{DataType, Field, Schema};
@@ -113,10 +113,7 @@ fn print_banner() {
 }
 
 fn generate_market_data(num_days: usize) -> RecordBatch {
-    println!(
-        "⏳ Loading historical market data ({} trading days)...",
-        num_days
-    );
+    println!("⏳ Loading historical market data ({num_days} trading days)...");
 
     let schema = Arc::new(Schema::new(vec![
         Field::new("date_id", DataType::Int32, false),
@@ -133,12 +130,7 @@ fn generate_market_data(num_days: usize) -> RecordBatch {
         .map(|i| {
             let year = 1929 + (i / 252);
             let day_of_year = i % 252;
-            format!(
-                "{}-{:02}-{:02}",
-                year,
-                1 + (day_of_year / 21),
-                1 + (day_of_year % 21)
-            )
+            format!("{}-{:02}-{:02}", year, 1 + (day_of_year / 21), 1 + (day_of_year % 21))
         })
         .collect();
 
@@ -217,7 +209,7 @@ fn generate_market_data(num_days: usize) -> RecordBatch {
     )
     .expect("Example should work with valid test data");
 
-    println!("✅ Loaded {} trading days with 6 columns", num_days);
+    println!("✅ Loaded {num_days} trading days with 6 columns");
     println!();
 
     batch
@@ -257,15 +249,11 @@ fn run_crash_query(
 
     // Execute query with timing
     let start = Instant::now();
-    let result = batch
-        .top_k(value_column, k, order)
-        .expect("Example should work with valid test data");
+    let result =
+        batch.top_k(value_column, k, order).expect("Example should work with valid test data");
     let elapsed = start.elapsed();
 
-    println!(
-        "⚡ Query Execution: {:.3}ms (scanning 24K rows)",
-        elapsed.as_secs_f64() * 1000.0
-    );
+    println!("⚡ Query Execution: {:.3}ms (scanning 24K rows)", elapsed.as_secs_f64() * 1000.0);
     println!();
 
     // Display results
@@ -299,10 +287,10 @@ fn run_crash_query(
         let value = values.value(i);
 
         let (value_str, event) = match value_column {
-            3 => (format!("{:+.2}%", value), identify_crash_event(date, value)),
-            4 => (format!("{:.1} VIX", value), "High volatility".to_string()),
-            5 => (format!("{:.1}%", value), "Large intraday move".to_string()),
-            _ => (format!("{:.2}", value), String::new()),
+            3 => (format!("{value:+.2}%"), identify_crash_event(date, value)),
+            4 => (format!("{value:.1} VIX"), "High volatility".to_string()),
+            5 => (format!("{value:.1}%"), "Large intraday move".to_string()),
+            _ => (format!("{value:.2}"), String::new()),
         };
 
         let medal = match rank {
@@ -312,10 +300,7 @@ fn run_crash_query(
             _ => "  ",
         };
 
-        println!(
-            "  {medal} {:2}  {}  {:7.0}  {:12} {}",
-            rank, date, index, value_str, event
-        );
+        println!("  {medal} {rank:2}  {date}  {index:7.0}  {value_str:12} {event}");
     }
 
     if result.num_rows() > display_count {

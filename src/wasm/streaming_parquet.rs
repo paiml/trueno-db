@@ -71,11 +71,7 @@ impl StreamingParquetReader {
 
         console::log_1(&format!("Parquet file size: {} bytes", file_size).into());
 
-        Ok(Self {
-            client,
-            file_size,
-            metadata: None,
-        })
+        Ok(Self { client, file_size, metadata: None })
     }
 
     /// Read and parse Parquet footer metadata
@@ -86,7 +82,7 @@ impl StreamingParquetReader {
     /// - Column statistics (min/max for predicate pushdown)
     pub async fn read_metadata(&mut self) -> Result<&ParquetMetadata, JsValue> {
         if self.metadata.is_some() {
-            return Ok(self.metadata.as_ref().unwrap());
+            return Ok(self.metadata.as_ref().expect("metadata checked Some above"));
         }
 
         // Read footer metadata (last 8 bytes)
@@ -96,9 +92,7 @@ impl StreamingParquetReader {
 
         // Verify magic number
         if &footer_bytes[4..8] != PARQUET_MAGIC {
-            return Err(JsValue::from_str(
-                "Invalid Parquet file: missing magic number",
-            ));
+            return Err(JsValue::from_str("Invalid Parquet file: missing magic number"));
         }
 
         // Parse footer length (little-endian i32)
@@ -127,7 +121,7 @@ impl StreamingParquetReader {
         let metadata = self.parse_footer(&footer_data)?;
         self.metadata = Some(metadata);
 
-        Ok(self.metadata.as_ref().unwrap())
+        Ok(self.metadata.as_ref().expect("metadata just assigned above"))
     }
 
     /// Parse Parquet footer bytes into metadata
@@ -138,11 +132,7 @@ impl StreamingParquetReader {
         // Stub implementation - real version needs Thrift deserialization
         console::log_1(&"Parsing Parquet footer (stub implementation)".into());
 
-        Ok(ParquetMetadata {
-            num_rows: 0,
-            row_groups: vec![],
-            schema: ParquetSchema::default(),
-        })
+        Ok(ParquetMetadata { num_rows: 0, row_groups: vec![], schema: ParquetSchema::default() })
     }
 
     /// Read a specific row group on-demand
@@ -191,20 +181,15 @@ impl StreamingParquetReader {
         row_group_index: usize,
         column_indices: &[usize],
     ) -> Result<Vec<Vec<u8>>, JsValue> {
-        let metadata = self
-            .metadata
-            .as_ref()
-            .ok_or_else(|| JsValue::from_str("Metadata not loaded"))?;
+        let metadata =
+            self.metadata.as_ref().ok_or_else(|| JsValue::from_str("Metadata not loaded"))?;
 
         let row_group = &metadata.row_groups[row_group_index];
         let mut column_data = Vec::new();
 
         for &col_idx in column_indices {
             if col_idx >= row_group.columns.len() {
-                return Err(JsValue::from_str(&format!(
-                    "Column index {} out of bounds",
-                    col_idx
-                )));
+                return Err(JsValue::from_str(&format!("Column index {} out of bounds", col_idx)));
             }
 
             let column = &row_group.columns[col_idx];

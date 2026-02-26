@@ -15,7 +15,7 @@
 //! - Neumann (2011): JIT compilation for queries
 //! - CORE-003: JIT WGSL compiler for kernel fusion
 //!
-//! Run with: cargo bench --bench kernel_fusion --features gpu
+//! Run with: cargo bench --bench `kernel_fusion` --features gpu
 
 use criterion::{criterion_group, criterion_main, Criterion};
 
@@ -67,10 +67,7 @@ fn bench_fusion_comparison(c: &mut Criterion) {
             |b, array| {
                 b.to_async(&runtime).iter(|| async {
                     // Single pass: Filter WHERE value > 500 AND SUM
-                    engine
-                        .fused_filter_sum(black_box(array), 500, "gt")
-                        .await
-                        .unwrap()
+                    engine.fused_filter_sum(black_box(array), 500, "gt").await.unwrap()
                 });
             },
         );
@@ -85,12 +82,8 @@ fn bench_fusion_comparison(c: &mut Criterion) {
                 b.to_async(&runtime).iter(|| async {
                     // Simulate unfused: CPU filter → intermediate buffer → GPU sum
                     // In practice, this would be 2 GPU kernels with intermediate write
-                    let filtered: Vec<i32> = array
-                        .values()
-                        .iter()
-                        .copied()
-                        .filter(|&x| x > 500)
-                        .collect();
+                    let filtered: Vec<i32> =
+                        array.values().iter().copied().filter(|&x| x > 500).collect();
                     let filtered_array = Int32Array::from(filtered);
                     engine.sum_i32(black_box(&filtered_array)).await.unwrap()
                 });
@@ -123,18 +116,11 @@ fn bench_jit_operators(c: &mut Criterion) {
 
     // Test different operators (should all compile and cache separately)
     for op in ["gt", "lt", "eq", "gte", "lte"] {
-        group.bench_with_input(
-            BenchmarkId::new("fused_filter_sum", op),
-            &array,
-            |b, array| {
-                b.to_async(&runtime).iter(|| async {
-                    engine
-                        .fused_filter_sum(black_box(array), 500_000, op)
-                        .await
-                        .unwrap()
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("fused_filter_sum", op), &array, |b, array| {
+            b.to_async(&runtime).iter(|| async {
+                engine.fused_filter_sum(black_box(array), 500_000, op).await.unwrap()
+            });
+        });
     }
 
     group.finish();
@@ -169,10 +155,7 @@ fn bench_cache_effectiveness(c: &mut Criterion) {
                 COUNTER += 1;
                 COUNTER
             };
-            engine
-                .fused_filter_sum(black_box(&array), threshold, "gt")
-                .await
-                .unwrap()
+            engine.fused_filter_sum(black_box(&array), threshold, "gt").await.unwrap()
         });
     });
 
@@ -180,10 +163,7 @@ fn bench_cache_effectiveness(c: &mut Criterion) {
     group.bench_function(BenchmarkId::new("cached_call", "warm_cache"), |b| {
         b.to_async(&runtime).iter(|| async {
             // Same threshold every time → cached shader
-            engine
-                .fused_filter_sum(black_box(&array), 1000, "gt")
-                .await
-                .unwrap()
+            engine.fused_filter_sum(black_box(&array), 1000, "gt").await.unwrap()
         });
     });
 

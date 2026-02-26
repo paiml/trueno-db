@@ -1,25 +1,25 @@
-//! PCIe Transfer Benchmarks and 5x Rule Validation (CORE-008)
+//! `PCIe` Transfer Benchmarks and 5x Rule Validation (CORE-008)
 //!
 //! Toyota Way: Genchi Genbutsu (go and see, measure don't guess)
 //!
 //! This benchmark empirically validates the 5x rule from CORE-002:
-//! GPU is only worthwhile when compute_time > 5 * transfer_time
+//! GPU is only worthwhile when `compute_time` > 5 * `transfer_time`
 //!
 //! Measurements:
-//! 1. PCIe transfer time (CPU → GPU VRAM)
+//! 1. `PCIe` transfer time (CPU → GPU VRAM)
 //! 2. GPU compute time for SUM aggregation
 //! 3. Transfer overhead vs compute time ratio
 //!
 //! Expected findings:
 //! - Small datasets (<1M rows): Transfer dominates, SIMD faster
 //! - Large datasets (>10M rows): Compute dominates, GPU faster
-//! - Crossover point validates cost model from BackendDispatcher
+//! - Crossover point validates cost model from `BackendDispatcher`
 //!
 //! References:
-//! - Gregg & Hazelwood (2011): PCIe bus bottleneck analysis
+//! - Gregg & Hazelwood (2011): `PCIe` bus bottleneck analysis
 //! - CORE-002: Cost-based backend dispatcher with 5x rule
 //!
-//! Run with: cargo bench --bench pcie_analysis --features gpu
+//! Run with: cargo bench --bench `pcie_analysis` --features gpu
 
 use criterion::{criterion_group, criterion_main, Criterion};
 
@@ -176,10 +176,7 @@ fn bench_5x_rule_validation(c: &mut Criterion) {
         println!("     Transfer: {:?}", transfer_time);
         println!("     Compute:  {:?}", compute_time);
         println!("     Ratio:    {:.2}x", ratio);
-        println!(
-            "     GPU worthwhile: {}",
-            if ratio > 5.0 { "✅ YES" } else { "❌ NO" }
-        );
+        println!("     GPU worthwhile: {}", if ratio > 5.0 { "✅ YES" } else { "❌ NO" });
         println!();
 
         // Prevent unused variable warning
@@ -191,12 +188,7 @@ fn bench_5x_rule_validation(c: &mut Criterion) {
 }
 
 #[cfg(feature = "gpu")]
-criterion_group!(
-    pcie_benches,
-    bench_pcie_transfer,
-    bench_gpu_compute,
-    bench_5x_rule_validation
-);
+criterion_group!(pcie_benches, bench_pcie_transfer, bench_gpu_compute, bench_5x_rule_validation);
 
 #[cfg(not(feature = "gpu"))]
 fn bench_gpu_not_available(_c: &mut Criterion) {

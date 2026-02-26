@@ -27,9 +27,7 @@ fn test_database_builder_with_morsel_size() {
 #[test]
 fn test_database_builder_chain() {
     // Test method chaining
-    let _builder = Database::builder()
-        .backend(Backend::CostBased)
-        .morsel_size_mb(512);
+    let _builder = Database::builder().backend(Backend::CostBased).morsel_size_mb(512);
 }
 
 #[test]
@@ -42,10 +40,7 @@ fn test_database_build() {
 #[test]
 fn test_database_build_with_config() {
     // Test building database with configuration
-    let result = Database::builder()
-        .backend(Backend::Simd)
-        .morsel_size_mb(128)
-        .build();
+    let result = Database::builder().backend(Backend::Simd).morsel_size_mb(128).build();
 
     assert!(result.is_ok(), "Database build with config should succeed");
 }

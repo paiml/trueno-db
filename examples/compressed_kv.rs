@@ -47,10 +47,7 @@ async fn demo_lz4_compression() -> trueno_db::Result<()> {
     // Check compressed size in inner store
     let compressed = store.inner().get("greeting").await?.unwrap();
     println!("   Compressed size: {} bytes", compressed.len());
-    println!(
-        "   Compression ratio: {:.1}x",
-        data.len() as f64 / compressed.len() as f64
-    );
+    println!("   Compression ratio: {:.1}x", data.len() as f64 / compressed.len() as f64);
 
     // Verify roundtrip
     let retrieved = store.get("greeting").await?.unwrap();
@@ -78,10 +75,7 @@ async fn demo_zstd_compression() -> trueno_db::Result<()> {
 
     let compressed = store.inner().get("sentence").await?.unwrap();
     println!("   Compressed size: {} bytes", compressed.len());
-    println!(
-        "   Compression ratio: {:.1}x",
-        data.len() as f64 / compressed.len() as f64
-    );
+    println!("   Compression ratio: {:.1}x", data.len() as f64 / compressed.len() as f64);
 
     // Verify roundtrip
     let retrieved = store.get("sentence").await?.unwrap();
@@ -110,10 +104,7 @@ async fn demo_compression_comparison() -> trueno_db::Result<()> {
     zstd_store.set("embed", embeddings.clone()).await?;
     let zstd_size = zstd_store.inner().get("embed").await?.unwrap().len();
 
-    println!(
-        "   Test data: {} bytes (simulated embeddings)",
-        embeddings.len()
-    );
+    println!("   Test data: {} bytes (simulated embeddings)", embeddings.len());
     println!(
         "   LZ4:  {} bytes ({:.1}x ratio)",
         lz4_size,
@@ -148,9 +139,8 @@ async fn demo_kv_cache_simulation() -> trueno_db::Result<()> {
     for layer in 0..12 {
         // Simulate KV cache: batch_size=1, seq_len=512, head_dim=64, num_heads=8
         // Size per layer: 512 * 64 * 8 * 2 (K and V) * 4 bytes = 2MB
-        let cache_data: Vec<u8> = (0..2 * 1024 * 1024)
-            .map(|i| ((i + layer * 1000) % 256) as u8)
-            .collect();
+        let cache_data: Vec<u8> =
+            (0..2 * 1024 * 1024).map(|i| ((i + layer * 1000) % 256) as u8).collect();
 
         let key = format!("layer:{layer}:kv_cache");
         store.set(&key, cache_data.clone()).await?;
@@ -161,14 +151,8 @@ async fn demo_kv_cache_simulation() -> trueno_db::Result<()> {
     }
 
     println!("   Layers: 12");
-    println!(
-        "   Total original: {:.1} MB",
-        total_original as f64 / 1024.0 / 1024.0
-    );
-    println!(
-        "   Total compressed: {:.1} MB",
-        total_compressed as f64 / 1024.0 / 1024.0
-    );
+    println!("   Total original: {:.1} MB", total_original as f64 / 1024.0 / 1024.0);
+    println!("   Total compressed: {:.1} MB", total_compressed as f64 / 1024.0 / 1024.0);
     println!(
         "   Memory saved: {:.1} MB ({:.1}x compression)",
         (total_original - total_compressed) as f64 / 1024.0 / 1024.0,

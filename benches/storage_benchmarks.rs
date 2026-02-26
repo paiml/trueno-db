@@ -3,7 +3,7 @@
 //! Benchmarks for Arrow storage backend performance:
 //! - Parquet loading
 //! - Morsel iteration
-//! - RecordBatch slicing
+//! - `RecordBatch` slicing
 //!
 //! Toyota Way: Measure before optimizing (Genchi Genbutsu)
 
@@ -17,7 +17,7 @@ use std::fs::File;
 use std::sync::Arc;
 use trueno_db::storage::StorageEngine;
 
-/// Create a test RecordBatch with specified number of rows
+/// Create a test `RecordBatch` with specified number of rows
 #[allow(clippy::cast_precision_loss)]
 fn create_test_batch(num_rows: i32) -> RecordBatch {
     let schema = Schema::new(vec![
@@ -33,11 +33,7 @@ fn create_test_batch(num_rows: i32) -> RecordBatch {
 
     RecordBatch::try_new(
         Arc::new(schema),
-        vec![
-            Arc::new(id_array),
-            Arc::new(value_array),
-            Arc::new(category_array),
-        ],
+        vec![Arc::new(id_array), Arc::new(value_array), Arc::new(category_array)],
     )
     .unwrap()
 }
@@ -61,7 +57,7 @@ fn create_test_parquet(path: &str, num_rows: i32) {
 fn bench_parquet_loading(c: &mut Criterion) {
     let mut group = c.benchmark_group("parquet_loading");
 
-    for size in [1_000, 10_000, 100_000].iter() {
+    for size in &[1_000, 10_000, 100_000] {
         let path = format!("/tmp/trueno_bench_{size}.parquet");
         create_test_parquet(&path, *size);
 
@@ -83,7 +79,7 @@ fn bench_parquet_loading(c: &mut Criterion) {
 fn bench_morsel_iteration(c: &mut Criterion) {
     let mut group = c.benchmark_group("morsel_iteration");
 
-    for size in [10_000, 100_000, 1_000_000].iter() {
+    for size in &[10_000, 100_000, 1_000_000] {
         let batch = create_test_batch(*size);
         let storage = StorageEngine::new(vec![batch]);
 
@@ -98,11 +94,11 @@ fn bench_morsel_iteration(c: &mut Criterion) {
     group.finish();
 }
 
-/// Benchmark RecordBatch memory usage calculation
+/// Benchmark `RecordBatch` memory usage calculation
 fn bench_batch_memory_size(c: &mut Criterion) {
     let mut group = c.benchmark_group("batch_memory_size");
 
-    for size in [1_000, 10_000, 100_000].iter() {
+    for size in &[1_000, 10_000, 100_000] {
         let batch = create_test_batch(*size);
 
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
@@ -116,23 +112,19 @@ fn bench_batch_memory_size(c: &mut Criterion) {
     group.finish();
 }
 
-/// Benchmark RecordBatch slicing (used by morsel iterator)
+/// Benchmark `RecordBatch` slicing (used by morsel iterator)
 fn bench_batch_slicing(c: &mut Criterion) {
     let mut group = c.benchmark_group("batch_slicing");
 
     let batch = create_test_batch(100_000);
 
-    for chunk_size in [1_000, 10_000, 50_000].iter() {
-        group.bench_with_input(
-            BenchmarkId::from_parameter(chunk_size),
-            chunk_size,
-            |b, size| {
-                b.iter(|| {
-                    let sliced = batch.slice(0, *size);
-                    black_box(sliced);
-                });
-            },
-        );
+    for chunk_size in &[1_000, 10_000, 50_000] {
+        group.bench_with_input(BenchmarkId::from_parameter(chunk_size), chunk_size, |b, size| {
+            b.iter(|| {
+                let sliced = batch.slice(0, *size);
+                black_box(sliced);
+            });
+        });
     }
 
     group.finish();

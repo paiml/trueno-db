@@ -72,11 +72,7 @@ fn test_aggregation_sum() {
     let result = executor.execute(&plan, &storage).unwrap();
 
     assert_eq!(result.num_rows(), 1);
-    let sum_col = result
-        .column(0)
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .unwrap();
+    let sum_col = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
     assert!((sum_col.value(0) - 150.0).abs() < 0.01);
 }
 
@@ -90,11 +86,7 @@ fn test_aggregation_avg() {
     let result = executor.execute(&plan, &storage).unwrap();
 
     assert_eq!(result.num_rows(), 1);
-    let avg_col = result
-        .column(0)
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .unwrap();
+    let avg_col = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
     assert!((avg_col.value(0) - 30.0).abs() < 0.01);
 }
 
@@ -108,11 +100,7 @@ fn test_aggregation_count() {
     let result = executor.execute(&plan, &storage).unwrap();
 
     assert_eq!(result.num_rows(), 1);
-    let count_col = result
-        .column(0)
-        .as_any()
-        .downcast_ref::<arrow::array::Int64Array>()
-        .unwrap();
+    let count_col = result.column(0).as_any().downcast_ref::<arrow::array::Int64Array>().unwrap();
     assert_eq!(count_col.value(0), 5);
 }
 
@@ -122,22 +110,12 @@ fn test_aggregation_min_max() {
     let engine = QueryEngine::new();
     let executor = QueryExecutor::new();
 
-    let plan = engine
-        .parse("SELECT MIN(value), MAX(value) FROM table1")
-        .unwrap();
+    let plan = engine.parse("SELECT MIN(value), MAX(value) FROM table1").unwrap();
     let result = executor.execute(&plan, &storage).unwrap();
 
     assert_eq!(result.num_rows(), 1);
-    let min_col = result
-        .column(0)
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .unwrap();
-    let max_col = result
-        .column(1)
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .unwrap();
+    let min_col = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
+    let max_col = result.column(1).as_any().downcast_ref::<Float64Array>().unwrap();
     assert!((min_col.value(0) - 10.0).abs() < 0.01);
     assert!((max_col.value(0) - 50.0).abs() < 0.01);
 }
@@ -148,9 +126,7 @@ fn test_where_filter_greater_than() {
     let engine = QueryEngine::new();
     let executor = QueryExecutor::new();
 
-    let plan = engine
-        .parse("SELECT id, value FROM table1 WHERE value > 25.0")
-        .unwrap();
+    let plan = engine.parse("SELECT id, value FROM table1 WHERE value > 25.0").unwrap();
     let result = executor.execute(&plan, &storage).unwrap();
 
     // Should return rows with value 30.0, 40.0, 50.0
@@ -163,9 +139,7 @@ fn test_where_filter_less_than() {
     let engine = QueryEngine::new();
     let executor = QueryExecutor::new();
 
-    let plan = engine
-        .parse("SELECT id, value FROM table1 WHERE value < 35.0")
-        .unwrap();
+    let plan = engine.parse("SELECT id, value FROM table1 WHERE value < 35.0").unwrap();
     let result = executor.execute(&plan, &storage).unwrap();
 
     // Should return rows with value 10.0, 20.0, 30.0
@@ -178,17 +152,11 @@ fn test_where_filter_equals() {
     let engine = QueryEngine::new();
     let executor = QueryExecutor::new();
 
-    let plan = engine
-        .parse("SELECT id, value FROM table1 WHERE id = 3")
-        .unwrap();
+    let plan = engine.parse("SELECT id, value FROM table1 WHERE id = 3").unwrap();
     let result = executor.execute(&plan, &storage).unwrap();
 
     assert_eq!(result.num_rows(), 1);
-    let id_col = result
-        .column(0)
-        .as_any()
-        .downcast_ref::<Int32Array>()
-        .unwrap();
+    let id_col = result.column(0).as_any().downcast_ref::<Int32Array>().unwrap();
     assert_eq!(id_col.value(0), 3);
 }
 
@@ -198,18 +166,12 @@ fn test_order_by_limit_top_k() {
     let engine = QueryEngine::new();
     let executor = QueryExecutor::new();
 
-    let plan = engine
-        .parse("SELECT id, value FROM table1 ORDER BY value DESC LIMIT 2")
-        .unwrap();
+    let plan = engine.parse("SELECT id, value FROM table1 ORDER BY value DESC LIMIT 2").unwrap();
     let result = executor.execute(&plan, &storage).unwrap();
 
     assert_eq!(result.num_rows(), 2);
 
-    let value_col = result
-        .column(1)
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .unwrap();
+    let value_col = result.column(1).as_any().downcast_ref::<Float64Array>().unwrap();
     // Top 2 highest values: 50.0, 40.0
     assert!((value_col.value(0) - 50.0).abs() < 0.01);
     assert!((value_col.value(1) - 40.0).abs() < 0.01);
@@ -221,18 +183,12 @@ fn test_order_by_ascending() {
     let engine = QueryEngine::new();
     let executor = QueryExecutor::new();
 
-    let plan = engine
-        .parse("SELECT id, value FROM table1 ORDER BY value ASC LIMIT 2")
-        .unwrap();
+    let plan = engine.parse("SELECT id, value FROM table1 ORDER BY value ASC LIMIT 2").unwrap();
     let result = executor.execute(&plan, &storage).unwrap();
 
     assert_eq!(result.num_rows(), 2);
 
-    let value_col = result
-        .column(1)
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .unwrap();
+    let value_col = result.column(1).as_any().downcast_ref::<Float64Array>().unwrap();
     // Top 2 lowest values: 10.0, 20.0
     assert!((value_col.value(0) - 10.0).abs() < 0.01);
     assert!((value_col.value(1) - 20.0).abs() < 0.01);
@@ -244,9 +200,7 @@ fn test_limit_without_order_by() {
     let engine = QueryEngine::new();
     let executor = QueryExecutor::new();
 
-    let plan = engine
-        .parse("SELECT id, value FROM table1 LIMIT 3")
-        .unwrap();
+    let plan = engine.parse("SELECT id, value FROM table1 LIMIT 3").unwrap();
     let result = executor.execute(&plan, &storage).unwrap();
 
     assert_eq!(result.num_rows(), 3);
@@ -258,17 +212,11 @@ fn test_aggregation_with_filter() {
     let engine = QueryEngine::new();
     let executor = QueryExecutor::new();
 
-    let plan = engine
-        .parse("SELECT SUM(value) FROM table1 WHERE value > 20.0")
-        .unwrap();
+    let plan = engine.parse("SELECT SUM(value) FROM table1 WHERE value > 20.0").unwrap();
     let result = executor.execute(&plan, &storage).unwrap();
 
     assert_eq!(result.num_rows(), 1);
-    let sum_col = result
-        .column(0)
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .unwrap();
+    let sum_col = result.column(0).as_any().downcast_ref::<Float64Array>().unwrap();
     // Sum of 30.0 + 40.0 + 50.0 = 120.0
     assert!((sum_col.value(0) - 120.0).abs() < 0.01);
 }
@@ -287,36 +235,12 @@ fn test_multiple_aggregations() {
     assert_eq!(result.num_rows(), 1);
     assert_eq!(result.num_columns(), 5);
 
-    let count = result
-        .column(0)
-        .as_any()
-        .downcast_ref::<arrow::array::Int64Array>()
-        .unwrap()
-        .value(0);
-    let sum = result
-        .column(1)
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .unwrap()
-        .value(0);
-    let avg = result
-        .column(2)
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .unwrap()
-        .value(0);
-    let min = result
-        .column(3)
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .unwrap()
-        .value(0);
-    let max = result
-        .column(4)
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .unwrap()
-        .value(0);
+    let count =
+        result.column(0).as_any().downcast_ref::<arrow::array::Int64Array>().unwrap().value(0);
+    let sum = result.column(1).as_any().downcast_ref::<Float64Array>().unwrap().value(0);
+    let avg = result.column(2).as_any().downcast_ref::<Float64Array>().unwrap().value(0);
+    let min = result.column(3).as_any().downcast_ref::<Float64Array>().unwrap().value(0);
+    let max = result.column(4).as_any().downcast_ref::<Float64Array>().unwrap().value(0);
 
     assert_eq!(count, 5);
     assert!((sum - 150.0).abs() < 0.01);
@@ -341,10 +265,7 @@ mod property_tests {
 
         let batch = RecordBatch::try_new(
             schema,
-            vec![
-                Arc::new(Int32Array::from(ids)),
-                Arc::new(Float64Array::from(values)),
-            ],
+            vec![Arc::new(Int32Array::from(ids)), Arc::new(Float64Array::from(values))],
         )
         .unwrap();
 
@@ -416,7 +337,7 @@ mod property_tests {
             let engine = QueryEngine::new();
             let executor = QueryExecutor::new();
 
-            let sql = format!("SELECT value FROM table1 ORDER BY value DESC LIMIT {}", limit);
+            let sql = format!("SELECT value FROM table1 ORDER BY value DESC LIMIT {limit}");
             let plan = engine.parse(&sql).unwrap();
             let result = executor.execute(&plan, &storage).unwrap();
 

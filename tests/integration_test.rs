@@ -35,11 +35,7 @@ fn create_test_parquet<P: AsRef<Path>>(path: P) -> Result<(), Box<dyn std::error
 
     let batch = RecordBatch::try_new(
         Arc::new(schema.clone()),
-        vec![
-            Arc::new(id_array),
-            Arc::new(value_array),
-            Arc::new(category_array),
-        ],
+        vec![Arc::new(id_array), Arc::new(value_array), Arc::new(category_array)],
     )?;
 
     // Write to Parquet file
@@ -69,7 +65,7 @@ fn test_storage_engine_loads_parquet() {
     assert!(!batches.is_empty(), "No batches loaded");
 
     // Verify total row count
-    let total_rows: usize = batches.iter().map(|b| b.num_rows()).sum();
+    let total_rows: usize = batches.iter().map(arrow::array::RecordBatch::num_rows).sum();
     assert_eq!(total_rows, 10_000, "Expected 10,000 rows");
 
     // Verify schema
@@ -97,18 +93,13 @@ fn test_morsel_iterator_with_real_data() {
     assert!(!morsels.is_empty(), "No morsels created");
 
     // Verify all rows accounted for
-    let morsel_row_count: usize = morsels.iter().map(|m| m.num_rows()).sum();
+    let morsel_row_count: usize = morsels.iter().map(arrow::array::RecordBatch::num_rows).sum();
     assert_eq!(morsel_row_count, 10_000, "Morsel iteration lost rows");
 
     // Verify each morsel is within size limit (128MB)
     for (i, morsel) in morsels.iter().enumerate() {
         let size = morsel.get_array_memory_size();
-        assert!(
-            size <= 128 * 1024 * 1024,
-            "Morsel {} exceeds 128MB: {} bytes",
-            i,
-            size
-        );
+        assert!(size <= 128 * 1024 * 1024, "Morsel {i} exceeds 128MB: {size} bytes");
     }
 
     // Clean up
@@ -131,10 +122,7 @@ async fn test_full_pipeline_with_gpu_queue() {
     // Enqueue 2 morsels (queue capacity is 2, so this won't block)
     let mut count = 0;
     for morsel in storage.morsels().take(2) {
-        queue
-            .enqueue(morsel)
-            .await
-            .expect("Failed to enqueue morsel");
+        queue.enqueue(morsel).await.expect("Failed to enqueue morsel");
         count += 1;
     }
 

@@ -29,9 +29,7 @@ impl ShaderCache {
     /// Create a new shader cache
     #[must_use]
     pub fn new() -> Self {
-        Self {
-            cache: Mutex::new(HashMap::new()),
-        }
+        Self { cache: Mutex::new(HashMap::new()) }
     }
 
     /// Get cached shader or insert new one
@@ -66,11 +64,7 @@ impl ShaderCache {
         }
 
         // Clone the Arc (cheap), not the ShaderModule
-        Arc::clone(
-            cache
-                .get(key)
-                .expect("Shader must exist in cache after insertion"),
-        )
+        Arc::clone(cache.get(key).expect("Shader must exist in cache after insertion"))
     }
 
     /// Get cache statistics
@@ -105,9 +99,7 @@ impl JitCompiler {
     /// Create a new JIT compiler with shader cache
     #[must_use]
     pub fn new() -> Self {
-        Self {
-            cache: ShaderCache::new(),
-        }
+        Self { cache: ShaderCache::new() }
     }
 
     /// Generate fused filter+sum kernel

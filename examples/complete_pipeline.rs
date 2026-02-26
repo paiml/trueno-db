@@ -1,12 +1,12 @@
 //! Complete Trueno-DB Pipeline: Storage → Backend Selection → Top-K
 //!
 //! This example demonstrates the complete workflow:
-//! 1. Load data with StorageEngine
+//! 1. Load data with `StorageEngine`
 //! 2. Process with morsel iteration
 //! 3. Apply backend selection (GPU vs SIMD)
 //! 4. Execute Top-K selection
 //!
-//! Run with: cargo run --example complete_pipeline --release
+//! Run with: cargo run --example `complete_pipeline` --release
 
 use arrow::array::{Float64Array, Int32Array, StringArray};
 use arrow::datatypes::{DataType, Field, Schema};
@@ -31,11 +31,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("│ Dataset created:");
     println!("│   Rows: {}", batch.num_rows());
     println!("│   Columns: {}", batch.num_columns());
-    println!(
-        "│   Memory: {:.2} MB",
-        batch.get_array_memory_size() as f64 / 1_048_576.0
-    );
-    println!("│   Time: {:?}", load_time);
+    println!("│   Memory: {:.2} MB", batch.get_array_memory_size() as f64 / 1_048_576.0);
+    println!("│   Time: {load_time:?}");
 
     let schema = batch.schema();
     println!("│ Schema:");
@@ -52,14 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("│ Storage engine initialized:");
     println!("│   Pattern: OLAP (append-only)");
     println!("│   Batches: {}", storage.batches().len());
-    println!(
-        "│   Total rows: {}",
-        storage
-            .batches()
-            .iter()
-            .map(|b| b.num_rows())
-            .sum::<usize>()
-    );
+    println!("│   Total rows: {}", storage.batches().iter().map(arrow::array::RecordBatch::num_rows).sum::<usize>());
     println!("└────────────────────────────────────────────────────────────┘\n");
 
     // Step 3: Morsel iteration
@@ -76,12 +66,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         if morsel_count <= 3 {
             let size_mb = morsel.get_array_memory_size() as f64 / 1_048_576.0;
-            println!(
-                "│   Morsel #{}: {} rows, {:.2} MB",
-                morsel_count,
-                morsel.num_rows(),
-                size_mb
-            );
+            println!("│   Morsel #{}: {} rows, {:.2} MB", morsel_count, morsel.num_rows(), size_mb);
         }
     }
 
@@ -91,12 +76,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("│");
     println!("│ Summary:");
-    println!("│   Total morsels: {}", morsel_count);
-    println!("│   Total rows: {}", total_morsel_rows);
-    println!(
-        "│   Integrity check: {} ✓",
-        total_morsel_rows == batch.num_rows()
-    );
+    println!("│   Total morsels: {morsel_count}");
+    println!("│   Total rows: {total_morsel_rows}");
+    println!("│   Integrity check: {} ✓", total_morsel_rows == batch.num_rows());
     println!("└────────────────────────────────────────────────────────────┘\n");
 
     // Step 4: Backend selection
@@ -111,16 +93,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("│ Cost model:");
     println!("│   Data size: {:.2} MB", data_bytes as f64 / 1_048_576.0);
-    println!("│   Estimated FLOPs: {:.0}", estimated_flops);
-    println!("│   PCIe transfer time: {:.3} ms", pcie_transfer_ms);
-    println!("│   GPU compute time: {:.3} ms", gpu_compute_ms);
-    println!(
-        "│   Ratio: {:.2}x (compute/transfer)",
-        gpu_compute_ms / pcie_transfer_ms
-    );
+    println!("│   Estimated FLOPs: {estimated_flops:.0}");
+    println!("│   PCIe transfer time: {pcie_transfer_ms:.3} ms");
+    println!("│   GPU compute time: {gpu_compute_ms:.3} ms");
+    println!("│   Ratio: {:.2}x (compute/transfer)", gpu_compute_ms / pcie_transfer_ms);
     println!("│");
     println!("│ Decision:");
-    println!("│   Selected backend: {:?}", backend);
+    println!("│   Selected backend: {backend:?}");
 
     match backend {
         trueno_db::Backend::Gpu => {
@@ -177,7 +156,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("│");
     println!("│ Performance:");
-    println!("│   Time: {:?}", topk_time);
+    println!("│   Time: {topk_time:?}");
     println!(
         "│   Throughput: {:.2} M rows/sec",
         batch.num_rows() as f64 / 1_000_000.0 / topk_time.as_secs_f64()
@@ -189,14 +168,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("║                    PIPELINE SUMMARY                         ║");
     println!("╚══════════════════════════════════════════════════════════════╝");
     println!();
-    println!(
-        "✓ Data loaded: 5M rows ({:.2} MB)",
-        data_bytes as f64 / 1_048_576.0
-    );
+    println!("✓ Data loaded: 5M rows ({:.2} MB)", data_bytes as f64 / 1_048_576.0);
     println!("✓ Storage: OLAP append-only pattern");
-    println!("✓ Morsels: {} chunks (out-of-core execution)", morsel_count);
-    println!("✓ Backend: {:?} (cost-based selection)", backend);
-    println!("✓ Top-K: 10 results in {:?}", topk_time);
+    println!("✓ Morsels: {morsel_count} chunks (out-of-core execution)");
+    println!("✓ Backend: {backend:?} (cost-based selection)");
+    println!("✓ Top-K: 10 results in {topk_time:?}");
     println!();
     println!("Phase 1 MVP Features Demonstrated:");
     println!("  1. Arrow/Parquet storage engine");
@@ -228,7 +204,7 @@ fn create_sample_data(num_rows: usize) -> Result<RecordBatch, Box<dyn std::error
     let mut rng = rand::thread_rng();
 
     let user_ids: Vec<i32> = (0..num_rows).map(|i| i as i32).collect();
-    let usernames: Vec<String> = (0..num_rows).map(|i| format!("user_{}", i)).collect();
+    let usernames: Vec<String> = (0..num_rows).map(|i| format!("user_{i}")).collect();
     let scores: Vec<f64> = (0..num_rows).map(|_| rng.gen_range(0.0..1000.0)).collect();
 
     let batch = RecordBatch::try_new(

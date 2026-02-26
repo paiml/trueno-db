@@ -38,10 +38,7 @@ pub enum SortOrder {
 
 impl From<SortOrder> for SortOptions {
     fn from(order: SortOrder) -> Self {
-        Self {
-            descending: matches!(order, SortOrder::Descending),
-            nulls_first: false,
-        }
+        Self { descending: matches!(order, SortOrder::Descending), nulls_first: false }
     }
 }
 
@@ -129,44 +126,30 @@ fn select_top_k_indices(
 ) -> crate::Result<Vec<usize>> {
     match column.data_type() {
         arrow::datatypes::DataType::Int32 => {
-            let array = column
-                .as_any()
-                .downcast_ref::<Int32Array>()
-                .ok_or_else(|| {
-                    Error::Other("Failed to downcast Int32 column to Int32Array".to_string())
-                })?;
+            let array = column.as_any().downcast_ref::<Int32Array>().ok_or_else(|| {
+                Error::Other("Failed to downcast Int32 column to Int32Array".to_string())
+            })?;
             select_top_k_i32(array, k, order)
         }
         arrow::datatypes::DataType::Int64 => {
-            let array = column
-                .as_any()
-                .downcast_ref::<Int64Array>()
-                .ok_or_else(|| {
-                    Error::Other("Failed to downcast Int64 column to Int64Array".to_string())
-                })?;
+            let array = column.as_any().downcast_ref::<Int64Array>().ok_or_else(|| {
+                Error::Other("Failed to downcast Int64 column to Int64Array".to_string())
+            })?;
             select_top_k_i64(array, k, order)
         }
         arrow::datatypes::DataType::Float32 => {
-            let array = column
-                .as_any()
-                .downcast_ref::<Float32Array>()
-                .ok_or_else(|| {
-                    Error::Other("Failed to downcast Float32 column to Float32Array".to_string())
-                })?;
+            let array = column.as_any().downcast_ref::<Float32Array>().ok_or_else(|| {
+                Error::Other("Failed to downcast Float32 column to Float32Array".to_string())
+            })?;
             select_top_k_f32(array, k, order)
         }
         arrow::datatypes::DataType::Float64 => {
-            let array = column
-                .as_any()
-                .downcast_ref::<Float64Array>()
-                .ok_or_else(|| {
-                    Error::Other("Failed to downcast Float64 column to Float64Array".to_string())
-                })?;
+            let array = column.as_any().downcast_ref::<Float64Array>().ok_or_else(|| {
+                Error::Other("Failed to downcast Float64 column to Float64Array".to_string())
+            })?;
             select_top_k_f64(array, k, order)
         }
-        dt => Err(Error::InvalidInput(format!(
-            "Top-K not supported for data type: {dt:?}"
-        ))),
+        dt => Err(Error::InvalidInput(format!("Top-K not supported for data type: {dt:?}"))),
     }
 }
 
@@ -188,10 +171,7 @@ impl<V: PartialOrd> Eq for MinHeapItem<V> {}
 impl<V: PartialOrd> Ord for MinHeapItem<V> {
     fn cmp(&self, other: &Self) -> Ordering {
         // Reverse comparison for min-heap (smallest at top)
-        other
-            .value
-            .partial_cmp(&self.value)
-            .unwrap_or(Ordering::Equal)
+        other.value.partial_cmp(&self.value).unwrap_or(Ordering::Equal)
     }
 }
 
@@ -219,9 +199,7 @@ impl<V: PartialOrd> Eq for MaxHeapItem<V> {}
 impl<V: PartialOrd> Ord for MaxHeapItem<V> {
     fn cmp(&self, other: &Self) -> Ordering {
         // Normal comparison for max-heap (largest at top)
-        self.value
-            .partial_cmp(&other.value)
-            .unwrap_or(Ordering::Equal)
+        self.value.partial_cmp(&other.value).unwrap_or(Ordering::Equal)
     }
 }
 
@@ -432,56 +410,37 @@ fn build_batch_from_indices(batch: &RecordBatch, indices: &[usize]) -> crate::Re
 
         let new_array: ArrayRef = match column.data_type() {
             DataType::Int32 => {
-                let array = column
-                    .as_any()
-                    .downcast_ref::<Int32Array>()
-                    .ok_or_else(|| {
-                        Error::Other("Failed to downcast Int32 column to Int32Array".to_string())
-                    })?;
+                let array = column.as_any().downcast_ref::<Int32Array>().ok_or_else(|| {
+                    Error::Other("Failed to downcast Int32 column to Int32Array".to_string())
+                })?;
                 let values: Vec<i32> = indices.iter().map(|&idx| array.value(idx)).collect();
                 Arc::new(Int32Array::from(values))
             }
             DataType::Int64 => {
-                let array = column
-                    .as_any()
-                    .downcast_ref::<Int64Array>()
-                    .ok_or_else(|| {
-                        Error::Other("Failed to downcast Int64 column to Int64Array".to_string())
-                    })?;
+                let array = column.as_any().downcast_ref::<Int64Array>().ok_or_else(|| {
+                    Error::Other("Failed to downcast Int64 column to Int64Array".to_string())
+                })?;
                 let values: Vec<i64> = indices.iter().map(|&idx| array.value(idx)).collect();
                 Arc::new(Int64Array::from(values))
             }
             DataType::Float32 => {
-                let array = column
-                    .as_any()
-                    .downcast_ref::<Float32Array>()
-                    .ok_or_else(|| {
-                        Error::Other(
-                            "Failed to downcast Float32 column to Float32Array".to_string(),
-                        )
-                    })?;
+                let array = column.as_any().downcast_ref::<Float32Array>().ok_or_else(|| {
+                    Error::Other("Failed to downcast Float32 column to Float32Array".to_string())
+                })?;
                 let values: Vec<f32> = indices.iter().map(|&idx| array.value(idx)).collect();
                 Arc::new(Float32Array::from(values))
             }
             DataType::Float64 => {
-                let array = column
-                    .as_any()
-                    .downcast_ref::<Float64Array>()
-                    .ok_or_else(|| {
-                        Error::Other(
-                            "Failed to downcast Float64 column to Float64Array".to_string(),
-                        )
-                    })?;
+                let array = column.as_any().downcast_ref::<Float64Array>().ok_or_else(|| {
+                    Error::Other("Failed to downcast Float64 column to Float64Array".to_string())
+                })?;
                 let values: Vec<f64> = indices.iter().map(|&idx| array.value(idx)).collect();
                 Arc::new(Float64Array::from(values))
             }
             DataType::Utf8 => {
-                let array = column
-                    .as_any()
-                    .downcast_ref::<StringArray>()
-                    .ok_or_else(|| {
-                        Error::Other("Failed to downcast Utf8 column to StringArray".to_string())
-                    })?;
+                let array = column.as_any().downcast_ref::<StringArray>().ok_or_else(|| {
+                    Error::Other("Failed to downcast Utf8 column to StringArray".to_string())
+                })?;
                 let values: Vec<&str> = indices.iter().map(|&idx| array.value(idx)).collect();
                 Arc::new(StringArray::from(values))
             }
@@ -508,26 +467,19 @@ fn sort_all_rows(
     use arrow::compute::sort_to_indices;
 
     let sort_options = SortOptions::from(order);
-    let indices = sort_to_indices(
-        batch.column(column_index).as_ref(),
-        Some(sort_options),
-        None,
-    )
-    .map_err(|e| Error::StorageError(format!("Failed to sort: {e}")))?;
+    let indices = sort_to_indices(batch.column(column_index).as_ref(), Some(sort_options), None)
+        .map_err(|e| Error::StorageError(format!("Failed to sort: {e}")))?;
 
     // Convert indices to usize vec
-    let indices_array = indices
-        .as_any()
-        .downcast_ref::<arrow::array::UInt32Array>()
-        .ok_or_else(|| {
+    let indices_array =
+        indices.as_any().downcast_ref::<arrow::array::UInt32Array>().ok_or_else(|| {
             Error::Other(
                 "Failed to downcast sort indices to UInt32Array (expected from sort_to_indices)"
                     .to_string(),
             )
         })?;
-    let indices_vec: Vec<usize> = (0..indices_array.len())
-        .map(|i| indices_array.value(i) as usize)
-        .collect();
+    let indices_vec: Vec<usize> =
+        (0..indices_array.len()).map(|i| indices_array.value(i) as usize).collect();
 
     build_batch_from_indices(batch, &indices_vec)
 }
@@ -555,10 +507,7 @@ mod tests {
 
         RecordBatch::try_new(
             schema,
-            vec![
-                Arc::new(Int32Array::from(ids)),
-                Arc::new(Float64Array::from(values)),
-            ],
+            vec![Arc::new(Int32Array::from(ids)), Arc::new(Float64Array::from(values))],
         )
         .unwrap()
     }
@@ -571,11 +520,7 @@ mod tests {
 
         assert_eq!(result.num_rows(), 3);
 
-        let scores = result
-            .column(1)
-            .as_any()
-            .downcast_ref::<Float64Array>()
-            .unwrap();
+        let scores = result.column(1).as_any().downcast_ref::<Float64Array>().unwrap();
         assert_eq!(scores.value(0), 9.0);
         assert_eq!(scores.value(1), 5.0);
         assert_eq!(scores.value(2), 3.0);
@@ -589,11 +534,7 @@ mod tests {
 
         assert_eq!(result.num_rows(), 3);
 
-        let scores = result
-            .column(1)
-            .as_any()
-            .downcast_ref::<Float64Array>()
-            .unwrap();
+        let scores = result.column(1).as_any().downcast_ref::<Float64Array>().unwrap();
         assert_eq!(scores.value(0), 1.0);
         assert_eq!(scores.value(1), 2.0);
         assert_eq!(scores.value(2), 3.0);
@@ -607,11 +548,7 @@ mod tests {
 
         assert_eq!(result.num_rows(), 3);
 
-        let scores = result
-            .column(1)
-            .as_any()
-            .downcast_ref::<Float64Array>()
-            .unwrap();
+        let scores = result.column(1).as_any().downcast_ref::<Float64Array>().unwrap();
         assert_eq!(scores.value(0), 3.0);
         assert_eq!(scores.value(1), 2.0);
         assert_eq!(scores.value(2), 1.0);
@@ -625,11 +562,7 @@ mod tests {
 
         assert_eq!(result.num_rows(), 3);
 
-        let scores = result
-            .column(1)
-            .as_any()
-            .downcast_ref::<Float64Array>()
-            .unwrap();
+        let scores = result.column(1).as_any().downcast_ref::<Float64Array>().unwrap();
         assert_eq!(scores.value(0), 3.0);
         assert_eq!(scores.value(1), 2.0);
         assert_eq!(scores.value(2), 1.0);
@@ -642,10 +575,7 @@ mod tests {
         let result = batch.top_k(1, 0, SortOrder::Descending);
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("must be greater than 0"));
+        assert!(result.unwrap_err().to_string().contains("must be greater than 0"));
     }
 
     #[test]
@@ -664,16 +594,8 @@ mod tests {
         let batch = create_test_batch(vec![1.0, 5.0, 3.0]);
         let result = batch.top_k(1, 2, SortOrder::Descending).unwrap();
 
-        let ids = result
-            .column(0)
-            .as_any()
-            .downcast_ref::<Int32Array>()
-            .unwrap();
-        let scores = result
-            .column(1)
-            .as_any()
-            .downcast_ref::<Float64Array>()
-            .unwrap();
+        let ids = result.column(0).as_any().downcast_ref::<Int32Array>().unwrap();
+        let scores = result.column(1).as_any().downcast_ref::<Float64Array>().unwrap();
 
         // Top 2: scores 5.0 (id=1) and 3.0 (id=2)
         assert_eq!(scores.value(0), 5.0);
@@ -695,11 +617,7 @@ mod tests {
 
         assert_eq!(result.num_rows(), 10);
 
-        let scores = result
-            .column(1)
-            .as_any()
-            .downcast_ref::<Float64Array>()
-            .unwrap();
+        let scores = result.column(1).as_any().downcast_ref::<Float64Array>().unwrap();
         // Top 10 should be 999999, 999998, ..., 999990
         for i in 0..10 {
             assert_eq!(scores.value(i), 999_999.0 - i as f64);
@@ -795,11 +713,7 @@ mod tests {
         let result = batch.top_k(0, 3, SortOrder::Descending).unwrap();
         assert_eq!(result.num_rows(), 3);
 
-        let col = result
-            .column(0)
-            .as_any()
-            .downcast_ref::<Int32Array>()
-            .unwrap();
+        let col = result.column(0).as_any().downcast_ref::<Int32Array>().unwrap();
         assert_eq!(col.value(0), 9);
         assert_eq!(col.value(1), 8);
         assert_eq!(col.value(2), 5);
@@ -818,11 +732,7 @@ mod tests {
         let result = batch.top_k(0, 3, SortOrder::Ascending).unwrap();
         assert_eq!(result.num_rows(), 3);
 
-        let col = result
-            .column(0)
-            .as_any()
-            .downcast_ref::<Int32Array>()
-            .unwrap();
+        let col = result.column(0).as_any().downcast_ref::<Int32Array>().unwrap();
         assert_eq!(col.value(0), 1);
         assert_eq!(col.value(1), 2);
         assert_eq!(col.value(2), 3);
@@ -841,11 +751,7 @@ mod tests {
         let result = batch.top_k(0, 2, SortOrder::Ascending).unwrap();
         assert_eq!(result.num_rows(), 2);
 
-        let col = result
-            .column(0)
-            .as_any()
-            .downcast_ref::<Int64Array>()
-            .unwrap();
+        let col = result.column(0).as_any().downcast_ref::<Int64Array>().unwrap();
         assert_eq!(col.value(0), 50);
         assert_eq!(col.value(1), 100);
     }
@@ -863,11 +769,7 @@ mod tests {
         let result = batch.top_k(0, 2, SortOrder::Descending).unwrap();
         assert_eq!(result.num_rows(), 2);
 
-        let col = result
-            .column(0)
-            .as_any()
-            .downcast_ref::<Int64Array>()
-            .unwrap();
+        let col = result.column(0).as_any().downcast_ref::<Int64Array>().unwrap();
         assert_eq!(col.value(0), 300);
         assert_eq!(col.value(1), 200);
     }
@@ -885,11 +787,7 @@ mod tests {
         let result = batch.top_k(0, 3, SortOrder::Descending).unwrap();
         assert_eq!(result.num_rows(), 3);
 
-        let col = result
-            .column(0)
-            .as_any()
-            .downcast_ref::<Float32Array>()
-            .unwrap();
+        let col = result.column(0).as_any().downcast_ref::<Float32Array>().unwrap();
         assert!((col.value(0) - 4.2).abs() < 0.001);
         assert!((col.value(1) - 3.1).abs() < 0.001);
         assert!((col.value(2) - 2.7).abs() < 0.001);
@@ -908,11 +806,7 @@ mod tests {
         let result = batch.top_k(0, 3, SortOrder::Ascending).unwrap();
         assert_eq!(result.num_rows(), 3);
 
-        let col = result
-            .column(0)
-            .as_any()
-            .downcast_ref::<Float32Array>()
-            .unwrap();
+        let col = result.column(0).as_any().downcast_ref::<Float32Array>().unwrap();
         assert!((col.value(0) - 0.3).abs() < 0.001);
         assert!((col.value(1) - 1.5).abs() < 0.001);
         assert!((col.value(2) - 2.7).abs() < 0.001);
@@ -930,10 +824,7 @@ mod tests {
 
         let result = batch.top_k(0, 2, SortOrder::Descending);
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Top-K not supported for data type"));
+        assert!(result.unwrap_err().to_string().contains("Top-K not supported for data type"));
     }
 
     // ========================================================================
@@ -942,18 +833,9 @@ mod tests {
 
     #[test]
     fn test_min_heap_item_eq() {
-        let item1 = MinHeapItem {
-            value: 42i32,
-            index: 0,
-        };
-        let item2 = MinHeapItem {
-            value: 42i32,
-            index: 1,
-        };
-        let item3 = MinHeapItem {
-            value: 43i32,
-            index: 2,
-        };
+        let item1 = MinHeapItem { value: 42i32, index: 0 };
+        let item2 = MinHeapItem { value: 42i32, index: 1 };
+        let item3 = MinHeapItem { value: 43i32, index: 2 };
 
         assert_eq!(item1, item2);
         assert_ne!(item1, item3);
@@ -961,18 +843,9 @@ mod tests {
 
     #[test]
     fn test_min_heap_item_ord() {
-        let item1 = MinHeapItem {
-            value: 10i32,
-            index: 0,
-        };
-        let item2 = MinHeapItem {
-            value: 20i32,
-            index: 1,
-        };
-        let item3 = MinHeapItem {
-            value: 30i32,
-            index: 2,
-        };
+        let item1 = MinHeapItem { value: 10i32, index: 0 };
+        let item2 = MinHeapItem { value: 20i32, index: 1 };
+        let item3 = MinHeapItem { value: 30i32, index: 2 };
 
         // Min-heap: reverse ordering (smaller values at top)
         assert!(item3 < item2); // 30 < 20 in min-heap ordering
@@ -981,32 +854,17 @@ mod tests {
 
     #[test]
     fn test_min_heap_item_partial_ord() {
-        let item1 = MinHeapItem {
-            value: 5i32,
-            index: 0,
-        };
-        let item2 = MinHeapItem {
-            value: 10i32,
-            index: 1,
-        };
+        let item1 = MinHeapItem { value: 5i32, index: 0 };
+        let item2 = MinHeapItem { value: 10i32, index: 1 };
 
         assert!(item1.partial_cmp(&item2) == Some(Ordering::Greater));
     }
 
     #[test]
     fn test_max_heap_item_eq() {
-        let item1 = MaxHeapItem {
-            value: 42i32,
-            index: 0,
-        };
-        let item2 = MaxHeapItem {
-            value: 42i32,
-            index: 1,
-        };
-        let item3 = MaxHeapItem {
-            value: 43i32,
-            index: 2,
-        };
+        let item1 = MaxHeapItem { value: 42i32, index: 0 };
+        let item2 = MaxHeapItem { value: 42i32, index: 1 };
+        let item3 = MaxHeapItem { value: 43i32, index: 2 };
 
         assert_eq!(item1, item2);
         assert_ne!(item1, item3);
@@ -1014,18 +872,9 @@ mod tests {
 
     #[test]
     fn test_max_heap_item_ord() {
-        let item1 = MaxHeapItem {
-            value: 10i32,
-            index: 0,
-        };
-        let item2 = MaxHeapItem {
-            value: 20i32,
-            index: 1,
-        };
-        let item3 = MaxHeapItem {
-            value: 30i32,
-            index: 2,
-        };
+        let item1 = MaxHeapItem { value: 10i32, index: 0 };
+        let item2 = MaxHeapItem { value: 20i32, index: 1 };
+        let item3 = MaxHeapItem { value: 30i32, index: 2 };
 
         // Max-heap: normal ordering (larger values at top)
         assert!(item3 > item2);
@@ -1034,28 +883,16 @@ mod tests {
 
     #[test]
     fn test_max_heap_item_partial_ord() {
-        let item1 = MaxHeapItem {
-            value: 5i32,
-            index: 0,
-        };
-        let item2 = MaxHeapItem {
-            value: 10i32,
-            index: 1,
-        };
+        let item1 = MaxHeapItem { value: 5i32, index: 0 };
+        let item2 = MaxHeapItem { value: 10i32, index: 1 };
 
         assert!(item1.partial_cmp(&item2) == Some(Ordering::Less));
     }
 
     #[test]
     fn test_heap_item_with_floats() {
-        let item1 = MinHeapItem {
-            value: 1.5f64,
-            index: 0,
-        };
-        let item2 = MinHeapItem {
-            value: 2.5f64,
-            index: 1,
-        };
+        let item1 = MinHeapItem { value: 1.5f64, index: 0 };
+        let item2 = MinHeapItem { value: 2.5f64, index: 1 };
 
         assert_ne!(item1, item2);
         assert!(item2 < item1); // Min-heap: reverse ordering
@@ -1063,18 +900,9 @@ mod tests {
 
     #[test]
     fn test_heap_item_eq_method_with_floats() {
-        let item1 = MaxHeapItem {
-            value: 3.25f64,
-            index: 0,
-        };
-        let item2 = MaxHeapItem {
-            value: 3.25f64,
-            index: 1,
-        };
-        let item3 = MaxHeapItem {
-            value: 2.75f64,
-            index: 2,
-        };
+        let item1 = MaxHeapItem { value: 3.25f64, index: 0 };
+        let item2 = MaxHeapItem { value: 3.25f64, index: 1 };
+        let item3 = MaxHeapItem { value: 2.75f64, index: 2 };
 
         assert!(item1.eq(&item2));
         assert!(!item1.eq(&item3));

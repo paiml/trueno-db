@@ -59,10 +59,7 @@ pub struct DatabaseConfig {
 impl DatabaseConfig {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        Self {
-            backend: "auto".to_string(),
-            cache_size_mb: 256,
-        }
+        Self { backend: "auto".to_string(), cache_size_mb: 256 }
     }
 
     /// Set compute backend: "auto", "webgpu", "simd128", "scalar"
@@ -178,10 +175,8 @@ impl Database {
                     columns.push(Arc::new(Int32Array::from(values)));
                 }
                 DataType::Float64 => {
-                    let values: Vec<Option<f64>> = records
-                        .iter()
-                        .map(|r| r.get(col_name).and_then(|v| v.as_f64()))
-                        .collect();
+                    let values: Vec<Option<f64>> =
+                        records.iter().map(|r| r.get(col_name).and_then(|v| v.as_f64())).collect();
                     columns.push(Arc::new(Float64Array::from(values)));
                 }
                 DataType::Utf8 => {
@@ -193,10 +188,8 @@ impl Database {
                 }
                 _ => {
                     // Default: convert to string
-                    let values: Vec<Option<String>> = records
-                        .iter()
-                        .map(|r| r.get(col_name).map(|v| v.to_string()))
-                        .collect();
+                    let values: Vec<Option<String>> =
+                        records.iter().map(|r| r.get(col_name).map(|v| v.to_string())).collect();
                     columns.push(Arc::new(StringArray::from(values)));
                 }
             }
@@ -209,13 +202,8 @@ impl Database {
         self.tables.insert(name.clone(), storage);
 
         console::log_1(
-            &format!(
-                "Table '{}' loaded: {} rows, {} columns",
-                name,
-                records.len(),
-                fields.len()
-            )
-            .into(),
+            &format!("Table '{}' loaded: {} rows, {} columns", name, records.len(), fields.len())
+                .into(),
         );
         Ok(())
     }
@@ -293,10 +281,7 @@ fn array_value_to_json(array: &dyn Array, idx: usize) -> Result<serde_json::Valu
 
     match array.data_type() {
         DataType::Int32 => {
-            let arr = array
-                .as_any()
-                .downcast_ref::<Int32Array>()
-                .ok_or("downcast failed")?;
+            let arr = array.as_any().downcast_ref::<Int32Array>().ok_or("downcast failed")?;
             Ok(serde_json::Value::Number(arr.value(idx).into()))
         }
         DataType::Int64 => {
@@ -315,24 +300,15 @@ fn array_value_to_json(array: &dyn Array, idx: usize) -> Result<serde_json::Valu
             Ok(serde_json::json!(v))
         }
         DataType::Float64 => {
-            let arr = array
-                .as_any()
-                .downcast_ref::<Float64Array>()
-                .ok_or("downcast failed")?;
+            let arr = array.as_any().downcast_ref::<Float64Array>().ok_or("downcast failed")?;
             let v = arr.value(idx);
             Ok(serde_json::json!(v))
         }
         DataType::Utf8 => {
-            let arr = array
-                .as_any()
-                .downcast_ref::<StringArray>()
-                .ok_or("downcast failed")?;
+            let arr = array.as_any().downcast_ref::<StringArray>().ok_or("downcast failed")?;
             Ok(serde_json::Value::String(arr.value(idx).to_string()))
         }
-        _ => Ok(serde_json::Value::String(format!(
-            "<unsupported type: {:?}>",
-            array.data_type()
-        ))),
+        _ => Ok(serde_json::Value::String(format!("<unsupported type: {:?}>", array.data_type()))),
     }
 }
 

@@ -1,15 +1,27 @@
-[package]
-name = "trueno-db"
+[workspace]
+resolver = "2"
+
+[workspace.package]
 version = "0.3.15"
 edition = "2021"
 authors = ["Pragmatic AI Labs <info@paiml.com>"]
 license = "MIT"
-description = "GPU-first embedded analytics database with SIMD fallback and SQL query interface"
 repository = "https://github.com/paiml/trueno-db"
+rust-version = "1.75"
+
+[workspace.dependencies]
+
+[package]
+name = "trueno-db"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "GPU-first embedded analytics database with SIMD fallback and SQL query interface"
+repository.workspace = true
 keywords = ["database", "gpu", "simd", "analytics", "wasm"]
 categories = ["database", "science", "wasm"]
-rust-version = "1.75"
-resolver = "2"
+rust-version.workspace = true
 
 [dependencies]
 # Core compute (SIMD - always included)
@@ -143,6 +155,24 @@ harness = false
 name = "kernel_fusion"
 harness = false
 
+[workspace.lints.rust]
+unsafe_code = "deny"
+unsafe_op_in_unsafe_fn = "warn"
+unreachable_pub = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "warn"
+expect_used = "allow"
+module_name_repetitions = "allow"
+must_use_candidate = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+
+[lints]
+workspace = true
+
 [profile.test]
 # Optimizations for faster test execution (certeza formula)
 opt-level = 1
@@ -172,3 +202,18 @@ tdg_score_minimum = 85  # B+ grade minimum
 mutation_testing = true
 mutation_kill_rate_minimum = 85  # 85% kill rate (certeza formula)
 coverage_minimum = 85  # 85% code coverage (certeza minimum, target 95%)
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--generate-link-to-definition"]
+
+[package.metadata.release]
+shared-version = true
+
+[[package.metadata.release.pre-release-replacements]]
+file = "CHANGELOG.md"
+search = "## \\[Unreleased\\]"
+replace = "## [{{version}}] - {{date}}"
+
+[profile.dev]
+panic = "abort"

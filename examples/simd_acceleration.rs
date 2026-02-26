@@ -9,7 +9,7 @@
 //! - SSE2 (16-byte vectors) - universal fallback
 //! - Scalar - no SIMD support
 //!
-//! Run with: cargo run --example simd_acceleration --release
+//! Run with: cargo run --example `simd_acceleration` --release
 
 use std::time::Instant;
 
@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!(
         "  ✓ Dataset created: {} elements ({:.2} MB)\n",
         size,
-        (size * 4) as f64 / 1_048_576.0
+        f64::from(size * 4) / 1_048_576.0
     );
 
     // Benchmark: Scalar sum
@@ -49,11 +49,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start = Instant::now();
     let scalar_sum = scalar_sum(&data);
     let scalar_time = start.elapsed();
-    println!("  Result: {:.2}", scalar_sum);
-    println!("  Time: {:?}", scalar_time);
+    println!("  Result: {scalar_sum:.2}");
+    println!("  Time: {scalar_time:?}");
     println!(
         "  Throughput: {:.2} GB/s\n",
-        (size * 4) as f64 / 1_073_741_824.0 / scalar_time.as_secs_f64()
+        f64::from(size * 4) / 1_073_741_824.0 / scalar_time.as_secs_f64()
     );
 
     // Benchmark: SIMD sum (auto-vectorized)
@@ -61,16 +61,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start = Instant::now();
     let simd_sum = auto_vectorized_sum(&data);
     let simd_time = start.elapsed();
-    println!("  Result: {:.2}", simd_sum);
-    println!("  Time: {:?}", simd_time);
+    println!("  Result: {simd_sum:.2}");
+    println!("  Time: {simd_time:?}");
     println!(
         "  Throughput: {:.2} GB/s",
-        (size * 4) as f64 / 1_073_741_824.0 / simd_time.as_secs_f64()
+        f64::from(size * 4) / 1_073_741_824.0 / simd_time.as_secs_f64()
     );
-    println!(
-        "  Speedup: {:.2}x vs scalar\n",
-        scalar_time.as_secs_f64() / simd_time.as_secs_f64()
-    );
+    println!("  Speedup: {:.2}x vs scalar\n", scalar_time.as_secs_f64() / simd_time.as_secs_f64());
 
     // Demonstrate trueno backend (Phase 1 MVP integrates trueno for SIMD)
     println!("=== Trueno Integration (Phase 1 MVP) ===");
@@ -132,8 +129,6 @@ fn scalar_sum(data: &[f32]) -> f32 {
 /// Auto-vectorized sum (compiler may use SIMD)
 fn auto_vectorized_sum(data: &[f32]) -> f32 {
     // Use chunks to encourage auto-vectorization
-    data.chunks_exact(4)
-        .map(|chunk| chunk.iter().sum::<f32>())
-        .sum::<f32>()
+    data.chunks_exact(4).map(|chunk| chunk.iter().sum::<f32>()).sum::<f32>()
         + data.chunks_exact(4).remainder().iter().sum::<f32>()
 }

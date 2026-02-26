@@ -4,7 +4,7 @@
 //! - SIMD aggregations: 2.78x faster than scalar
 //! - Top-K (1M rows): 5-28x faster than heap-based
 //!
-//! Run with: cargo bench --bench sql_query_benchmarks
+//! Run with: cargo bench --bench `sql_query_benchmarks`
 
 use arrow::array::{Float64Array, Int32Array, RecordBatch};
 use arrow::datatypes::{DataType, Field, Schema};
@@ -115,9 +115,7 @@ fn bench_sql_min_max(c: &mut Criterion) {
 
         group.bench_with_input(BenchmarkId::new("sql_min_max", size), &size, |b, _| {
             b.iter(|| {
-                let plan = engine
-                    .parse("SELECT MIN(value), MAX(value) FROM table1")
-                    .unwrap();
+                let plan = engine.parse("SELECT MIN(value), MAX(value) FROM table1").unwrap();
                 black_box(executor.execute(&plan, &storage).unwrap());
             });
         });
@@ -170,9 +168,8 @@ fn bench_sql_filter_aggregate(c: &mut Criterion) {
 
         group.bench_with_input(BenchmarkId::new("filter_sum", size), &size, |b, _| {
             b.iter(|| {
-                let plan = engine
-                    .parse("SELECT SUM(value) FROM table1 WHERE value > 1000.0")
-                    .unwrap();
+                let plan =
+                    engine.parse("SELECT SUM(value) FROM table1 WHERE value > 1000.0").unwrap();
                 black_box(executor.execute(&plan, &storage).unwrap());
             });
         });
@@ -192,9 +189,7 @@ fn bench_sql_full_pipeline(c: &mut Criterion) {
     group.bench_function("parse_and_execute", |b| {
         b.iter(|| {
             let plan = engine
-                .parse(black_box(
-                    "SELECT SUM(value), AVG(value) FROM table1 WHERE value > 500.0",
-                ))
+                .parse(black_box("SELECT SUM(value), AVG(value) FROM table1 WHERE value > 500.0"))
                 .unwrap();
             black_box(executor.execute(&plan, &storage).unwrap());
         });
@@ -244,10 +239,7 @@ fn bench_heap_based_top_k_baseline(c: &mut Criterion) {
     impl Ord for MinHeapItem {
         fn cmp(&self, other: &Self) -> Ordering {
             // Reverse for min-heap
-            other
-                .value
-                .partial_cmp(&self.value)
-                .unwrap_or(Ordering::Equal)
+            other.value.partial_cmp(&self.value).unwrap_or(Ordering::Equal)
         }
     }
 

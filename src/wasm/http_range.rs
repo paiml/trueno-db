@@ -72,10 +72,7 @@ pub struct RangeClient {
 impl RangeClient {
     /// Create new range client for given URL
     pub fn new(url: impl Into<String>) -> Self {
-        Self {
-            base_url: url.into(),
-            retry_attempts: 3,
-        }
+        Self { base_url: url.into(), retry_attempts: 3 }
     }
 
     /// Fetch a byte range from the remote file
@@ -166,9 +163,7 @@ impl RangeClient {
 async fn sleep_ms(ms: u32) {
     let promise = js_sys::Promise::new(&mut |resolve, _reject| {
         let window = web_sys::window().unwrap();
-        window
-            .set_timeout_with_callback_and_timeout_and_arguments_0(&resolve, ms as i32)
-            .unwrap();
+        window.set_timeout_with_callback_and_timeout_and_arguments_0(&resolve, ms as i32).unwrap();
     });
 
     let _ = JsFuture::from(promise).await;

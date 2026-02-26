@@ -275,21 +275,14 @@ pub async fn sum_i32(device: &wgpu::Device, queue: &wgpu::Queue, data: &Int32Arr
         label: Some("Bind Group"),
         layout: &bind_group_layout,
         entries: &[
-            wgpu::BindGroupEntry {
-                binding: 0,
-                resource: input_buffer.as_entire_binding(),
-            },
-            wgpu::BindGroupEntry {
-                binding: 1,
-                resource: output_buffer.as_entire_binding(),
-            },
+            wgpu::BindGroupEntry { binding: 0, resource: input_buffer.as_entire_binding() },
+            wgpu::BindGroupEntry { binding: 1, resource: output_buffer.as_entire_binding() },
         ],
     });
 
     // Execute compute shader
-    let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
-        label: Some("Compute Encoder"),
-    });
+    let mut encoder = device
+        .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("Compute Encoder") });
 
     {
         let mut compute_pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
@@ -318,9 +311,7 @@ pub async fn sum_i32(device: &wgpu::Device, queue: &wgpu::Queue, data: &Int32Arr
     let buffer_slice = staging_buffer.slice(..);
     let (sender, receiver) = futures_intrusive::channel::shared::oneshot_channel();
     buffer_slice.map_async(wgpu::MapMode::Read, move |result| {
-        sender
-            .send(result)
-            .expect("Failed to send buffer mapping result through channel");
+        sender.send(result).expect("Failed to send buffer mapping result through channel");
     });
     device.poll(wgpu::Maintain::Wait);
 
@@ -332,9 +323,7 @@ pub async fn sum_i32(device: &wgpu::Device, queue: &wgpu::Queue, data: &Int32Arr
 
     let data = buffer_slice.get_mapped_range();
     let result = i32::from_le_bytes(
-        data[0..4]
-            .try_into()
-            .expect("Buffer must contain at least 4 bytes for i32 result"),
+        data[0..4].try_into().expect("Buffer must contain at least 4 bytes for i32 result"),
     );
     drop(data);
     staging_buffer.unmap();
@@ -457,14 +446,8 @@ pub async fn min_i32(device: &wgpu::Device, queue: &wgpu::Queue, data: &Int32Arr
         label: Some("MIN Bind Group"),
         layout: &bind_group_layout,
         entries: &[
-            wgpu::BindGroupEntry {
-                binding: 0,
-                resource: input_buffer.as_entire_binding(),
-            },
-            wgpu::BindGroupEntry {
-                binding: 1,
-                resource: output_buffer.as_entire_binding(),
-            },
+            wgpu::BindGroupEntry { binding: 0, resource: input_buffer.as_entire_binding() },
+            wgpu::BindGroupEntry { binding: 1, resource: output_buffer.as_entire_binding() },
         ],
     });
 
@@ -500,9 +483,7 @@ pub async fn min_i32(device: &wgpu::Device, queue: &wgpu::Queue, data: &Int32Arr
     let buffer_slice = staging_buffer.slice(..);
     let (sender, receiver) = futures_intrusive::channel::shared::oneshot_channel();
     buffer_slice.map_async(wgpu::MapMode::Read, move |result| {
-        sender
-            .send(result)
-            .expect("Failed to send buffer mapping result through channel");
+        sender.send(result).expect("Failed to send buffer mapping result through channel");
     });
     device.poll(wgpu::Maintain::Wait);
 
@@ -514,9 +495,7 @@ pub async fn min_i32(device: &wgpu::Device, queue: &wgpu::Queue, data: &Int32Arr
 
     let data = buffer_slice.get_mapped_range();
     let result = i32::from_le_bytes(
-        data[0..4]
-            .try_into()
-            .expect("Buffer must contain at least 4 bytes for i32 result"),
+        data[0..4].try_into().expect("Buffer must contain at least 4 bytes for i32 result"),
     );
     drop(data);
     staging_buffer.unmap();
@@ -609,14 +588,8 @@ pub async fn max_i32(device: &wgpu::Device, queue: &wgpu::Queue, data: &Int32Arr
         label: Some("MAX Bind Group"),
         layout: &bind_group_layout,
         entries: &[
-            wgpu::BindGroupEntry {
-                binding: 0,
-                resource: input_buffer.as_entire_binding(),
-            },
-            wgpu::BindGroupEntry {
-                binding: 1,
-                resource: output_buffer.as_entire_binding(),
-            },
+            wgpu::BindGroupEntry { binding: 0, resource: input_buffer.as_entire_binding() },
+            wgpu::BindGroupEntry { binding: 1, resource: output_buffer.as_entire_binding() },
         ],
     });
 
@@ -652,9 +625,7 @@ pub async fn max_i32(device: &wgpu::Device, queue: &wgpu::Queue, data: &Int32Arr
     let buffer_slice = staging_buffer.slice(..);
     let (sender, receiver) = futures_intrusive::channel::shared::oneshot_channel();
     buffer_slice.map_async(wgpu::MapMode::Read, move |result| {
-        sender
-            .send(result)
-            .expect("Failed to send buffer mapping result through channel");
+        sender.send(result).expect("Failed to send buffer mapping result through channel");
     });
     device.poll(wgpu::Maintain::Wait);
 
@@ -666,9 +637,7 @@ pub async fn max_i32(device: &wgpu::Device, queue: &wgpu::Queue, data: &Int32Arr
 
     let data = buffer_slice.get_mapped_range();
     let result = i32::from_le_bytes(
-        data[0..4]
-            .try_into()
-            .expect("Buffer must contain at least 4 bytes for i32 result"),
+        data[0..4].try_into().expect("Buffer must contain at least 4 bytes for i32 result"),
     );
     drop(data);
     staging_buffer.unmap();
@@ -688,16 +657,13 @@ mod tests {
 
         // Create mock device/queue (not used by count())
         let instance = wgpu::Instance::default();
-        let Some(adapter) = instance
-            .request_adapter(&wgpu::RequestAdapterOptions::default())
-            .await
+        let Some(adapter) = instance.request_adapter(&wgpu::RequestAdapterOptions::default()).await
         else {
             eprintln!("Skipping GPU test (no GPU available)");
             return;
         };
-        let Ok((device, queue)) = adapter
-            .request_device(&wgpu::DeviceDescriptor::default(), None)
-            .await
+        let Ok((device, queue)) =
+            adapter.request_device(&wgpu::DeviceDescriptor::default(), None).await
         else {
             eprintln!("Skipping GPU test (failed to create device)");
             return;
@@ -712,16 +678,13 @@ mod tests {
         let data = Int32Array::from(vec![] as Vec<i32>);
 
         let instance = wgpu::Instance::default();
-        let Some(adapter) = instance
-            .request_adapter(&wgpu::RequestAdapterOptions::default())
-            .await
+        let Some(adapter) = instance.request_adapter(&wgpu::RequestAdapterOptions::default()).await
         else {
             eprintln!("Skipping GPU test (no GPU available)");
             return;
         };
-        let Ok((device, queue)) = adapter
-            .request_device(&wgpu::DeviceDescriptor::default(), None)
-            .await
+        let Ok((device, queue)) =
+            adapter.request_device(&wgpu::DeviceDescriptor::default(), None).await
         else {
             eprintln!("Skipping GPU test (failed to create device)");
             return;
@@ -737,16 +700,13 @@ mod tests {
         let data = Float32Array::from(vec![1.0, 2.0, 3.0]);
 
         let instance = wgpu::Instance::default();
-        let Some(adapter) = instance
-            .request_adapter(&wgpu::RequestAdapterOptions::default())
-            .await
+        let Some(adapter) = instance.request_adapter(&wgpu::RequestAdapterOptions::default()).await
         else {
             eprintln!("Skipping GPU test (no GPU available)");
             return;
         };
-        let Ok((device, queue)) = adapter
-            .request_device(&wgpu::DeviceDescriptor::default(), None)
-            .await
+        let Ok((device, queue)) =
+            adapter.request_device(&wgpu::DeviceDescriptor::default(), None).await
         else {
             eprintln!("Skipping GPU test (failed to create device)");
             return;
@@ -754,9 +714,6 @@ mod tests {
 
         let result = sum_f32(&device, &queue, &data).await;
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("not yet implemented"));
+        assert!(result.unwrap_err().to_string().contains("not yet implemented"));
     }
 }

@@ -30,9 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let num_orders = 10_000;
     let order_ids: Vec<i32> = (1..=num_orders).collect();
     let customer_ids: Vec<i32> = (1..=num_orders).map(|i| (i % 1000) + 1).collect();
-    let amounts: Vec<f64> = (1..=num_orders)
-        .map(|i| (i as f64 * 12.5) % 500.0 + 10.0)
-        .collect();
+    let amounts: Vec<f64> = (1..=num_orders).map(|i| (f64::from(i) * 12.5) % 500.0 + 10.0).collect();
     let quantities: Vec<i32> = (1..=num_orders).map(|i| (i % 10) + 1).collect();
     let categories: Vec<&str> = (1..=num_orders)
         .map(|i| match i % 4 {
@@ -57,7 +55,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut storage = StorageEngine::new(vec![]);
     storage.append_batch(batch)?;
 
-    println!("  ✓ Created {} orders", num_orders);
+    println!("  ✓ Created {num_orders} orders");
     println!("  ✓ Columns: order_id, customer_id, amount, quantity, category\n");
 
     // Initialize query engine and executor
@@ -70,7 +68,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
     let sql = "SELECT order_id, amount FROM orders LIMIT 5";
-    println!("SQL: {}", sql);
+    println!("SQL: {sql}");
 
     let plan = engine.parse(sql)?;
     let result = executor.execute(&plan, &storage)?;
@@ -79,19 +77,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  order_id | amount");
     println!("  ---------|--------");
     for i in 0..result.num_rows() {
-        let order_id = result
-            .column(0)
-            .as_any()
-            .downcast_ref::<Int32Array>()
-            .unwrap()
-            .value(i);
-        let amount = result
-            .column(1)
-            .as_any()
-            .downcast_ref::<Float64Array>()
-            .unwrap()
-            .value(i);
-        println!("  {:8} | ${:6.2}", order_id, amount);
+        let order_id = result.column(0).as_any().downcast_ref::<Int32Array>().unwrap().value(i);
+        let amount = result.column(1).as_any().downcast_ref::<Float64Array>().unwrap().value(i);
+        println!("  {order_id:8} | ${amount:6.2}");
     }
 
     // Example 2: WHERE clause filtering
@@ -100,7 +88,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
     let sql = "SELECT order_id, amount FROM orders WHERE amount > 400.0 LIMIT 5";
-    println!("SQL: {}", sql);
+    println!("SQL: {sql}");
 
     let plan = engine.parse(sql)?;
     let result = executor.execute(&plan, &storage)?;
@@ -109,19 +97,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  order_id | amount");
     println!("  ---------|--------");
     for i in 0..result.num_rows() {
-        let order_id = result
-            .column(0)
-            .as_any()
-            .downcast_ref::<Int32Array>()
-            .unwrap()
-            .value(i);
-        let amount = result
-            .column(1)
-            .as_any()
-            .downcast_ref::<Float64Array>()
-            .unwrap()
-            .value(i);
-        println!("  {:8} | ${:6.2}", order_id, amount);
+        let order_id = result.column(0).as_any().downcast_ref::<Int32Array>().unwrap().value(i);
+        let amount = result.column(1).as_any().downcast_ref::<Float64Array>().unwrap().value(i);
+        println!("  {order_id:8} | ${amount:6.2}");
     }
 
     // Example 3: Aggregations (SUM, AVG, COUNT)
@@ -130,48 +108,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
     let sql = "SELECT COUNT(*), SUM(amount), AVG(amount), MIN(amount), MAX(amount) FROM orders";
-    println!("SQL: {}", sql);
+    println!("SQL: {sql}");
 
     let plan = engine.parse(sql)?;
     let result = executor.execute(&plan, &storage)?;
 
     println!("\nResults:");
-    let count = result
-        .column(0)
-        .as_any()
-        .downcast_ref::<arrow::array::Int64Array>()
-        .unwrap()
-        .value(0);
-    let sum = result
-        .column(1)
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .unwrap()
-        .value(0);
-    let avg = result
-        .column(2)
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .unwrap()
-        .value(0);
-    let min = result
-        .column(3)
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .unwrap()
-        .value(0);
-    let max = result
-        .column(4)
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .unwrap()
-        .value(0);
+    let count =
+        result.column(0).as_any().downcast_ref::<arrow::array::Int64Array>().unwrap().value(0);
+    let sum = result.column(1).as_any().downcast_ref::<Float64Array>().unwrap().value(0);
+    let avg = result.column(2).as_any().downcast_ref::<Float64Array>().unwrap().value(0);
+    let min = result.column(3).as_any().downcast_ref::<Float64Array>().unwrap().value(0);
+    let max = result.column(4).as_any().downcast_ref::<Float64Array>().unwrap().value(0);
 
-    println!("  Total Orders:    {:>10}", count);
-    println!("  Total Revenue:   ${:>10.2}", sum);
-    println!("  Average Order:   ${:>10.2}", avg);
-    println!("  Minimum Order:   ${:>10.2}", min);
-    println!("  Maximum Order:   ${:>10.2}", max);
+    println!("  Total Orders:    {count:>10}");
+    println!("  Total Revenue:   ${sum:>10.2}");
+    println!("  Average Order:   ${avg:>10.2}");
+    println!("  Minimum Order:   ${min:>10.2}");
+    println!("  Maximum Order:   ${max:>10.2}");
 
     // Example 4: ORDER BY + LIMIT (Top-K optimization)
     println!("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -179,7 +133,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
     let sql = "SELECT order_id, amount FROM orders ORDER BY amount DESC LIMIT 10";
-    println!("SQL: {}", sql);
+    println!("SQL: {sql}");
     println!("Note: Uses O(N log K) Top-K algorithm instead of O(N log N) full sort\n");
 
     let plan = engine.parse(sql)?;
@@ -189,18 +143,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Rank | order_id | amount");
     println!("  -----|----------|--------");
     for i in 0..result.num_rows() {
-        let order_id = result
-            .column(0)
-            .as_any()
-            .downcast_ref::<Int32Array>()
-            .unwrap()
-            .value(i);
-        let amount = result
-            .column(1)
-            .as_any()
-            .downcast_ref::<Float64Array>()
-            .unwrap()
-            .value(i);
+        let order_id = result.column(0).as_any().downcast_ref::<Int32Array>().unwrap().value(i);
+        let amount = result.column(1).as_any().downcast_ref::<Float64Array>().unwrap().value(i);
         println!("  {:4} | {:8} | ${:6.2}", i + 1, order_id, amount);
     }
 
@@ -210,27 +154,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
     let sql = "SELECT COUNT(*), AVG(amount) FROM orders WHERE amount > 300.0";
-    println!("SQL: {}", sql);
+    println!("SQL: {sql}");
 
     let plan = engine.parse(sql)?;
     let result = executor.execute(&plan, &storage)?;
 
-    let count = result
-        .column(0)
-        .as_any()
-        .downcast_ref::<arrow::array::Int64Array>()
-        .unwrap()
-        .value(0);
-    let avg = result
-        .column(1)
-        .as_any()
-        .downcast_ref::<Float64Array>()
-        .unwrap()
-        .value(0);
+    let count =
+        result.column(0).as_any().downcast_ref::<arrow::array::Int64Array>().unwrap().value(0);
+    let avg = result.column(1).as_any().downcast_ref::<Float64Array>().unwrap().value(0);
 
     println!("\nResults:");
-    println!("  High-value orders (>$300): {}", count);
-    println!("  Average amount:            ${:.2}", avg);
+    println!("  High-value orders (>$300): {count}");
+    println!("  Average amount:            ${avg:.2}");
 
     // Example 6: Multiple filters
     println!("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -238,7 +173,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
     let sql = "SELECT order_id, quantity, amount FROM orders WHERE quantity >= 8 LIMIT 5";
-    println!("SQL: {}", sql);
+    println!("SQL: {sql}");
 
     let plan = engine.parse(sql)?;
     let result = executor.execute(&plan, &storage)?;
@@ -247,25 +182,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  order_id | quantity | amount");
     println!("  ---------|----------|--------");
     for i in 0..result.num_rows() {
-        let order_id = result
-            .column(0)
-            .as_any()
-            .downcast_ref::<Int32Array>()
-            .unwrap()
-            .value(i);
-        let quantity = result
-            .column(1)
-            .as_any()
-            .downcast_ref::<Int32Array>()
-            .unwrap()
-            .value(i);
-        let amount = result
-            .column(2)
-            .as_any()
-            .downcast_ref::<Float64Array>()
-            .unwrap()
-            .value(i);
-        println!("  {:8} | {:8} | ${:6.2}", order_id, quantity, amount);
+        let order_id = result.column(0).as_any().downcast_ref::<Int32Array>().unwrap().value(i);
+        let quantity = result.column(1).as_any().downcast_ref::<Int32Array>().unwrap().value(i);
+        let amount = result.column(2).as_any().downcast_ref::<Float64Array>().unwrap().value(i);
+        println!("  {order_id:8} | {quantity:8} | ${amount:6.2}");
     }
 
     // Performance summary
