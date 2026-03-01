@@ -61,6 +61,11 @@ batuta-common = "0.1"
 lz4_flex = { version = "0.11", optional = true }
 zstd = { version = "0.13", optional = true }
 
+# Server (HTTP API)
+axum = { version = "0.7", optional = true }
+clap = { version = "4.5", features = ["derive"], optional = true }
+serde_yaml_ng = { version = "0.10", optional = true }
+
 # Error handling
 thiserror = "2"
 anyhow = "1"
@@ -113,12 +118,20 @@ web-sys = { version = "0.3", features = [
 tonic = { version = "0.12", optional = true }
 prost = { version = "0.13", optional = true }
 
+[[bin]]
+name = "trueno-db"
+path = "src/main.rs"
+required-features = ["server"]
+
 [features]
-# Default: SIMD with tokio/rayon and parquet I/O (native builds)
-default = ["simd", "tokio", "rayon", "parquet-io"]
+# Default: SIMD with tokio/rayon, parquet I/O, and server binary (native builds)
+default = ["simd", "tokio", "rayon", "parquet-io", "server"]
 
 # Parquet file I/O (adds ~18 transitive crates)
 parquet-io = ["dep:parquet"]
+
+# Server binary (HTTP API + CLI)
+server = ["dep:axum", "dep:clap", "dep:serde_yaml_ng", "tokio", "parquet-io"]
 
 # SIMD-only backend (12 dependencies, -0.4 MB vs SQLite, 18s compile)
 simd = []
