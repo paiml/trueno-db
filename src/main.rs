@@ -109,8 +109,7 @@ struct ErrorResponse {
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "info".into()),
+            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()),
         )
         .init();
 
@@ -147,18 +146,15 @@ async fn main() -> anyhow::Result<()> {
         .route("/status", get(status))
         .with_state(state.clone());
 
-    let addr: SocketAddr = state
-        .config
-        .listen
-        .parse()
-        .map_err(|e| anyhow::anyhow!("invalid listen address '{}': {}", state.config.listen, e))?;
+    let addr: SocketAddr =
+        state.config.listen.parse().map_err(|e| {
+            anyhow::anyhow!("invalid listen address '{}': {}", state.config.listen, e)
+        })?;
 
     info!(%addr, "trueno-db listening");
 
     let listener = TcpListener::bind(addr).await?;
-    axum::serve(listener, app)
-        .with_graceful_shutdown(shutdown_signal())
-        .await?;
+    axum::serve(listener, app).with_graceful_shutdown(shutdown_signal()).await?;
 
     info!("trueno-db shutdown complete");
     Ok(())
@@ -216,42 +212,25 @@ async fn query(
     axum::Json(req): axum::Json<QueryRequest>,
 ) -> Result<axum::Json<QueryResponse>, (StatusCode, axum::Json<ErrorResponse>)> {
     let plan = state.query_engine.parse(&req.sql).map_err(|e| {
-        (
-            StatusCode::BAD_REQUEST,
-            axum::Json(ErrorResponse {
-                error: format!("parse error: {e}"),
-            }),
-        )
+        (StatusCode::BAD_REQUEST, axum::Json(ErrorResponse { error: format!("parse error: {e}") }))
     })?;
 
     let storage = state.storage.read().map_err(|e| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            axum::Json(ErrorResponse {
-                error: format!("storage lock: {e}"),
-            }),
+            axum::Json(ErrorResponse { error: format!("storage lock: {e}") }),
         )
     })?;
 
-    let result = state
-        .executor
-        .execute(&plan, &storage)
-        .map_err(|e| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                axum::Json(ErrorResponse {
-                    error: format!("query error: {e}"),
-                }),
-            )
-        })?;
+    let result = state.executor.execute(&plan, &storage).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            axum::Json(ErrorResponse { error: format!("query error: {e}") }),
+        )
+    })?;
 
     // Convert RecordBatch to JSON rows
-    let columns: Vec<String> = result
-        .schema()
-        .fields()
-        .iter()
-        .map(|f| f.name().clone())
-        .collect();
+    let columns: Vec<String> = result.schema().fields().iter().map(|f| f.name().clone()).collect();
 
     let mut rows = Vec::with_capacity(result.num_rows());
     for row_idx in 0..result.num_rows() {
@@ -265,11 +244,7 @@ async fn query(
     }
 
     let row_count = rows.len();
-    Ok(axum::Json(QueryResponse {
-        columns,
-        rows,
-        row_count,
-    }))
+    Ok(axum::Json(QueryResponse { columns, rows, row_count }))
 }
 
 /// Convert an Arrow array value at a given index to a JSON value.

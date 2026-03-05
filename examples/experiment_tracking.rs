@@ -73,9 +73,7 @@ fn main() {
         store.add_metric(MetricRecord::new(run.run_id(), "accuracy", epoch, accuracy));
         store.add_metric(MetricRecord::new(run.run_id(), "learning_rate", epoch, learning_rate));
 
-        println!(
-            "   Epoch {epoch}: loss={loss:.4}, accuracy={accuracy:.4}, lr={learning_rate:.6}"
-        );
+        println!("   Epoch {epoch}: loss={loss:.4}, accuracy={accuracy:.4}, lr={learning_rate:.6}");
     }
 
     // -------------------------------------------------------------------------

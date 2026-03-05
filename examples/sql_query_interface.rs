@@ -30,7 +30,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let num_orders = 10_000;
     let order_ids: Vec<i32> = (1..=num_orders).collect();
     let customer_ids: Vec<i32> = (1..=num_orders).map(|i| (i % 1000) + 1).collect();
-    let amounts: Vec<f64> = (1..=num_orders).map(|i| (f64::from(i) * 12.5) % 500.0 + 10.0).collect();
+    let amounts: Vec<f64> =
+        (1..=num_orders).map(|i| (f64::from(i) * 12.5) % 500.0 + 10.0).collect();
     let quantities: Vec<i32> = (1..=num_orders).map(|i| (i % 10) + 1).collect();
     let categories: Vec<&str> = (1..=num_orders)
         .map(|i| match i % 4 {

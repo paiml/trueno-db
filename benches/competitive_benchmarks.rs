@@ -29,8 +29,7 @@ const MEDIUM: usize = 1_000_000; // 1M rows (typical analytics workload)
 /// Set up a SQLite connection with integer data for SUM benchmarks
 fn setup_sqlite_int() -> Option<SQLite> {
     let conn = SQLite::open_in_memory().ok()?;
-    conn.execute_batch("CREATE TABLE data(value INTEGER); BEGIN;")
-        .ok()?;
+    conn.execute_batch("CREATE TABLE data(value INTEGER); BEGIN;").ok()?;
     let mut stmt = conn.prepare("INSERT INTO data VALUES (?)").ok()?;
     for i in 0..MEDIUM {
         stmt.execute([i as i32]).ok()?;
@@ -42,8 +41,7 @@ fn setup_sqlite_int() -> Option<SQLite> {
 /// Set up a SQLite connection with float data for AVG benchmarks
 fn setup_sqlite_float() -> Option<SQLite> {
     let conn = SQLite::open_in_memory().ok()?;
-    conn.execute_batch("CREATE TABLE data(value REAL); BEGIN;")
-        .ok()?;
+    conn.execute_batch("CREATE TABLE data(value REAL); BEGIN;").ok()?;
     let mut stmt = conn.prepare("INSERT INTO data VALUES (?)").ok()?;
     for i in 0..MEDIUM {
         stmt.execute([i as f32]).ok()?;
