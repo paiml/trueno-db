@@ -49,7 +49,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("│ Storage engine initialized:");
     println!("│   Pattern: OLAP (append-only)");
     println!("│   Batches: {}", storage.batches().len());
-    println!("│   Total rows: {}", storage.batches().iter().map(arrow::array::RecordBatch::num_rows).sum::<usize>());
+    println!(
+        "│   Total rows: {}",
+        storage.batches().iter().map(arrow::array::RecordBatch::num_rows).sum::<usize>()
+    );
     println!("└────────────────────────────────────────────────────────────┘\n");
 
     // Step 3: Morsel iteration
