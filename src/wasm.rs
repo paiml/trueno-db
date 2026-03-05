@@ -113,7 +113,7 @@ impl Database {
     pub async fn load_table(&mut self, name: String, url: String) -> Result<(), JsValue> {
         console::log_1(&format!("Loading table '{}' from {}", name, url).into());
 
-        // TODO: Implement HTTP range request Parquet reader
+        // HTTP range request Parquet reader — not yet implemented
         Err(JsValue::from_str("Not yet implemented"))
     }
 

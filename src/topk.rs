@@ -129,25 +129,25 @@ fn select_top_k_indices(
             let array = column.as_any().downcast_ref::<Int32Array>().ok_or_else(|| {
                 Error::Other("Failed to downcast Int32 column to Int32Array".to_string())
             })?;
-            select_top_k_i32(array, k, order)
+            select_top_k_typed(array.len(), k, order, |i| array.is_null(i), |i| array.value(i))
         }
         arrow::datatypes::DataType::Int64 => {
             let array = column.as_any().downcast_ref::<Int64Array>().ok_or_else(|| {
                 Error::Other("Failed to downcast Int64 column to Int64Array".to_string())
             })?;
-            select_top_k_i64(array, k, order)
+            select_top_k_typed(array.len(), k, order, |i| array.is_null(i), |i| array.value(i))
         }
         arrow::datatypes::DataType::Float32 => {
             let array = column.as_any().downcast_ref::<Float32Array>().ok_or_else(|| {
                 Error::Other("Failed to downcast Float32 column to Float32Array".to_string())
             })?;
-            select_top_k_f32(array, k, order)
+            select_top_k_typed(array.len(), k, order, |i| array.is_null(i), |i| array.value(i))
         }
         arrow::datatypes::DataType::Float64 => {
             let array = column.as_any().downcast_ref::<Float64Array>().ok_or_else(|| {
                 Error::Other("Failed to downcast Float64 column to Float64Array".to_string())
             })?;
-            select_top_k_f64(array, k, order)
+            select_top_k_typed(array.len(), k, order, |i| array.is_null(i), |i| array.value(i))
         }
         dt => Err(Error::InvalidInput(format!("Top-K not supported for data type: {dt:?}"))),
     }
@@ -209,194 +209,76 @@ impl<V: PartialOrd> PartialOrd for MaxHeapItem<V> {
     }
 }
 
-/// Top-K selection for `Int32Array`
-#[allow(clippy::unnecessary_wraps)]
-fn select_top_k_i32(array: &Int32Array, k: usize, order: SortOrder) -> crate::Result<Vec<usize>> {
-    match order {
-        SortOrder::Descending => {
-            // Use min-heap to find largest K
-            let mut heap: BinaryHeap<MinHeapItem<i32>> = BinaryHeap::with_capacity(k);
+/// Collect top-K indices from a min-heap (descending order: find largest K values)
+fn collect_top_k_descending<V: PartialOrd>(
+    len: usize,
+    k: usize,
+    is_null: impl Fn(usize) -> bool,
+    get_value: impl Fn(usize) -> V,
+) -> Vec<usize> {
+    let mut heap: BinaryHeap<MinHeapItem<V>> = BinaryHeap::with_capacity(k);
 
-            for index in 0..array.len() {
-                if !array.is_null(index) {
-                    let value = array.value(index);
-                    let item = MinHeapItem { value, index };
-
-                    if heap.len() < k {
-                        heap.push(item);
-                    } else if let Some(top) = heap.peek() {
-                        if value > top.value {
-                            heap.pop();
-                            heap.push(item);
-                        }
-                    }
+    for index in 0..len {
+        if !is_null(index) {
+            let value = get_value(index);
+            if heap.len() < k {
+                heap.push(MinHeapItem { value, index });
+            } else if let Some(top) = heap.peek() {
+                if value.partial_cmp(&top.value) == Some(Ordering::Greater) {
+                    heap.pop();
+                    heap.push(MinHeapItem { value, index });
                 }
             }
-
-            let mut result: Vec<_> = heap.into_vec();
-            result.sort_by(|a, b| b.value.cmp(&a.value));
-            Ok(result.into_iter().map(|item| item.index).collect())
-        }
-        SortOrder::Ascending => {
-            // Use max-heap to find smallest K
-            let mut heap: BinaryHeap<MaxHeapItem<i32>> = BinaryHeap::with_capacity(k);
-
-            for index in 0..array.len() {
-                if !array.is_null(index) {
-                    let value = array.value(index);
-                    let item = MaxHeapItem { value, index };
-
-                    if heap.len() < k {
-                        heap.push(item);
-                    } else if let Some(top) = heap.peek() {
-                        if value < top.value {
-                            heap.pop();
-                            heap.push(item);
-                        }
-                    }
-                }
-            }
-
-            let mut result: Vec<_> = heap.into_vec();
-            result.sort_by(|a, b| a.value.cmp(&b.value));
-            Ok(result.into_iter().map(|item| item.index).collect())
         }
     }
+
+    let mut result: Vec<_> = heap.into_vec();
+    result.sort_by(|a, b| b.value.partial_cmp(&a.value).unwrap_or(Ordering::Equal));
+    result.into_iter().map(|item| item.index).collect()
 }
 
-/// Top-K selection for `Int64Array`
-#[allow(clippy::unnecessary_wraps)]
-fn select_top_k_i64(array: &Int64Array, k: usize, order: SortOrder) -> crate::Result<Vec<usize>> {
-    match order {
-        SortOrder::Descending => {
-            let mut heap: BinaryHeap<MinHeapItem<i64>> = BinaryHeap::with_capacity(k);
-            for index in 0..array.len() {
-                if !array.is_null(index) {
-                    let value = array.value(index);
-                    if heap.len() < k {
-                        heap.push(MinHeapItem { value, index });
-                    } else if let Some(top) = heap.peek() {
-                        if value > top.value {
-                            heap.pop();
-                            heap.push(MinHeapItem { value, index });
-                        }
-                    }
+/// Collect top-K indices from a max-heap (ascending order: find smallest K values)
+fn collect_top_k_ascending<V: PartialOrd>(
+    len: usize,
+    k: usize,
+    is_null: impl Fn(usize) -> bool,
+    get_value: impl Fn(usize) -> V,
+) -> Vec<usize> {
+    let mut heap: BinaryHeap<MaxHeapItem<V>> = BinaryHeap::with_capacity(k);
+
+    for index in 0..len {
+        if !is_null(index) {
+            let value = get_value(index);
+            if heap.len() < k {
+                heap.push(MaxHeapItem { value, index });
+            } else if let Some(top) = heap.peek() {
+                if value.partial_cmp(&top.value) == Some(Ordering::Less) {
+                    heap.pop();
+                    heap.push(MaxHeapItem { value, index });
                 }
             }
-            let mut result: Vec<_> = heap.into_vec();
-            result.sort_by(|a, b| b.value.cmp(&a.value));
-            Ok(result.into_iter().map(|item| item.index).collect())
-        }
-        SortOrder::Ascending => {
-            let mut heap: BinaryHeap<MaxHeapItem<i64>> = BinaryHeap::with_capacity(k);
-            for index in 0..array.len() {
-                if !array.is_null(index) {
-                    let value = array.value(index);
-                    if heap.len() < k {
-                        heap.push(MaxHeapItem { value, index });
-                    } else if let Some(top) = heap.peek() {
-                        if value < top.value {
-                            heap.pop();
-                            heap.push(MaxHeapItem { value, index });
-                        }
-                    }
-                }
-            }
-            let mut result: Vec<_> = heap.into_vec();
-            result.sort_by(|a, b| a.value.cmp(&b.value));
-            Ok(result.into_iter().map(|item| item.index).collect())
         }
     }
+
+    let mut result: Vec<_> = heap.into_vec();
+    result.sort_by(|a, b| a.value.partial_cmp(&b.value).unwrap_or(Ordering::Equal));
+    result.into_iter().map(|item| item.index).collect()
 }
 
-/// Top-K selection for `Float32Array`
+/// Generic top-K selection for any Arrow array with `PartialOrd` values
 #[allow(clippy::unnecessary_wraps)]
-fn select_top_k_f32(array: &Float32Array, k: usize, order: SortOrder) -> crate::Result<Vec<usize>> {
-    match order {
-        SortOrder::Descending => {
-            let mut heap: BinaryHeap<MinHeapItem<f32>> = BinaryHeap::with_capacity(k);
-            for index in 0..array.len() {
-                if !array.is_null(index) {
-                    let value = array.value(index);
-                    if heap.len() < k {
-                        heap.push(MinHeapItem { value, index });
-                    } else if let Some(top) = heap.peek() {
-                        if value > top.value {
-                            heap.pop();
-                            heap.push(MinHeapItem { value, index });
-                        }
-                    }
-                }
-            }
-            let mut result: Vec<_> = heap.into_vec();
-            result.sort_by(|a, b| b.value.partial_cmp(&a.value).unwrap_or(Ordering::Equal));
-            Ok(result.into_iter().map(|item| item.index).collect())
-        }
-        SortOrder::Ascending => {
-            let mut heap: BinaryHeap<MaxHeapItem<f32>> = BinaryHeap::with_capacity(k);
-            for index in 0..array.len() {
-                if !array.is_null(index) {
-                    let value = array.value(index);
-                    if heap.len() < k {
-                        heap.push(MaxHeapItem { value, index });
-                    } else if let Some(top) = heap.peek() {
-                        if value < top.value {
-                            heap.pop();
-                            heap.push(MaxHeapItem { value, index });
-                        }
-                    }
-                }
-            }
-            let mut result: Vec<_> = heap.into_vec();
-            result.sort_by(|a, b| a.value.partial_cmp(&b.value).unwrap_or(Ordering::Equal));
-            Ok(result.into_iter().map(|item| item.index).collect())
-        }
-    }
-}
-
-/// Top-K selection for `Float64Array`
-#[allow(clippy::unnecessary_wraps)]
-fn select_top_k_f64(array: &Float64Array, k: usize, order: SortOrder) -> crate::Result<Vec<usize>> {
-    match order {
-        SortOrder::Descending => {
-            let mut heap: BinaryHeap<MinHeapItem<f64>> = BinaryHeap::with_capacity(k);
-            for index in 0..array.len() {
-                if !array.is_null(index) {
-                    let value = array.value(index);
-                    if heap.len() < k {
-                        heap.push(MinHeapItem { value, index });
-                    } else if let Some(top) = heap.peek() {
-                        if value > top.value {
-                            heap.pop();
-                            heap.push(MinHeapItem { value, index });
-                        }
-                    }
-                }
-            }
-            let mut result: Vec<_> = heap.into_vec();
-            result.sort_by(|a, b| b.value.partial_cmp(&a.value).unwrap_or(Ordering::Equal));
-            Ok(result.into_iter().map(|item| item.index).collect())
-        }
-        SortOrder::Ascending => {
-            let mut heap: BinaryHeap<MaxHeapItem<f64>> = BinaryHeap::with_capacity(k);
-            for index in 0..array.len() {
-                if !array.is_null(index) {
-                    let value = array.value(index);
-                    if heap.len() < k {
-                        heap.push(MaxHeapItem { value, index });
-                    } else if let Some(top) = heap.peek() {
-                        if value < top.value {
-                            heap.pop();
-                            heap.push(MaxHeapItem { value, index });
-                        }
-                    }
-                }
-            }
-            let mut result: Vec<_> = heap.into_vec();
-            result.sort_by(|a, b| a.value.partial_cmp(&b.value).unwrap_or(Ordering::Equal));
-            Ok(result.into_iter().map(|item| item.index).collect())
-        }
-    }
+fn select_top_k_typed<V: PartialOrd>(
+    len: usize,
+    k: usize,
+    order: SortOrder,
+    is_null: impl Fn(usize) -> bool,
+    get_value: impl Fn(usize) -> V,
+) -> crate::Result<Vec<usize>> {
+    let indices = match order {
+        SortOrder::Descending => collect_top_k_descending(len, k, is_null, get_value),
+        SortOrder::Ascending => collect_top_k_ascending(len, k, is_null, get_value),
+    };
+    Ok(indices)
 }
 
 /// Build a new record batch from selected row indices
