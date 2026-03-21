@@ -12,6 +12,7 @@ rust-version = "1.75"
 [workspace.dependencies]
 
 [package]
+exclude = ["tests/", "benches/", "docs/", ".github/", "book/", ".pmat/"]
 name = "trueno-db"
 version.workspace = true
 edition.workspace = true
