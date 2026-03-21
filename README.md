@@ -1,4 +1,5 @@
 <div align="center">
+<h1 align="center">trueno-db</h1>
 
 <img src=".github/trueno-db-hero.svg" alt="trueno-db" width="600">
 
