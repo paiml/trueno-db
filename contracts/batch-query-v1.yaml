@@ -23,7 +23,7 @@ proof_obligations:
 falsification_tests:
   - id: FALSIFY-BATCH-001
     rule: "Batch correctness"
-    test: "test_batch_query_returns_all_matches"
+    test: "test_append_batch_olap_pattern"
     prediction: "verified"
     if_fails: "Contract violation — batch query drops rows"
 
@@ -33,7 +33,7 @@ kani_harnesses:
     property: "Batch result bounded by table size"
     bound: 8
     strategy: bounded_int
-    harness: verify_batch_bound
+    harness: verify_batch_query_bound
 
 qa_gate:
   id: QA-BATCH
