@@ -2,6 +2,8 @@
 
 <img src=".github/trueno-db-hero.svg" alt="trueno-db" width="600">
 
+**GPU-first embedded analytics database built on Apache Arrow and Parquet.**
+
 ## Table of Contents
 
 - [Installation](#installation)
