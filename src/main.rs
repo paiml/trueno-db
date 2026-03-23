@@ -249,6 +249,7 @@ async fn query(
 
 /// Convert an Arrow array value at a given index to a JSON value.
 fn arrow_value_to_json(array: &dyn arrow::array::Array, index: usize) -> serde_json::Value {
+    #[allow(clippy::wildcard_imports)]
     use arrow::array::*;
     use arrow::datatypes::DataType;
 

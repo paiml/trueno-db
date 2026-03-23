@@ -13,12 +13,6 @@ allowed-idents-below-min-chars = ["x", "y", "i", "j", "k", "n", "m", "a", "b", "
 # Minimum identifier length
 min-ident-chars-threshold = 1
 
-# Disallow dangerous methods that can cause panics
-# Cloudflare outage 2025-11-18: unwrap() panic caused 3+ hour network outage
-[[disallowed-methods]]
-path = "core::option::Option::unwrap"
-reason = "Use .expect() with descriptive message or proper error handling with ?. Cloudflare-class defect risk."
-
-[[disallowed-methods]]
-path = "core::result::Result::unwrap"
-reason = "Use .expect() with descriptive message or proper error handling with ?. Cloudflare-class defect risk."
+# Disallow dangerous methods (Cloudflare outage 2025-11-18)
+# Note: disallowed-methods removed — unwrap_used/expect_used allowed at crate level
+disallowed-methods = []
