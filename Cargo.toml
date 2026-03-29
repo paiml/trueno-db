@@ -75,6 +75,10 @@ anyhow = "1"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
+[build-dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_yaml_ng = "0.10"
+
 [dev-dependencies]
 # Testing
 criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
