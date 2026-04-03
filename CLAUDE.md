@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Contract-First Design
+
+This project follows contract-first development with provable-contracts.
+Contracts live in `../provable-contracts/contracts/trueno-db/`.
+Run `pmat comply check` to validate contract compliance.
+
 ## Project Overview
 
 **Trueno-DB** is a GPU-first, SIMD-fallback embedded analytics database built on Apache Arrow and Trueno. It provides high-performance aggregations with graceful degradation from GPU → AVX-512 → AVX2 → SSE2 → Scalar, including WASM/WebGPU support for browser deployment.
