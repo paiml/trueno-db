@@ -30,6 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     #[cfg(target_arch = "aarch64")]
     {
+        use std::arch::is_aarch64_feature_detected;
         println!("  NEON: {}", is_aarch64_feature_detected!("neon"));
     }
     println!();
